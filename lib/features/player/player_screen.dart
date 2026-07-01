@@ -62,6 +62,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   double _subDelay = 0.0; // secondes
   int _audioBoost = 100; // % (jusqu'à 200)
   bool _pip = false;
+  int _liveReconnects = 0; // tentatives de reconnexion live consécutives
 
   int? get _knownDurSec => _reqKnownDur ?? ((_mkDuration != null && _mkDuration!.inSeconds > 0) ? _mkDuration!.inSeconds : null);
   bool get _hasNext => (widget.request.playlist != null) && (_plIndex + 1 < widget.request.playlist!.length);
@@ -98,6 +99,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     _subs.add(_player.stream.playing.listen((v) => setState(() => _playing = v)));
     _subs.add(_player.stream.position.listen((p) {
       setState(() => _position = p);
+      if (widget.request.isLive && p.inSeconds > 3) _liveReconnects = 0; // flux rétabli
       _maybeResume();
       _maybeMarkWatched();
     }));
@@ -120,12 +122,31 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     }));
   }
 
-  // Fin de lecture : autoplay de l'épisode suivant si activé.
+  // Fin de lecture : reconnexion live (flux coupé) ou autoplay épisode suivant.
   void _onCompleted() {
+    if (widget.request.isLive) {
+      _reconnectLive();
+      return;
+    }
     if (_hasNext && _prefs.settingBool('autoplayNext', true)) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Épisode suivant…'), duration: Duration(seconds: 2)));
       _playNext();
     }
+  }
+
+  // Le flux live s'est interrompu (souvent : le restream a ouvert/fermé une 2e
+  // connexion fournisseur) → on se reconnecte automatiquement (max 6 essais).
+  void _reconnectLive() {
+    if (_liveReconnects >= 6 || !mounted) return;
+    final urls = ref.read(xtreamUrlsProvider);
+    if (urls == null || _liveId == null) return;
+    _liveReconnects++;
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) {
+        _player.open(Media(urls.live(_liveId!, ext: 'ts')));
+        _applyTweaks();
+      }
+    });
   }
 
   void _playNext() {
