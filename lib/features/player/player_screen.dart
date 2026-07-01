@@ -433,7 +433,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     });
     _player.open(Media(urls.live(ch.streamId, ext: 'ts')));
     _applyTweaks(); // conserve vitesse/boost/délai en changeant de chaîne
-    _prefs.pushRecent(RecentEntry(kind: MediaKind.live, id: ch.streamId, name: ch.name, cover: ch.icon, ext: 'ts', at: DateTime.now().millisecondsSinceEpoch));
+    _prefs.pushRecent(RecentEntry(kind: MediaKind.live, id: ch.streamId, name: ch.name, cover: ch.icon, ext: 'ts', categoryId: ch.categoryId, at: DateTime.now().millisecondsSinceEpoch));
   }
 
   // Démarre/arrête l'enregistrement de la chaîne courante (la lecture continue).
@@ -570,6 +570,18 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     }
   }
 
+  // Démarre le restream en LIBÉRANT d'abord la connexion fournisseur (stop du player
+  // + délai), sinon ffmpeg ne peut pas se connecter (limite de connexions).
+  Future<void> _startRestream() async {
+    final urls = ref.read(xtreamUrlsProvider);
+    if (urls == null || _liveId == null) return;
+    try {
+      await _player.stop();
+    } catch (_) {}
+    await Future.delayed(const Duration(milliseconds: 900));
+    await ref.read(restreamControllerProvider.notifier).start(name: _title, url: urls.live(_liveId!, ext: 'ts'));
+  }
+
   void _restreamDialog() {
     final urls = ref.read(xtreamUrlsProvider);
     if (urls == null || _liveId == null) return;
@@ -601,7 +613,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
               if (st.status == RestreamStatus.live)
                 FilledButton.tonalIcon(onPressed: () => ctrl.stop(), icon: const Icon(Icons.stop, size: 18), label: const Text('Arrêter'))
               else if (st.status != RestreamStatus.starting)
-                FilledButton.icon(onPressed: () => ctrl.start(name: _title, url: urls.live(_liveId!, ext: 'ts')), icon: const Icon(Icons.cast, size: 18), label: const Text('Démarrer')),
+                FilledButton.icon(onPressed: _startRestream, icon: const Icon(Icons.cast, size: 18), label: const Text('Démarrer')),
               TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Fermer')),
             ],
           );
@@ -672,18 +684,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   @override
   Widget build(BuildContext context) {
     final isRec = ref.watch(recordingControllerProvider).any((r) => r.status == RecStatus.recording);
-    // Coordination player ↔ restream (fournisseur souvent limité à 1 connexion) :
-    // au démarrage d'un restream, on libère la connexion (stop du player) ; à l'arrêt,
-    // on rétablit le live automatiquement.
+    // À l'arrêt d'un restream, on rétablit le live (le fournisseur a pu couper la connexion).
     ref.listen(restreamControllerProvider, (prev, next) {
-      if (!widget.request.isLive) return;
       final was = prev?.status ?? RestreamStatus.idle;
-      final started = next.status == RestreamStatus.starting || next.status == RestreamStatus.live;
-      if (was == RestreamStatus.idle && started) {
-        try {
-          _player.stop();
-        } catch (_) {}
-      } else if (was != RestreamStatus.idle && next.status == RestreamStatus.idle) {
+      if (widget.request.isLive && was != RestreamStatus.idle && next.status == RestreamStatus.idle) {
         _liveReconnects = 0;
         _reconnectLive();
       }

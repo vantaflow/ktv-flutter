@@ -128,6 +128,7 @@ class RecentEntry {
   final String ext;
   final String? resumeKey;
   final String? subtitle; // ex. « Saison 1 · Épisode 2 »
+  final String? categoryId; // catégorie live (pour le zapping/restream depuis l'accueil)
   final int at;
   const RecentEntry({
     required this.kind,
@@ -137,6 +138,7 @@ class RecentEntry {
     required this.ext,
     this.resumeKey,
     this.subtitle,
+    this.categoryId,
     required this.at,
   });
 
@@ -148,6 +150,7 @@ class RecentEntry {
         'ext': ext,
         'resumeKey': resumeKey,
         'subtitle': subtitle,
+        'categoryId': categoryId,
         'at': at,
       };
   factory RecentEntry.fromJson(Map<String, dynamic> j) => RecentEntry(
@@ -158,6 +161,7 @@ class RecentEntry {
         ext: _s(j['ext']).isEmpty ? 'mp4' : _s(j['ext']),
         resumeKey: _sn(j['resumeKey']),
         subtitle: _sn(j['subtitle']),
+        categoryId: _sn(j['categoryId']),
         at: int.tryParse(_s(j['at'])) ?? 0,
       );
 }

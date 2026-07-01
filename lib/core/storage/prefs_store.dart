@@ -117,13 +117,13 @@ class PrefsStore {
 
   bool isFav(String id) => favChannels().any((e) => e['id'] == id);
 
-  Future<void> toggleFav({required String id, required String name, String? cover}) async {
+  Future<void> toggleFav({required String id, required String name, String? cover, String? category}) async {
     final list = favChannels();
     final i = list.indexWhere((e) => e['id'] == id);
     if (i >= 0) {
       list.removeAt(i);
     } else {
-      list.add({'id': id, 'name': name, 'cover': cover});
+      list.add({'id': id, 'name': name, 'cover': cover, 'category': category});
     }
     await _p.setString(_kFavs, jsonEncode(list));
   }

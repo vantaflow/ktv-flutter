@@ -71,7 +71,7 @@ class PlayLauncher {
   static void live(BuildContext context, WidgetRef ref, LiveChannel ch) {
     final urls = ref.read(xtreamUrlsProvider);
     if (urls == null) return;
-    ref.read(prefsProvider).pushRecent(RecentEntry(kind: MediaKind.live, id: ch.streamId, name: ch.name, cover: ch.icon, ext: 'ts', at: _now));
+    ref.read(prefsProvider).pushRecent(RecentEntry(kind: MediaKind.live, id: ch.streamId, name: ch.name, cover: ch.icon, ext: 'ts', categoryId: ch.categoryId, at: _now));
     _open(context, ref, PlaybackRequest(url: urls.live(ch.streamId), title: ch.name, kind: MediaKind.live, liveStreamId: ch.streamId, liveCategoryId: ch.categoryId));
   }
 
@@ -91,7 +91,21 @@ class PlayLauncher {
         url = urls.live(e.id);
         break;
     }
-    ref.read(prefsProvider).pushRecent(RecentEntry(kind: e.kind, id: e.id, name: e.name, cover: e.cover, ext: e.ext, resumeKey: e.resumeKey, subtitle: e.subtitle, at: _now));
-    _open(context, ref, PlaybackRequest(url: url, title: e.name, subtitle: e.subtitle, kind: e.kind, resumeKey: e.resumeKey));
+    ref.read(prefsProvider).pushRecent(RecentEntry(kind: e.kind, id: e.id, name: e.name, cover: e.cover, ext: e.ext, resumeKey: e.resumeKey, subtitle: e.subtitle, categoryId: e.categoryId, at: _now));
+    _open(
+      context,
+      ref,
+      PlaybackRequest(
+        url: url,
+        title: e.name,
+        subtitle: e.subtitle,
+        kind: e.kind,
+        resumeKey: e.resumeKey,
+        // Live lancé depuis l'accueil : on transporte l'id + la catégorie pour que
+        // restream / enregistrement / zapping fonctionnent aussi.
+        liveStreamId: e.kind == MediaKind.live ? e.id : null,
+        liveCategoryId: e.kind == MediaKind.live ? e.categoryId : null,
+      ),
+    );
   }
 }

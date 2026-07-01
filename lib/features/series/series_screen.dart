@@ -36,34 +36,29 @@ class _SeriesScreenState extends ConsumerState<SeriesScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text('Séries', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
-        ),
-        // Catégories + bouton filtres à droite (en haut).
-        Row(children: [
-          Expanded(
-            child: cats.when(
-              loading: () => const SizedBox(height: 44),
-              error: (_, _) => const SizedBox(height: 44),
-              data: (list) => CategoryChips(
-                categories: [const Category(kAllCatId, '⭐ Toutes'), ...list],
-                selectedId: selected,
-                onSelect: (id) => ref.read(selectedSeriesCategoryProvider.notifier).state = id,
-              ),
+        // Titre + (filtres dans l'espace vide à droite) + bouton afficher/masquer.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 8, 8),
+          child: Row(children: [
+            const Text('Séries', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+            const SizedBox(width: 20),
+            Expanded(child: showFilters ? FilterBar(filter: _filter, onChanged: (f) => setState(() => _filter = f)) : const SizedBox.shrink()),
+            IconButton(
+              tooltip: showFilters ? 'Masquer les filtres' : 'Afficher les filtres',
+              icon: Icon(showFilters ? Icons.filter_list_off : Icons.filter_list, color: showFilters ? KtvColors.accent : KtvColors.muted),
+              onPressed: () async { await prefs.setSetting('catalogFilters', !showFilters); setState(() {}); },
             ),
+          ]),
+        ),
+        cats.when(
+          loading: () => const SizedBox(height: 44),
+          error: (_, _) => const SizedBox(height: 44),
+          data: (list) => CategoryChips(
+            categories: [const Category(kAllCatId, '⭐ Toutes'), ...list],
+            selectedId: selected,
+            onSelect: (id) => ref.read(selectedSeriesCategoryProvider.notifier).state = id,
           ),
-          IconButton(
-            tooltip: showFilters ? 'Masquer les filtres' : 'Afficher les filtres',
-            icon: Icon(showFilters ? Icons.filter_list_off : Icons.filter_list, color: showFilters ? KtvColors.accent : KtvColors.muted),
-            onPressed: () async { await prefs.setSetting('catalogFilters', !showFilters); setState(() {}); },
-          ),
-          const SizedBox(width: 8),
-        ]),
-        if (showFilters) ...[
-          const SizedBox(height: 6),
-          FilterBar(filter: _filter, onChanged: (f) => setState(() => _filter = f)),
-        ],
+        ),
         const SizedBox(height: 8),
         Expanded(
           child: AsyncView(

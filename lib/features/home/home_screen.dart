@@ -39,7 +39,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final resume = recent.where((e) => progressOf(e) > 0).toList();
     final favs = prefs
         .favChannels()
-        .map((f) => RecentEntry(kind: MediaKind.live, id: '${f['id']}', name: '${f['name']}', cover: f['cover'] as String?, ext: 'ts', at: 0))
+        .map((f) => RecentEntry(kind: MediaKind.live, id: '${f['id']}', name: '${f['name']}', cover: f['cover'] as String?, ext: 'ts', categoryId: f['category'] as String?, at: 0))
         .toList();
 
     return SafeArea(
