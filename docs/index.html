@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KTV — lecteur Xtream (Flutter + libmpv)</title>
+<style>
+  :root{
+    --bg:#0e0f13; --panel:#16181f; --panel2:#1e212b; --line:#2a2d38;
+    --txt:#e8eaf0; --muted:#8a8f9e; --accent:#ff6a2c; --accent2:#ffb85a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.55}
+  a{color:var(--accent2);text-decoration:none}
+  .wrap{max-width:960px;margin:0 auto;padding:0 24px}
+  header{padding:80px 0 48px;text-align:center;background:radial-gradient(1200px 500px at 50% -10%,rgba(255,106,44,.18),transparent)}
+  .logo{display:inline-flex;align-items:center;gap:16px;margin-bottom:24px}
+  .mark{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-size:34px}
+  h1{font-size:52px;font-weight:800;letter-spacing:1px}
+  .lead{color:var(--muted);font-size:19px;max-width:640px;margin:16px auto 0}
+  .cta{display:inline-flex;gap:14px;margin-top:32px;flex-wrap:wrap;justify-content:center}
+  .btn{padding:14px 26px;border-radius:12px;font-weight:700;font-size:15px}
+  .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+  .btn.ghost{border:1px solid var(--line);color:var(--txt)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:56px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
+  .card h3{font-size:16px;margin-bottom:8px;color:var(--accent2)}
+  .card p{color:var(--muted);font-size:14px}
+  .why{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:32px;margin:24px 0}
+  .why h2{font-size:24px;margin-bottom:12px}
+  .why p{color:var(--muted)}
+  code{background:var(--panel2);padding:2px 7px;border-radius:6px;font-size:13px;color:var(--accent2)}
+  footer{color:var(--muted);text-align:center;padding:56px 0;font-size:13px;border-top:1px solid var(--line);margin-top:56px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="logo"><div class="mark">▶</div><h1>KTV</h1></div>
+    <p class="lead">Lecteur <b>Xtream / IPTV</b> pour macOS &amp; Windows — Live TV, Films, Séries, Guide EPG, recommandations. Réécrit en <b>Flutter</b> avec le moteur <b>libmpv</b> : lecture native MKV/HEVC, seek instantané, pistes audio &amp; sous-titres.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/khalilbenaz/ktv-flutter/releases/latest">Télécharger</a>
+      <a class="btn ghost" href="https://github.com/khalilbenaz/ktv-flutter">Code source</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="why">
+    <h2>Pourquoi une réécriture</h2>
+    <p>La version Electron s'appuyait sur le moteur vidéo de Chromium, incapable de lire les conteneurs MKV/HEVC multi-pistes de l'IPTV VOD — d'où un relais <code>ffmpeg</code> qui cassait la navigation, la durée, la reprise et le choix des pistes. <b>libmpv (media_kit)</b> lit tout nativement, avec un seek instantané. Cette famille de bugs disparaît.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h3>Accueil cinématographique</h3><p>Reprendre la lecture, favoris, vu récemment, <b>recommandations</b> TMDB contextuelles, derniers ajouts.</p></div>
+    <div class="card"><h3>Live TV + EPG</h3><p>Grille par catégorie, programme en cours avec progression, favoris, enregistrement.</p></div>
+    <div class="card"><h3>Films &amp; Séries</h3><p>Fiches TMDB : affiche, backdrop, synopsis, note, casting. Épisodes par saison.</p></div>
+    <div class="card"><h3>Guide TV</h3><p>Grille EPG par chaîne : en cours &amp; à venir.</p></div>
+    <div class="card"><h3>Lecteur natif</h3><p>MKV/HEVC, seek instantané, pistes audio/sous-titres, plein écran, raccourcis, reprise.</p></div>
+    <div class="card"><h3>Trakt · Téléchargements · Enregistrement</h3><p>Scrobble automatique, file de téléchargements, capture MP4 des chaînes.</p></div>
+  </div>
+</main>
+
+<footer class="wrap">
+  KTV · Flutter + media_kit (libmpv) · macOS &amp; Windows · Licence MIT<br>
+  Version Electron précédente : <a href="https://github.com/khalilbenaz/ktv">khalilbenaz/ktv</a>
+</footer>
+</body>
+</html>

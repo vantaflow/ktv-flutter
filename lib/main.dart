@@ -1,0 +1,27 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:window_manager/window_manager.dart';
+import 'app.dart';
+import 'core/providers.dart';
+import 'core/storage/prefs_store.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  MediaKit.ensureInitialized();
+  await windowManager.ensureInitialized();
+  await windowManager.waitUntilReadyToShow(
+    const WindowOptions(size: Size(1280, 800), minimumSize: Size(940, 600), title: 'KTV'),
+    () async {
+      await windowManager.show();
+      await windowManager.focus();
+    },
+  );
+  final prefs = await PrefsStore.create();
+  runApp(
+    ProviderScope(
+      overrides: [prefsProvider.overrideWithValue(prefs)],
+      child: const KtvApp(),
+    ),
+  );
+}

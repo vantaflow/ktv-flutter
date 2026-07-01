@@ -1,0 +1,336 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
+import 'package:window_manager/window_manager.dart';
+import '../../core/models/playback.dart';
+import '../../core/providers.dart';
+import '../../core/connection/connection_lock.dart';
+import '../../core/storage/prefs_store.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/models/models.dart';
+import '../../services/trakt/trakt_service.dart';
+import '../../services/trakt/trakt_providers.dart';
+import 'player_controls.dart';
+
+class PlayerScreen extends ConsumerStatefulWidget {
+  final PlaybackRequest request;
+  const PlayerScreen({super.key, required this.request});
+  @override
+  ConsumerState<PlayerScreen> createState() => _PlayerScreenState();
+}
+
+class _PlayerScreenState extends ConsumerState<PlayerScreen> {
+  late final Player _player = Player();
+  late final VideoController _video = VideoController(_player);
+  late final PrefsStore _prefs;
+  late final ConnectionLock _lock;
+  late final TraktService _trakt;
+  final _subs = <StreamSubscription>[];
+  final _focus = FocusNode();
+
+  bool _playing = true;
+  Duration _position = Duration.zero;
+  Duration _bufferPos = Duration.zero;
+  Duration? _mkDuration;
+  double _volume = 1.0;
+  bool _muted = false;
+  bool _fullscreen = false;
+  List<AudioTrack> _audio = const [];
+  List<SubtitleTrack> _subtitle = const [];
+  String? _curAudioId;
+  String? _curSubId;
+  bool _resumeApplied = false;
+  bool _watchedMarked = false;
+  bool _controlsVisible = true;
+  Timer? _hideTimer;
+  Timer? _saveTimer;
+
+  int? get _knownDurSec => widget.request.knownDurationSec ?? ((_mkDuration != null && _mkDuration!.inSeconds > 0) ? _mkDuration!.inSeconds : null);
+  Duration? get _effDuration => _knownDurSec == null ? null : Duration(seconds: _knownDurSec!);
+
+  @override
+  void initState() {
+    super.initState();
+    _prefs = ref.read(prefsProvider);
+    _lock = ref.read(connectionLockProvider);
+    _trakt = ref.read(traktServiceProvider);
+    // Tampon → propriété mpv (cache-secs) selon le réglage.
+    const bufMap = {'low': '10', 'balanced': '30', 'stable': '60'};
+    final secs = bufMap[_prefs.settingStr('bufferProfile', 'balanced')] ?? '30';
+    try {
+      (_player.platform as dynamic)?.setProperty('cache-secs', secs);
+    } catch (_) {}
+    // Si un autre flux (lecture/enregistrement) préempte, on coupe immédiatement.
+    _lock.acquire(ConnUse.playback, onPreempt: () {
+      try {
+        _player.stop();
+      } catch (_) {}
+    });
+    _wire();
+    _player.open(Media(widget.request.url));
+    _saveTimer = Timer.periodic(const Duration(seconds: 5), (_) => _saveResume());
+    _armHide();
+  }
+
+  void _wire() {
+    _subs.add(_player.stream.playing.listen((v) => setState(() => _playing = v)));
+    _subs.add(_player.stream.position.listen((p) {
+      setState(() => _position = p);
+      _maybeResume();
+      _maybeMarkWatched();
+    }));
+    _subs.add(_player.stream.buffer.listen((b) => setState(() => _bufferPos = b)));
+    _subs.add(_player.stream.duration.listen((d) => setState(() => _mkDuration = d)));
+    _subs.add(_player.stream.volume.listen((v) => setState(() => _volume = (v / 100).clamp(0, 1))));
+    _subs.add(_player.stream.tracks.listen((t) => setState(() {
+          _audio = t.audio;
+          _subtitle = t.subtitle;
+        })));
+    _subs.add(_player.stream.track.listen((t) => setState(() {
+          _curAudioId = t.audio.id;
+          _curSubId = t.subtitle.id;
+        })));
+  }
+
+  void _maybeResume() {
+    if (_resumeApplied || widget.request.isLive || widget.request.resumeKey == null) return;
+    final r = _prefs.resume(widget.request.resumeKey!);
+    if (r == null) {
+      _resumeApplied = true;
+      return;
+    }
+    final t = (r['t'] as num?)?.toInt() ?? 0;
+    final dur = _knownDurSec ?? 0;
+    if (t > 15 && (dur == 0 || t < dur - 30)) {
+      _resumeApplied = true;
+      _player.seek(Duration(seconds: t));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Reprise à ${_fmt(t)}'), duration: const Duration(seconds: 3), backgroundColor: KtvColors.panel),
+        );
+      }
+    } else {
+      _resumeApplied = true;
+    }
+  }
+
+  void _maybeMarkWatched() {
+    if (_watchedMarked || widget.request.resumeKey == null) return;
+    final dur = _knownDurSec ?? 0;
+    if (dur > 300 && _position.inSeconds / dur >= 0.9) {
+      _watchedMarked = true;
+      _prefs.setWatched(widget.request.resumeKey!, true);
+      // Scrobble Trakt (films) si connecté.
+      if (widget.request.kind == MediaKind.movie && _trakt.connected) {
+        _trakt.markMovieWatched(widget.request.title);
+      }
+    }
+  }
+
+  Future<void> _saveResume() async {
+    final key = widget.request.resumeKey;
+    if (key == null || widget.request.isLive) return;
+    final dur = _knownDurSec ?? 0;
+    if (_position.inSeconds > 15) {
+      await _prefs.saveResume(key, _position.inSeconds, dur);
+    }
+  }
+
+  String _fmt(int s) {
+    final h = s ~/ 3600, m = (s % 3600) ~/ 60, ss = s % 60;
+    String two(int n) => n.toString().padLeft(2, '0');
+    return h > 0 ? '$h:${two(m)}:${two(ss)}' : '${two(m)}:${two(ss)}';
+  }
+
+  void _armHide() {
+    _hideTimer?.cancel();
+    if (!_controlsVisible) setState(() => _controlsVisible = true);
+    _hideTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted && _playing) setState(() => _controlsVisible = false);
+    });
+  }
+
+  Future<void> _toggleFullscreen() async {
+    _fullscreen = !_fullscreen;
+    try {
+      await windowManager.setFullScreen(_fullscreen);
+    } catch (_) {}
+    if (mounted) setState(() {});
+  }
+
+  void _seekBy(int secs) {
+    final t = _position + Duration(seconds: secs);
+    _player.seek(t < Duration.zero ? Duration.zero : t);
+  }
+
+  KeyEventResult _onKey(FocusNode n, KeyEvent e) {
+    if (e is! KeyDownEvent) return KeyEventResult.ignored;
+    _armHide();
+    switch (e.logicalKey) {
+      case LogicalKeyboardKey.space:
+      case LogicalKeyboardKey.keyK:
+        _player.playOrPause();
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.arrowRight:
+        if (!widget.request.isLive) _seekBy(10);
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.arrowLeft:
+        if (!widget.request.isLive) _seekBy(-10);
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.arrowUp:
+        _player.setVolume((((_volume * 100) + 10).clamp(0, 100)));
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.arrowDown:
+        _player.setVolume((((_volume * 100) - 10).clamp(0, 100)));
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.keyM:
+        _player.setVolume(_muted ? _volume * 100 : 0);
+        setState(() => _muted = !_muted);
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.keyF:
+        _toggleFullscreen();
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.escape:
+        if (_fullscreen) {
+          _toggleFullscreen();
+        } else {
+          _close();
+        }
+        return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  bool _closing = false;
+  Future<void> _close() async {
+    if (_closing) return;
+    _closing = true;
+    await _saveResume();
+    try {
+      await _player.stop(); // coupe le flux tout de suite (audio + connexion fournisseur)
+    } catch (_) {}
+    if (_fullscreen) {
+      try {
+        await windowManager.setFullScreen(false);
+      } catch (_) {}
+    }
+    if (mounted) Navigator.of(context).maybePop();
+  }
+
+  @override
+  void dispose() {
+    _saveResume();
+    _hideTimer?.cancel();
+    _saveTimer?.cancel();
+    for (final s in _subs) {
+      s.cancel();
+    }
+    _lock.release(ConnUse.playback);
+    // Arrêt + libération : sans le stop explicite, l'audio continuait après le retour.
+    try {
+      _player.stop();
+    } catch (_) {}
+    _player.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, _) {
+        // Retour via geste/clavier système : on stoppe aussi le flux.
+        if (didPop) {
+          try {
+            _player.stop();
+          } catch (_) {}
+        }
+      },
+      child: Scaffold(
+      backgroundColor: Colors.black,
+      body: Focus(
+        focusNode: _focus,
+        autofocus: true,
+        onKeyEvent: _onKey,
+        child: MouseRegion(
+          onHover: (_) => _armHide(),
+          child: Stack(
+            children: [
+              Positioned.fill(child: Video(controller: _video, controls: NoVideoControls)),
+              // Barre du haut : retour + titre
+              AnimatedOpacity(
+                opacity: _controlsVisible ? 1 : 0,
+                duration: const Duration(milliseconds: 200),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 16, 30),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black87, Colors.transparent]),
+                  ),
+                  child: Row(
+                    children: [
+                      IconButton(onPressed: _close, icon: const Icon(Icons.arrow_back, color: Colors.white)),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(widget.request.title,
+                                maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                            if (widget.request.subtitle != null)
+                              Text(widget.request.subtitle!, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Barre du bas : contrôles
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: AnimatedOpacity(
+                  opacity: _controlsVisible ? 1 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: PlayerControls(
+                    playing: _playing,
+                    isLive: widget.request.isLive,
+                    position: _position,
+                    duration: _effDuration,
+                    buffered: _bufferPos,
+                    volume: _volume,
+                    muted: _muted,
+                    audioTracks: _audio,
+                    subtitleTracks: _subtitle,
+                    currentAudioId: _curAudioId,
+                    currentSubtitleId: _curSubId,
+                    isFullscreen: _fullscreen,
+                    onPlayPause: () => _player.playOrPause(),
+                    onSeek: (d) => _player.seek(d),
+                    onVolume: (v) {
+                      _muted = false;
+                      _player.setVolume(v * 100);
+                    },
+                    onMuteToggle: () {
+                      _player.setVolume(_muted ? _volume * 100 : 0);
+                      setState(() => _muted = !_muted);
+                    },
+                    onSelectAudio: (a) => _player.setAudioTrack(a),
+                    onSelectSubtitle: (s) => _player.setSubtitleTrack(s),
+                    onToggleFullscreen: _toggleFullscreen,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      ),
+    );
+  }
+}

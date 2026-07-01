@@ -1,0 +1,129 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/models/models.dart';
+import '../../core/providers.dart';
+import '../../core/theme/app_theme.dart';
+import '../auth/auth_controller.dart';
+import '../../services/recording/recording_service.dart';
+import 'live_providers.dart';
+
+/// Carte d'une chaîne live : logo + nom + programme EN COURS (EPG now/next).
+class LiveChannelCard extends ConsumerWidget {
+  final LiveChannel channel;
+  final VoidCallback onTap;
+  const LiveChannelCard({super.key, required this.channel, required this.onTap});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final prefs = ref.read(prefsProvider);
+    final epg = ref.watch(shortEpgProvider(channel.streamId));
+    final progs = epg.asData?.value ?? const <EpgProgram>[];
+    final now = progs.isNotEmpty ? progs.first : null;
+    final next = progs.length > 1 ? progs[1] : null;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: AspectRatio(
+              aspectRatio: 16 / 10,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (channel.icon != null && channel.icon!.isNotEmpty)
+                    CachedNetworkImage(
+                      imageUrl: channel.icon!,
+                      fit: BoxFit.contain,
+                      placeholder: (_, _) => const ColoredBox(color: KtvColors.panel2),
+                      errorWidget: (_, _, _) => const _LiveFallback(),
+                    )
+                  else
+                    const _LiveFallback(),
+                  Positioned(
+                    top: 2,
+                    right: 2,
+                    child: IconButton(
+                      iconSize: 18,
+                      visualDensity: VisualDensity.compact,
+                      icon: Icon(prefs.isFav(channel.streamId) ? Icons.favorite : Icons.favorite_border,
+                          color: prefs.isFav(channel.streamId) ? KtvColors.accent : Colors.white70),
+                      onPressed: () async {
+                        await prefs.toggleFav(id: channel.streamId, name: channel.name, cover: channel.icon);
+                        ref.read(recentTickProvider.notifier).state++;
+                        (context as Element).markNeedsBuild();
+                      },
+                    ),
+                  ),
+                  Positioned(
+                    top: 2,
+                    left: 2,
+                    child: IconButton(
+                      iconSize: 18,
+                      visualDensity: VisualDensity.compact,
+                      tooltip: 'Enregistrer',
+                      icon: const Icon(Icons.fiber_manual_record, color: KtvColors.rec),
+                      onPressed: () async {
+                        final urls = ref.read(xtreamUrlsProvider);
+                        if (urls == null) return;
+                        final err = await ref.read(recordingControllerProvider.notifier).start(name: channel.name, url: urls.live(channel.streamId, ext: 'ts'));
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(err ?? 'Enregistrement démarré : ${channel.name} (Réglages → Enregistrements)'),
+                          ));
+                        }
+                      },
+                    ),
+                  ),
+                  if (now != null)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: _ProgressBar(now),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(channel.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+          if (now != null)
+            Text('🔴 ${now.title}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11.5, color: KtvColors.accent2)),
+          if (next != null)
+            Text('Puis · ${next.title}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: KtvColors.muted)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressBar extends StatelessWidget {
+  final EpgProgram p;
+  const _ProgressBar(this.p);
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final total = (p.stop - p.start);
+    final done = (now - p.start);
+    final v = (total > 0) ? (done / total).clamp(0.0, 1.0) : 0.0;
+    if (v <= 0) return const SizedBox.shrink();
+    return LinearProgressIndicator(
+      value: v,
+      minHeight: 3,
+      backgroundColor: Colors.black45,
+      valueColor: const AlwaysStoppedAnimation(KtvColors.accent),
+    );
+  }
+}
+
+class _LiveFallback extends StatelessWidget {
+  const _LiveFallback();
+  @override
+  Widget build(BuildContext context) =>
+      const ColoredBox(color: KtvColors.panel2, child: Center(child: Icon(Icons.live_tv, color: KtvColors.muted, size: 30)));
+}
