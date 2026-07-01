@@ -99,7 +99,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _appSection() {
     return _section('Application', [
-      const Text('KTV — Flutter + media_kit · v0.1.2', style: TextStyle(color: KtvColors.muted, fontSize: 13)),
+      const Text('KTV — Flutter + media_kit · v0.1.3', style: TextStyle(color: KtvColors.muted, fontSize: 13)),
       const SizedBox(height: 10),
       FilledButton.tonalIcon(
         onPressed: () {

@@ -17,7 +17,7 @@ jobs:
         include:
           - os: macos-14
             target: macos
-            out: build/macos/Build/Products/Release/ktv.app
+            out: build/macos/Build/Products/Release
             asset: KTV-macos-arm64.zip
           - os: windows-latest
             target: windows
@@ -52,7 +52,10 @@ jobs:
 
       - name: Zip (macOS)
         if: runner.os == 'macOS'
-        run: ditto -c -k --keepParent "${{ matrix.out }}" "${{ matrix.asset }}"
+        run: |
+          APP=$(ls -d "${{ matrix.out }}"/*.app | head -1)
+          echo "Packaging $APP"
+          ditto -c -k --keepParent "$APP" "${{ matrix.asset }}"
 
       - name: Zip (Windows)
         if: runner.os == 'Windows'

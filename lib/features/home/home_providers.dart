@@ -40,6 +40,17 @@ final latestSeriesProvider = FutureProvider<List<SeriesItem>>((ref) async {
   return list.take(24).toList();
 });
 
+/// Amorces de recommandation tirées du PROPRE catalogue IPTV de l'utilisateur :
+/// les titres les mieux notés (à défaut les plus récents). Ainsi les
+/// recommandations sont fondées sur le contenu réellement disponible chez lui.
+List<String> _catalogSeedNames(Iterable<({String name, double rating, int added})> items) {
+  final list = items.toList();
+  // Priorité aux titres notés (qualité), sinon aux plus récemment ajoutés.
+  final rated = list.where((e) => e.rating > 0).toList()..sort((a, b) => b.rating.compareTo(a.rating));
+  final pool = rated.isNotEmpty ? rated : (list..sort((a, b) => b.added.compareTo(a.added)));
+  return pool.take(6).map((e) => e.name).toList();
+}
+
 /// Transforme un résultat TMDB brut en « suggestion » pour matchRecommendationsToCatalog.
 Map<String, dynamic> _toSuggestion(Map r) {
   final date = (r['release_date'] ?? r['first_air_date'] ?? '').toString();
@@ -57,12 +68,14 @@ final seriesRecommendationsProvider = FutureProvider<List<SeriesItem>>((ref) asy
   final catalog = await ref.watch(allSeriesProvider.future);
   if (catalog.isEmpty) return [];
   final tmdb = ref.read(tmdbServiceProvider);
-  final seeds = ref.read(prefsProvider).recent().where((e) => e.kind == MediaKind.series).take(4).toList();
+  // Amorces : séries récemment vues ; sinon les mieux notées de TON catalogue.
+  final recentNames = ref.read(prefsProvider).recent().where((e) => e.kind == MediaKind.series).take(4).map((e) => e.name).toList();
+  final seedNames = recentNames.isNotEmpty ? recentNames : _catalogSeedNames(catalog.map((s) => (name: s.name, rating: s.rating, added: s.lastModified)));
 
   final seen = <int>{};
   final suggestions = <Map<String, dynamic>>[];
-  for (final seed in seeds) {
-    final hit = await tmdb.search('tv', seed.name);
+  for (final name in seedNames) {
+    final hit = await tmdb.search('tv', name);
     final id = hit?['id'];
     if (id is! int) continue;
     for (final r in await tmdb.recommendations('tv', id)) {
@@ -72,7 +85,7 @@ final seriesRecommendationsProvider = FutureProvider<List<SeriesItem>>((ref) asy
       suggestions.add(_toSuggestion(r));
     }
   }
-  // Fallback : tendances de la semaine (la rangée n'est jamais vide).
+  // Dernier recours : tendances de la semaine (la rangée n'est jamais vide).
   if (suggestions.isEmpty) {
     for (final r in await tmdb.trending('tv')) {
       final rid = r['id'];
@@ -95,14 +108,15 @@ final movieRecommendationsProvider = FutureProvider<List<VodItem>>((ref) async {
   if (catalog.isEmpty) return [];
   final tmdb = ref.read(tmdbServiceProvider);
 
-  // Seeds : films récemment lus (max 4).
-  final recentMovies = ref.read(prefsProvider).recent().where((e) => e.kind == MediaKind.movie).take(4).toList();
+  // Amorces : films récemment vus ; sinon les mieux notés de TON catalogue.
+  final recentNames = ref.read(prefsProvider).recent().where((e) => e.kind == MediaKind.movie).take(4).map((e) => e.name).toList();
+  final seedNames = recentNames.isNotEmpty ? recentNames : _catalogSeedNames(catalog.map((m) => (name: m.name, rating: m.rating, added: m.added)));
 
-  // Agrège les recommandations TMDB de chaque seed.
+  // Agrège les recommandations TMDB de chaque amorce.
   final seen = <int>{};
   final suggestions = <Map<String, dynamic>>[];
-  for (final seed in recentMovies) {
-    final hit = await tmdb.search('movie', seed.name);
+  for (final name in seedNames) {
+    final hit = await tmdb.search('movie', name);
     final id = hit?['id'];
     if (id is! int) continue;
     for (final r in await tmdb.recommendations('movie', id)) {
@@ -112,7 +126,7 @@ final movieRecommendationsProvider = FutureProvider<List<VodItem>>((ref) async {
       suggestions.add(_toSuggestion(r));
     }
   }
-  // Fallback : tendances de la semaine (la rangée n'est jamais vide).
+  // Dernier recours : tendances de la semaine (la rangée n'est jamais vide).
   if (suggestions.isEmpty) {
     for (final r in await tmdb.trending('movie')) {
       final rid = r['id'];
