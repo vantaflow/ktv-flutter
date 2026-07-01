@@ -11,11 +11,12 @@ class RestreamState {
   final RestreamStatus status;
   final String name;
   final String? lanUrl;
+  final String? localUrl; // relais local (127.0.0.1) pour la lecture locale partagée
   final String? publicUrl; // via cloudflared
   final String? error;
-  const RestreamState({this.status = RestreamStatus.idle, this.name = '', this.lanUrl, this.publicUrl, this.error});
-  RestreamState copyWith({RestreamStatus? status, String? name, String? lanUrl, String? publicUrl, String? error}) =>
-      RestreamState(status: status ?? this.status, name: name ?? this.name, lanUrl: lanUrl ?? this.lanUrl, publicUrl: publicUrl ?? this.publicUrl, error: error);
+  const RestreamState({this.status = RestreamStatus.idle, this.name = '', this.lanUrl, this.localUrl, this.publicUrl, this.error});
+  RestreamState copyWith({RestreamStatus? status, String? name, String? lanUrl, String? localUrl, String? publicUrl, String? error}) =>
+      RestreamState(status: status ?? this.status, name: name ?? this.name, lanUrl: lanUrl ?? this.lanUrl, localUrl: localUrl ?? this.localUrl, publicUrl: publicUrl ?? this.publicUrl, error: error);
 }
 
 /// Re-diffuse le flux courant en HLS (ffmpeg) servi par un serveur HTTP local
@@ -104,7 +105,7 @@ class RestreamController extends Notifier<RestreamState> {
 
       final ip = await _lanIp();
       final lan = ip == null ? null : 'http://$ip:$_port/index.m3u8';
-      state = RestreamState(status: RestreamStatus.live, name: name, lanUrl: lan);
+      state = RestreamState(status: RestreamStatus.live, name: name, lanUrl: lan, localUrl: 'http://127.0.0.1:$_port/index.m3u8');
 
       if (tunnel) _startTunnel();
     } catch (e) {

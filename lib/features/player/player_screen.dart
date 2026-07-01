@@ -63,6 +63,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   int _audioBoost = 100; // % (jusqu'à 200)
   bool _pip = false;
   int _liveReconnects = 0; // tentatives de reconnexion live consécutives
+  bool _relayActive = false; // le player lit le relais HLS local (pendant un restream)
 
   int? get _knownDurSec => _reqKnownDur ?? ((_mkDuration != null && _mkDuration!.inSeconds > 0) ? _mkDuration!.inSeconds : null);
   bool get _hasNext => (widget.request.playlist != null) && (_plIndex + 1 < widget.request.playlist!.length);
@@ -684,10 +685,18 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   @override
   Widget build(BuildContext context) {
     final isRec = ref.watch(recordingControllerProvider).any((r) => r.status == RecStatus.recording);
-    // À l'arrêt d'un restream, on rétablit le live (le fournisseur a pu couper la connexion).
+    // Restream = relais local partagé (comme l'ancienne KTV) : quand il démarre, le
+    // player local bascule sur le relais HLS (une seule connexion fournisseur, la
+    // chaîne ne s'arrête pas) ; à l'arrêt, il revient au flux direct.
     ref.listen(restreamControllerProvider, (prev, next) {
+      if (!widget.request.isLive) return;
       final was = prev?.status ?? RestreamStatus.idle;
-      if (widget.request.isLive && was != RestreamStatus.idle && next.status == RestreamStatus.idle) {
+      if (next.status == RestreamStatus.live && next.localUrl != null && !_relayActive) {
+        _relayActive = true;
+        _player.open(Media(next.localUrl!));
+        _applyTweaks();
+      } else if (was != RestreamStatus.idle && next.status == RestreamStatus.idle && _relayActive) {
+        _relayActive = false;
         _liveReconnects = 0;
         _reconnectLive();
       }
