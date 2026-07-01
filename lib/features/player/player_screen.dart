@@ -53,6 +53,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   bool _controlsVisible = true;
   Timer? _hideTimer;
   Timer? _saveTimer;
+  double _rate = 1.0;
+  double _subDelay = 0.0; // secondes
+  int _audioBoost = 100; // % (jusqu'à 200)
 
   int? get _knownDurSec => widget.request.knownDurationSec ?? ((_mkDuration != null && _mkDuration!.inSeconds > 0) ? _mkDuration!.inSeconds : null);
   Duration? get _effDuration => _knownDurSec == null ? null : Duration(seconds: _knownDurSec!);
@@ -75,6 +78,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
         _player.stop();
       } catch (_) {}
     });
+    try {
+      (_player.platform as dynamic)?.setProperty('volume-max', '200'); // autorise le boost audio
+    } catch (_) {}
     _wire();
     _player.open(Media(widget.request.url));
     _saveTimer = Timer.periodic(const Duration(seconds: 5), (_) => _saveResume());
@@ -91,10 +97,13 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     _subs.add(_player.stream.buffer.listen((b) => setState(() => _bufferPos = b)));
     _subs.add(_player.stream.duration.listen((d) => setState(() => _mkDuration = d)));
     _subs.add(_player.stream.volume.listen((v) => setState(() => _volume = (v / 100).clamp(0, 1))));
-    _subs.add(_player.stream.tracks.listen((t) => setState(() {
-          _audio = t.audio;
-          _subtitle = t.subtitle;
-        })));
+    _subs.add(_player.stream.tracks.listen((t) {
+      setState(() {
+        _audio = t.audio;
+        _subtitle = t.subtitle;
+      });
+      _restoreTracks(); // réapplique les pistes mémorisées pour ce contenu
+    }));
     _subs.add(_player.stream.track.listen((t) => setState(() {
           _curAudioId = t.audio.id;
           _curSubId = t.subtitle.id;
@@ -172,6 +181,94 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     _player.seek(t < Duration.zero ? Duration.zero : t);
   }
 
+  // Réapplique vitesse / délai ST / boost au flux courant (mpv réinitialise par fichier).
+  void _applyTweaks() {
+    _player.setRate(_rate);
+    try {
+      (_player.platform as dynamic)?.setProperty('sub-delay', _subDelay.toStringAsFixed(2));
+    } catch (_) {}
+    if (_audioBoost != 100) {
+      try {
+        (_player.platform as dynamic)?.setProperty('volume', '$_audioBoost');
+      } catch (_) {}
+    }
+  }
+
+  void _setSubDelay(double v) {
+    setState(() => _subDelay = double.parse(v.clamp(-10.0, 10.0).toStringAsFixed(2)));
+    try {
+      (_player.platform as dynamic)?.setProperty('sub-delay', _subDelay.toStringAsFixed(2));
+    } catch (_) {}
+  }
+
+  void _openPlaybackSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: KtvColors.panel,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (_) => StatefulBuilder(
+        builder: (c, setSheet) => Padding(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Réglages de lecture', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 16),
+              const Text('Vitesse', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+              const SizedBox(height: 6),
+              Wrap(spacing: 8, children: [
+                for (final r in const [0.5, 0.75, 1.0, 1.25, 1.5, 2.0])
+                  ChoiceChip(
+                    label: Text('${r}x'),
+                    selected: _rate == r,
+                    selectedColor: KtvColors.accent,
+                    backgroundColor: KtvColors.panel2,
+                    onSelected: (_) {
+                      setState(() => _rate = r);
+                      _player.setRate(r);
+                      setSheet(() {});
+                    },
+                  ),
+              ]),
+              const SizedBox(height: 16),
+              const Text('Boost audio', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+              const SizedBox(height: 6),
+              Wrap(spacing: 8, children: [
+                for (final b in const [100, 125, 150, 200])
+                  ChoiceChip(
+                    label: Text('$b%'),
+                    selected: _audioBoost == b,
+                    selectedColor: KtvColors.accent,
+                    backgroundColor: KtvColors.panel2,
+                    onSelected: (_) {
+                      setState(() => _audioBoost = b);
+                      try {
+                        (_player.platform as dynamic)?.setProperty('volume', '$b');
+                      } catch (_) {}
+                      setSheet(() {});
+                    },
+                  ),
+              ]),
+              if (_subtitle.length > 1) ...[
+                const SizedBox(height: 16),
+                const Text('Délai sous-titres', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                const SizedBox(height: 6),
+                Row(children: [
+                  IconButton(onPressed: () { _setSubDelay(_subDelay - 0.25); setSheet(() {}); }, icon: const Icon(Icons.remove_circle_outline, color: Colors.white)),
+                  Text('${_subDelay > 0 ? '+' : ''}${_subDelay.toStringAsFixed(2)} s', style: const TextStyle(fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()])),
+                  IconButton(onPressed: () { _setSubDelay(_subDelay + 0.25); setSheet(() {}); }, icon: const Icon(Icons.add_circle_outline, color: Colors.white)),
+                  const Spacer(),
+                  TextButton(onPressed: () { _setSubDelay(0); setSheet(() {}); }, child: const Text('Réinitialiser')),
+                ]),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   KeyEventResult _onKey(FocusNode n, KeyEvent e) {
     if (e is! KeyDownEvent) return KeyEventResult.ignored;
     _armHide();
@@ -210,6 +307,37 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     return KeyEventResult.ignored;
   }
 
+  bool _tracksRestored = false;
+  // Réapplique la piste audio/sous-titres mémorisée pour ce contenu (par resumeKey).
+  void _restoreTracks() {
+    if (_tracksRestored) return;
+    final key = widget.request.resumeKey;
+    if (key == null) return;
+    final aId = _prefs.settingStr('atrack:$key');
+    final sId = _prefs.settingStr('strack:$key');
+    if (aId.isNotEmpty) {
+      final m = _audio.where((a) => a.id == aId);
+      if (m.isNotEmpty) _player.setAudioTrack(m.first);
+    }
+    if (sId.isNotEmpty) {
+      final m = _subtitle.where((s) => s.id == sId);
+      if (m.isNotEmpty) _player.setSubtitleTrack(m.first);
+    }
+    if (_audio.isNotEmpty) _tracksRestored = true;
+  }
+
+  void _selectAudio(AudioTrack a) {
+    _player.setAudioTrack(a);
+    final key = widget.request.resumeKey;
+    if (key != null) _prefs.setSetting('atrack:$key', a.id);
+  }
+
+  void _selectSubtitle(SubtitleTrack s) {
+    _player.setSubtitleTrack(s);
+    final key = widget.request.resumeKey;
+    if (key != null) _prefs.setSetting('strack:$key', s.id);
+  }
+
   bool _closing = false;
   // Zapping : change de chaîne sans quitter le lecteur.
   void _switchChannel(LiveChannel ch) {
@@ -221,6 +349,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
       _sidebarOpen = false;
     });
     _player.open(Media(urls.live(ch.streamId, ext: 'ts')));
+    _applyTweaks(); // conserve vitesse/boost/délai en changeant de chaîne
     _prefs.pushRecent(RecentEntry(kind: MediaKind.live, id: ch.streamId, name: ch.name, cover: ch.icon, ext: 'ts', at: DateTime.now().millisecondsSinceEpoch));
   }
 
@@ -440,6 +569,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                         ),
                       ),
                       if (isRec) const _RecBadge(),
+                      IconButton(tooltip: 'Réglages de lecture (vitesse, audio, sous-titres)', onPressed: _openPlaybackSheet, icon: const Icon(Icons.tune, color: Colors.white)),
                       if (widget.request.isLive) ...[
                         IconButton(
                           tooltip: isRec ? 'Arrêter l\'enregistrement' : 'Enregistrer',
@@ -499,8 +629,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                       _player.setVolume(_muted ? _volume * 100 : 0);
                       setState(() => _muted = !_muted);
                     },
-                    onSelectAudio: (a) => _player.setAudioTrack(a),
-                    onSelectSubtitle: (s) => _player.setSubtitleTrack(s),
+                    onSelectAudio: _selectAudio,
+                    onSelectSubtitle: _selectSubtitle,
                     onToggleFullscreen: _toggleFullscreen,
                   ),
                 ),
