@@ -31,10 +31,15 @@ class PosterRail extends StatelessWidget {
         if (grid)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Wrap(
-              spacing: 14,
-              runSpacing: 16,
-              children: [for (final it in items) PosterCard(title: it.title, imageUrl: it.cover, rating: it.rating, width: 120, onTap: it.onTap)],
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 160, mainAxisSpacing: 16, crossAxisSpacing: 14, childAspectRatio: 0.5),
+              itemCount: items.length,
+              itemBuilder: (_, i) {
+                final it = items[i];
+                return PosterCard(title: it.title, imageUrl: it.cover, rating: it.rating, width: double.infinity, onTap: it.onTap);
+              },
             ),
           )
         else

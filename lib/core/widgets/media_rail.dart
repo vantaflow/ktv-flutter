@@ -14,10 +14,10 @@ class MediaRail extends StatelessWidget {
 
   const MediaRail({super.key, required this.title, required this.items, required this.onTap, this.progressOf, this.grid = false});
 
-  Widget _card(RecentEntry e) => PosterCard(
+  Widget _card(RecentEntry e, {double width = 130}) => PosterCard(
         title: e.name,
         imageUrl: e.cover,
-        width: 130,
+        width: width,
         aspectRatio: 2 / 3,
         progress: progressOf?.call(e) ?? 0,
         onTap: () => onTap(e),
@@ -36,7 +36,13 @@ class MediaRail extends StatelessWidget {
         if (grid)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Wrap(spacing: 14, runSpacing: 16, children: [for (final e in items) _card(e)]),
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 160, mainAxisSpacing: 16, crossAxisSpacing: 14, childAspectRatio: 0.5),
+              itemCount: items.length,
+              itemBuilder: (_, i) => _card(items[i], width: double.infinity),
+            ),
           )
         else
           SizedBox(
