@@ -61,3 +61,14 @@ final xtreamUrlsProvider = Provider<XtreamUrls?>((ref) {
   final prof = ref.watch(authControllerProvider);
   return prof == null ? null : XtreamUrls.of(prof);
 });
+
+/// Infos d'abonnement (statut, expiration, connexions…) du profil actif.
+final userInfoProvider = FutureProvider<UserInfo?>((ref) async {
+  final c = ref.watch(xtreamClientProvider);
+  if (c == null) return null;
+  try {
+    return await c.authenticate();
+  } catch (_) {
+    return null;
+  }
+});

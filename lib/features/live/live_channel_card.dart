@@ -20,6 +20,7 @@ class LiveChannelCard extends ConsumerWidget {
     final prefs = ref.read(prefsProvider);
     final index = ref.watch(epgIndexProvider).asData?.value;
     final (now, next) = index?.nowNext(channel) ?? (null, null);
+    final recording = ref.watch(recordingControllerProvider).any((r) => r.status == RecStatus.recording);
 
     return InkWell(
       onTap: onTap,
@@ -64,15 +65,21 @@ class LiveChannelCard extends ConsumerWidget {
                     child: IconButton(
                       iconSize: 18,
                       visualDensity: VisualDensity.compact,
-                      tooltip: 'Enregistrer',
-                      icon: const Icon(Icons.fiber_manual_record, color: KtvColors.rec),
+                      tooltip: recording ? 'Arrêter l\'enregistrement' : 'Enregistrer',
+                      icon: Icon(recording ? Icons.stop_circle : Icons.fiber_manual_record, color: KtvColors.rec),
                       onPressed: () async {
+                        final rec = ref.read(recordingControllerProvider.notifier);
+                        if (recording) {
+                          await rec.stop();
+                          if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enregistrement arrêté')));
+                          return;
+                        }
                         final urls = ref.read(xtreamUrlsProvider);
                         if (urls == null) return;
-                        final err = await ref.read(recordingControllerProvider.notifier).start(name: channel.name, url: urls.live(channel.streamId, ext: 'ts'));
+                        final err = await rec.start(name: channel.name, url: urls.live(channel.streamId, ext: 'ts'));
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text(err ?? 'Enregistrement démarré : ${channel.name} (Réglages → Enregistrements)'),
+                            content: Text(err ?? 'Enregistrement démarré : ${channel.name} · la lecture reste possible (Réglages)'),
                           ));
                         }
                       },

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/models.dart';
 import '../../core/logic/recommendations_match.dart';
@@ -6,6 +7,42 @@ import '../auth/auth_controller.dart';
 import '../vod/vod_providers.dart';
 import '../series/series_providers.dart';
 import '../../services/tmdb/tmdb_providers.dart';
+import '../../services/epg/epg_providers.dart';
+
+/// Rafraîchissement périodique en arrière-plan (catalogue + EPG) selon le réglage
+/// `autoRefreshMin`. L'état = minutes courantes (0 = désactivé).
+class AutoRefreshController extends Notifier<int> {
+  Timer? _timer;
+  @override
+  int build() {
+    final m = int.tryParse(ref.read(prefsProvider).settingStr('autoRefreshMin', '0')) ?? 0;
+    _schedule(m);
+    ref.onDispose(() => _timer?.cancel());
+    return m;
+  }
+
+  Future<void> setMinutes(int m) async {
+    await ref.read(prefsProvider).setSetting('autoRefreshMin', m);
+    state = m;
+    _schedule(m);
+  }
+
+  void refreshNow() {
+    ref.invalidate(allVodProvider);
+    ref.invalidate(allSeriesProvider);
+    ref.invalidate(latestVodProvider);
+    ref.invalidate(latestSeriesProvider);
+    ref.invalidate(epgIndexProvider);
+    ref.read(prefsProvider).setSetting('lastRefresh', DateTime.now().millisecondsSinceEpoch);
+  }
+
+  void _schedule(int m) {
+    _timer?.cancel();
+    if (m > 0) _timer = Timer.periodic(Duration(minutes: m), (_) => refreshNow());
+  }
+}
+
+final autoRefreshControllerProvider = NotifierProvider<AutoRefreshController, int>(AutoRefreshController.new);
 
 /// Catalogue VOD complet, filtré aux catégories FR (chargé une fois, mis en cache).
 final allVodProvider = FutureProvider<List<VodItem>>((ref) async {
@@ -43,12 +80,12 @@ final latestSeriesProvider = FutureProvider<List<SeriesItem>>((ref) async {
 /// Amorces de recommandation tirées du PROPRE catalogue IPTV de l'utilisateur :
 /// les titres les mieux notés (à défaut les plus récents). Ainsi les
 /// recommandations sont fondées sur le contenu réellement disponible chez lui.
-List<String> _catalogSeedNames(Iterable<({String name, double rating, int added})> items) {
+List<String> _catalogSeedNames(Iterable<({String name, double rating, int added})> items, {int n = 12}) {
   final list = items.toList();
   // Priorité aux titres notés (qualité), sinon aux plus récemment ajoutés.
   final rated = list.where((e) => e.rating > 0).toList()..sort((a, b) => b.rating.compareTo(a.rating));
-  final pool = rated.isNotEmpty ? rated : (list..sort((a, b) => b.added.compareTo(a.added)));
-  return pool.take(6).map((e) => e.name).toList();
+  final pool = rated.length >= n ? rated : (list..sort((a, b) => b.added.compareTo(a.added)));
+  return pool.take(n).map((e) => e.name).toList();
 }
 
 /// Transforme un résultat TMDB brut en « suggestion » pour matchRecommendationsToCatalog.
@@ -61,6 +98,21 @@ Map<String, dynamic> _toSuggestion(Map r) {
   };
 }
 
+/// Agrège les recommandations TMDB de plusieurs amorces (titres) dans [out],
+/// en dédupliquant par id TMDB via [seen].
+Future<void> _gatherRecs(dynamic tmdb, String type, List<String> names, Set<int> seen, List<Map<String, dynamic>> out) async {
+  for (final name in names) {
+    final hit = await tmdb.search(type, name);
+    final id = hit?['id'];
+    if (id is! int) continue;
+    for (final r in await tmdb.recommendations(type, id)) {
+      final rid = r['id'];
+      if (rid is! int || !seen.add(rid)) continue;
+      out.add(_toSuggestion(r));
+    }
+  }
+}
+
 /// Recommandations séries : seeds = séries récemment lues → TMDB tv recommandations
 /// → filtrées sur le catalogue. Si aucun seed/aucune correspondance → tendances TMDB.
 final seriesRecommendationsProvider = FutureProvider<List<SeriesItem>>((ref) async {
@@ -68,35 +120,23 @@ final seriesRecommendationsProvider = FutureProvider<List<SeriesItem>>((ref) asy
   final catalog = await ref.watch(allSeriesProvider.future);
   if (catalog.isEmpty) return [];
   final tmdb = ref.read(tmdbServiceProvider);
-  // Amorces : séries récemment vues ; sinon les mieux notées de TON catalogue.
-  final recentNames = ref.read(prefsProvider).recent().where((e) => e.kind == MediaKind.series).take(4).map((e) => e.name).toList();
-  final seedNames = recentNames.isNotEmpty ? recentNames : _catalogSeedNames(catalog.map((s) => (name: s.name, rating: s.rating, added: s.lastModified)));
+  // Vivier large : recommandations de TES séries vues + des titres phares de ton
+  // catalogue, PLUS les tendances — tout fusionné puis filtré sur le catalogue.
+  final recentNames = ref.read(prefsProvider).recent().where((e) => e.kind == MediaKind.series).take(6).map((e) => e.name).toList();
+  final catalogNames = _catalogSeedNames(catalog.map((s) => (name: s.name, rating: s.rating, added: s.lastModified)));
+  final seedNames = {...recentNames, ...catalogNames}.toList();
 
   final seen = <int>{};
   final suggestions = <Map<String, dynamic>>[];
-  for (final name in seedNames) {
-    final hit = await tmdb.search('tv', name);
-    final id = hit?['id'];
-    if (id is! int) continue;
-    for (final r in await tmdb.recommendations('tv', id)) {
-      final rid = r['id'];
-      if (rid is! int || seen.contains(rid)) continue;
-      seen.add(rid);
-      suggestions.add(_toSuggestion(r));
-    }
-  }
-  // Dernier recours : tendances de la semaine (la rangée n'est jamais vide).
-  if (suggestions.isEmpty) {
-    for (final r in await tmdb.trending('tv')) {
-      final rid = r['id'];
-      if (rid is! int || seen.contains(rid)) continue;
-      seen.add(rid);
-      suggestions.add(_toSuggestion(r));
-    }
+  await _gatherRecs(tmdb, 'tv', seedNames, seen, suggestions);
+  for (final r in await tmdb.trending('tv')) {
+    final rid = r['id'];
+    if (rid is! int || !seen.add(rid)) continue;
+    suggestions.add(_toSuggestion(r));
   }
   if (suggestions.isEmpty) return [];
   final catalogMaps = catalog.map((s) => {'name': s.name, '_tmdbId': s.tmdbId, 'releaseDate': null, '__ref': s}).toList();
-  return matchRecommendationsToCatalog(suggestions, catalogMaps).map((mp) => mp['__ref'] as SeriesItem).take(24).toList();
+  return matchRecommendationsToCatalog(suggestions, catalogMaps).map((mp) => mp['__ref'] as SeriesItem).take(40).toList();
 });
 
 /// Recommandations films : seeds = films récemment lus → TMDB recommandations →
@@ -108,32 +148,19 @@ final movieRecommendationsProvider = FutureProvider<List<VodItem>>((ref) async {
   if (catalog.isEmpty) return [];
   final tmdb = ref.read(tmdbServiceProvider);
 
-  // Amorces : films récemment vus ; sinon les mieux notés de TON catalogue.
-  final recentNames = ref.read(prefsProvider).recent().where((e) => e.kind == MediaKind.movie).take(4).map((e) => e.name).toList();
-  final seedNames = recentNames.isNotEmpty ? recentNames : _catalogSeedNames(catalog.map((m) => (name: m.name, rating: m.rating, added: m.added)));
+  // Vivier large : recommandations de TES films vus + des titres phares de ton
+  // catalogue, PLUS les tendances — tout fusionné puis filtré sur le catalogue.
+  final recentNames = ref.read(prefsProvider).recent().where((e) => e.kind == MediaKind.movie).take(6).map((e) => e.name).toList();
+  final catalogNames = _catalogSeedNames(catalog.map((m) => (name: m.name, rating: m.rating, added: m.added)));
+  final seedNames = {...recentNames, ...catalogNames}.toList();
 
-  // Agrège les recommandations TMDB de chaque amorce.
   final seen = <int>{};
   final suggestions = <Map<String, dynamic>>[];
-  for (final name in seedNames) {
-    final hit = await tmdb.search('movie', name);
-    final id = hit?['id'];
-    if (id is! int) continue;
-    for (final r in await tmdb.recommendations('movie', id)) {
-      final rid = r['id'];
-      if (rid is! int || seen.contains(rid)) continue;
-      seen.add(rid);
-      suggestions.add(_toSuggestion(r));
-    }
-  }
-  // Dernier recours : tendances de la semaine (la rangée n'est jamais vide).
-  if (suggestions.isEmpty) {
-    for (final r in await tmdb.trending('movie')) {
-      final rid = r['id'];
-      if (rid is! int || seen.contains(rid)) continue;
-      seen.add(rid);
-      suggestions.add(_toSuggestion(r));
-    }
+  await _gatherRecs(tmdb, 'movie', seedNames, seen, suggestions);
+  for (final r in await tmdb.trending('movie')) {
+    final rid = r['id'];
+    if (rid is! int || !seen.add(rid)) continue;
+    suggestions.add(_toSuggestion(r));
   }
   if (suggestions.isEmpty) return [];
 

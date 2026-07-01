@@ -10,6 +10,8 @@ import '../guide/guide_screen.dart';
 import '../search/search_screen.dart';
 import '../search/search_providers.dart';
 import '../settings/settings_screen.dart';
+import '../home/home_providers.dart';
+import '../../services/recording/recording_service.dart';
 
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
@@ -55,10 +57,20 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   Widget build(BuildContext context) {
     final query = ref.watch(searchQueryProvider);
     final searching = query.length >= 2;
+    ref.watch(autoRefreshControllerProvider); // maintient le timer de rafraîchissement actif
     return Scaffold(
       body: Column(
         children: [
-          _TopBar(controller: _searchCtrl, onChanged: _onSearch, onClear: _clearSearch),
+          _TopBar(
+            controller: _searchCtrl,
+            onChanged: _onSearch,
+            onClear: _clearSearch,
+            recordingCount: ref.watch(recordingControllerProvider).where((r) => r.status == RecStatus.recording).length,
+            onRecTap: () {
+              _clearSearch();
+              setState(() => _index = 5); // Réglages → section Enregistrements
+            },
+          ),
           const Divider(height: 1, color: KtvColors.line),
           Expanded(
             child: Row(
@@ -97,7 +109,9 @@ class _TopBar extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final VoidCallback onClear;
-  const _TopBar({required this.controller, required this.onChanged, required this.onClear});
+  final int recordingCount;
+  final VoidCallback onRecTap;
+  const _TopBar({required this.controller, required this.onChanged, required this.onClear, this.recordingCount = 0, required this.onRecTap});
 
   @override
   Widget build(BuildContext context) {
@@ -134,6 +148,23 @@ class _TopBar extends StatelessWidget {
             ),
           ),
           const Spacer(),
+          if (recordingCount > 0)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: InkWell(
+                onTap: onRecTap,
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  decoration: BoxDecoration(color: KtvColors.rec, borderRadius: BorderRadius.circular(20)),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.fiber_manual_record, color: Colors.white, size: 13),
+                    const SizedBox(width: 6),
+                    Text(recordingCount > 1 ? 'REC ×$recordingCount' : 'REC', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12, letterSpacing: 1)),
+                  ]),
+                ),
+              ),
+            ),
         ],
       ),
     );

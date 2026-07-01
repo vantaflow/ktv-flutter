@@ -55,8 +55,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           SliverToBoxAdapter(
             child: MediaRail(title: 'Vu récemment', items: recent, progressOf: progressOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
           ),
-          SliverToBoxAdapter(child: _recoRail()),
-          SliverToBoxAdapter(child: _recoSeriesRail()),
+          if (prefs.settingBool('traktRecommendationsEnabled', true)) ...[
+            SliverToBoxAdapter(child: _recoRail()),
+            SliverToBoxAdapter(child: _recoSeriesRail()),
+          ],
           SliverToBoxAdapter(child: _latestVodRail()),
           SliverToBoxAdapter(child: _latestSeriesRail()),
           if (recent.isEmpty && favs.isEmpty)

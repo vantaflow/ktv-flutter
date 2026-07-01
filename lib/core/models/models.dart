@@ -196,18 +196,41 @@ class EpgProgram {
 class UserInfo {
   final bool authOk;
   final String status;
-  final String expDate;
+  final String expDate; // epoch (s) en chaîne, ou vide
   final int activeCons;
   final int maxCons;
-  const UserInfo({required this.authOk, required this.status, required this.expDate, required this.activeCons, required this.maxCons});
+  final bool isTrial;
+  final String createdAt; // epoch (s) en chaîne
+  final String timezone;
+  final String message;
+  final List<String> allowedFormats;
+  const UserInfo({
+    required this.authOk,
+    required this.status,
+    required this.expDate,
+    required this.activeCons,
+    required this.maxCons,
+    this.isTrial = false,
+    this.createdAt = '',
+    this.timezone = '',
+    this.message = '',
+    this.allowedFormats = const [],
+  });
   factory UserInfo.fromJson(Map<String, dynamic> j) {
     final ui = (j['user_info'] is Map) ? Map<String, dynamic>.from(j['user_info']) : <String, dynamic>{};
+    final si = (j['server_info'] is Map) ? Map<String, dynamic>.from(j['server_info']) : <String, dynamic>{};
+    final fmts = (ui['allowed_output_formats'] is List) ? (ui['allowed_output_formats'] as List).map((e) => e.toString()).toList() : <String>[];
     return UserInfo(
       authOk: _s(ui['auth']) == '1',
       status: _s(ui['status']),
       expDate: _s(ui['exp_date']),
       activeCons: int.tryParse(_s(ui['active_cons'])) ?? 0,
       maxCons: int.tryParse(_s(ui['max_connections'])) ?? 0,
+      isTrial: _s(ui['is_trial']) == '1',
+      createdAt: _s(ui['created_at']),
+      timezone: _s(si['timezone']),
+      message: _s(ui['message']),
+      allowedFormats: fmts,
     );
   }
 }

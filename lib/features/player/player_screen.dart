@@ -129,8 +129,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     if (dur > 300 && _position.inSeconds / dur >= 0.9) {
       _watchedMarked = true;
       _prefs.setWatched(widget.request.resumeKey!, true);
-      // Scrobble Trakt (films) si connecté.
-      if (widget.request.kind == MediaKind.movie && _trakt.connected) {
+      // Scrobble Trakt (films) si connecté ET « marquer vu auto » activé.
+      if (widget.request.kind == MediaKind.movie && _trakt.connected && _prefs.settingBool('traktScrobble', true)) {
         _trakt.markMovieWatched(widget.request.title);
       }
     }
@@ -224,78 +224,114 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     _prefs.pushRecent(RecentEntry(kind: MediaKind.live, id: ch.streamId, name: ch.name, cover: ch.icon, ext: 'ts', at: DateTime.now().millisecondsSinceEpoch));
   }
 
-  // Enregistre la chaîne courante (préempte la lecture : 1 connexion fournisseur).
-  Future<void> _record({int? durationSec}) async {
+  // Démarre/arrête l'enregistrement de la chaîne courante (la lecture continue).
+  Future<void> _toggleRecord() async {
+    final rec = ref.read(recordingControllerProvider.notifier);
+    if (rec.isRecording) {
+      await rec.stop();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enregistrement arrêté (Réglages → Enregistrements)')));
+      return;
+    }
+    await _record();
+  }
+
+  Future<void> _record({int? durationSec, bool compress = true}) async {
     final urls = ref.read(xtreamUrlsProvider);
     if (urls == null || _liveId == null) return;
-    final err = await ref.read(recordingControllerProvider.notifier).start(name: _title, url: urls.live(_liveId!, ext: 'ts'), durationSec: durationSec);
+    final err = await ref.read(recordingControllerProvider.notifier).start(name: _title, url: urls.live(_liveId!, ext: 'ts'), durationSec: durationSec, compress: compress);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err ?? 'Enregistrement démarré (la lecture s\'arrête — 1 connexion). Voir Réglages.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err ?? 'Enregistrement démarré · la lecture continue (Réglages → Enregistrements)')));
     }
   }
 
   Future<void> _scheduleDialog() async {
-    const starts = [(0, 'Maintenant'), (5, 'Dans 5 min'), (15, 'Dans 15 min'), (30, 'Dans 30 min'), (60, 'Dans 1 h')];
+    const starts = [(0, 'Maintenant'), (5, '+5 min'), (15, '+15 min'), (30, '+30 min'), (60, '+1 h')];
     const durations = [(30, '30 min'), (60, '1 h'), (120, '2 h'), (150, '2 h 30 (match)'), (180, '3 h')];
+    String two(int n) => n.toString().padLeft(2, '0');
     int startMin = 0;
+    DateTime? exactStart; // heure précise choisie (prioritaire sur startMin)
     int durMin = 120;
+    bool compress = true;
     await showDialog(
       context: context,
       builder: (dctx) => StatefulBuilder(
         builder: (dctx, setLocal) {
-          String startLabel() {
-            if (startMin == 0) return 'maintenant';
-            final at = DateTime.now().add(Duration(minutes: startMin));
-            String two(int n) => n.toString().padLeft(2, '0');
-            return 'à ${two(at.hour)}:${two(at.minute)}';
-          }
+          DateTime effectiveStart() => exactStart ?? DateTime.now().add(Duration(minutes: startMin));
+          final isNow = exactStart == null && startMin == 0;
+          String startLabel() => isNow ? 'maintenant' : 'à ${two(effectiveStart().hour)}:${two(effectiveStart().minute)}';
 
           return AlertDialog(
             backgroundColor: KtvColors.panel,
             title: const Text('Programmer l\'enregistrement'),
-            content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Chaîne : $_title', style: const TextStyle(color: KtvColors.muted, fontSize: 12.5)),
-              const SizedBox(height: 14),
-              const Text('Début', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-              const SizedBox(height: 6),
-              Wrap(spacing: 8, children: [
-                for (final s in starts)
-                  ChoiceChip(
-                    label: Text(s.$2),
-                    selected: startMin == s.$1,
-                    selectedColor: KtvColors.accent,
-                    backgroundColor: KtvColors.panel2,
-                    onSelected: (_) => setLocal(() => startMin = s.$1),
+            content: SingleChildScrollView(
+              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Chaîne : $_title', style: const TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+                const SizedBox(height: 14),
+                const Text('Début', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                const SizedBox(height: 6),
+                Wrap(spacing: 8, runSpacing: 8, children: [
+                  for (final s in starts)
+                    ChoiceChip(
+                      label: Text(s.$2),
+                      selected: exactStart == null && startMin == s.$1,
+                      selectedColor: KtvColors.accent,
+                      backgroundColor: KtvColors.panel2,
+                      onSelected: (_) => setLocal(() {
+                        startMin = s.$1;
+                        exactStart = null;
+                      }),
+                    ),
+                  // Heure précise via sélecteur d'horloge.
+                  ActionChip(
+                    avatar: Icon(Icons.schedule, size: 16, color: exactStart != null ? Colors.white : KtvColors.accent2),
+                    label: Text(exactStart == null ? 'Heure précise…' : 'à ${two(exactStart!.hour)}:${two(exactStart!.minute)}'),
+                    backgroundColor: exactStart != null ? KtvColors.accent : KtvColors.panel2,
+                    onPressed: () async {
+                      final now = DateTime.now();
+                      final picked = await showTimePicker(context: dctx, initialTime: TimeOfDay.fromDateTime(now.add(const Duration(minutes: 30))));
+                      if (picked == null) return;
+                      var dt = DateTime(now.year, now.month, now.day, picked.hour, picked.minute);
+                      if (dt.isBefore(now)) dt = dt.add(const Duration(days: 1)); // demain si l'heure est passée
+                      setLocal(() => exactStart = dt);
+                    },
                   ),
+                ]),
+                const SizedBox(height: 14),
+                const Text('Durée', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                const SizedBox(height: 6),
+                Wrap(spacing: 8, runSpacing: 8, children: [
+                  for (final dd in durations)
+                    ChoiceChip(
+                      label: Text(dd.$2),
+                      selected: durMin == dd.$1,
+                      selectedColor: KtvColors.accent,
+                      backgroundColor: KtvColors.panel2,
+                      onSelected: (_) => setLocal(() => durMin = dd.$1),
+                    ),
+                ]),
+                const SizedBox(height: 14),
+                const Text('Qualité', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                const SizedBox(height: 6),
+                Wrap(spacing: 8, children: [
+                  ChoiceChip(label: const Text('Compact (720p, léger)'), selected: compress, selectedColor: KtvColors.accent, backgroundColor: KtvColors.panel2, onSelected: (_) => setLocal(() => compress = true)),
+                  ChoiceChip(label: const Text('Original (lourd)'), selected: !compress, selectedColor: KtvColors.accent, backgroundColor: KtvColors.panel2, onSelected: (_) => setLocal(() => compress = false)),
+                ]),
+                const SizedBox(height: 14),
+                Text('Enregistrera $startLabel() pendant ${durMin >= 60 ? '${durMin ~/ 60} h${durMin % 60 == 0 ? '' : ' ${durMin % 60}'}' : '$durMin min'} · ${compress ? 'compact' : 'original'} (arrêt auto).',
+                    style: const TextStyle(color: KtvColors.accent2, fontSize: 12.5)),
               ]),
-              const SizedBox(height: 14),
-              const Text('Durée', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-              const SizedBox(height: 6),
-              Wrap(spacing: 8, children: [
-                for (final dd in durations)
-                  ChoiceChip(
-                    label: Text(dd.$2),
-                    selected: durMin == dd.$1,
-                    selectedColor: KtvColors.accent,
-                    backgroundColor: KtvColors.panel2,
-                    onSelected: (_) => setLocal(() => durMin = dd.$1),
-                  ),
-              ]),
-              const SizedBox(height: 14),
-              Text('Enregistrera ${startLabel()} pendant ${durMin >= 60 ? '${durMin ~/ 60} h${durMin % 60 == 0 ? '' : ' ${durMin % 60}'}' : '$durMin min'} (arrêt auto).',
-                  style: const TextStyle(color: KtvColors.accent2, fontSize: 12.5)),
-            ]),
+            ),
             actions: [
               TextButton(onPressed: () => Navigator.pop(dctx), child: const Text('Annuler')),
               FilledButton.icon(
                 icon: const Icon(Icons.fiber_manual_record, size: 16),
-                label: Text(startMin == 0 ? 'Enregistrer' : 'Programmer'),
+                label: Text(isNow ? 'Enregistrer' : 'Programmer'),
                 onPressed: () {
                   Navigator.pop(dctx);
-                  if (startMin == 0) {
-                    _record(durationSec: durMin * 60);
+                  if (isNow) {
+                    _record(durationSec: durMin * 60, compress: compress);
                   } else {
-                    _scheduleRecord(startMin, durMin);
+                    _scheduleRecord(effectiveStart(), durMin, compress);
                   }
                 },
               ),
@@ -306,15 +342,15 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     );
   }
 
-  void _scheduleRecord(int startMin, int durMin) {
+  void _scheduleRecord(DateTime at, int durMin, bool compress) {
     final urls = ref.read(xtreamUrlsProvider);
     if (urls == null || _liveId == null) return;
-    final at = DateTime.now().add(Duration(minutes: startMin));
     ref.read(recordingControllerProvider.notifier).schedule(
           name: _title,
           url: urls.live(_liveId!, ext: 'ts'),
           at: at,
           durationSec: durMin * 60,
+          compress: compress,
         );
     String two(int n) => n.toString().padLeft(2, '0');
     if (mounted) {
@@ -357,6 +393,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isRec = ref.watch(recordingControllerProvider).any((r) => r.status == RecStatus.recording);
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (didPop, _) {
@@ -402,8 +439,13 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                           ],
                         ),
                       ),
+                      if (isRec) const _RecBadge(),
                       if (widget.request.isLive) ...[
-                        IconButton(tooltip: 'Enregistrer', onPressed: () => _record(), icon: const Icon(Icons.fiber_manual_record, color: KtvColors.rec)),
+                        IconButton(
+                          tooltip: isRec ? 'Arrêter l\'enregistrement' : 'Enregistrer',
+                          onPressed: _toggleRecord,
+                          icon: Icon(isRec ? Icons.stop_circle : Icons.fiber_manual_record, color: KtvColors.rec),
+                        ),
                         IconButton(tooltip: 'Programmer', onPressed: _scheduleDialog, icon: const Icon(Icons.schedule, color: Colors.white)),
                         if (widget.request.liveCategoryId != null)
                           IconButton(tooltip: 'Chaînes', onPressed: () => setState(() => _sidebarOpen = !_sidebarOpen), icon: Icon(Icons.dvr, color: _sidebarOpen ? KtvColors.accent : Colors.white)),
@@ -470,6 +512,22 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
       ),
     );
   }
+}
+
+/// Pastille « ● REC » affichée pendant un enregistrement.
+class _RecBadge extends StatelessWidget {
+  const _RecBadge();
+  @override
+  Widget build(BuildContext context) => Container(
+        margin: const EdgeInsets.only(right: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(color: KtvColors.rec, borderRadius: BorderRadius.circular(20)),
+        child: const Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(Icons.fiber_manual_record, color: Colors.white, size: 12),
+          SizedBox(width: 5),
+          Text('REC', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12, letterSpacing: 1)),
+        ]),
+      );
 }
 
 /// Panneau latéral de zapping : chaînes de la même catégorie.
