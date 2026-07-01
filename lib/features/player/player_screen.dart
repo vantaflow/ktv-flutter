@@ -138,6 +138,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   // connexion fournisseur) → on se reconnecte automatiquement (max 6 essais).
   void _reconnectLive() {
     if (_liveReconnects >= 6 || !mounted) return;
+    // Ne pas se reconnecter pendant un restream : le player reprendrait la
+    // connexion fournisseur et couperait le restream.
+    final rs = ref.read(restreamControllerProvider).status;
+    if (rs == RestreamStatus.live || rs == RestreamStatus.starting) return;
     final urls = ref.read(xtreamUrlsProvider);
     if (urls == null || _liveId == null) return;
     _liveReconnects++;
@@ -668,6 +672,22 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   @override
   Widget build(BuildContext context) {
     final isRec = ref.watch(recordingControllerProvider).any((r) => r.status == RecStatus.recording);
+    // Coordination player ↔ restream (fournisseur souvent limité à 1 connexion) :
+    // au démarrage d'un restream, on libère la connexion (stop du player) ; à l'arrêt,
+    // on rétablit le live automatiquement.
+    ref.listen(restreamControllerProvider, (prev, next) {
+      if (!widget.request.isLive) return;
+      final was = prev?.status ?? RestreamStatus.idle;
+      final started = next.status == RestreamStatus.starting || next.status == RestreamStatus.live;
+      if (was == RestreamStatus.idle && started) {
+        try {
+          _player.stop();
+        } catch (_) {}
+      } else if (was != RestreamStatus.idle && next.status == RestreamStatus.idle) {
+        _liveReconnects = 0;
+        _reconnectLive();
+      }
+    });
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (didPop, _) {

@@ -42,19 +42,19 @@ class _VodScreenState extends ConsumerState<VodScreen> {
           padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text('Films', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
         ),
-        cats.when(
-          loading: () => const SizedBox(height: 44),
-          error: (_, _) => const SizedBox(height: 44),
-          data: (list) => CategoryChips(
-            categories: [const Category(kAllCatId, '⭐ Toutes'), ...list],
-            selectedId: selected,
-            onSelect: (id) => ref.read(selectedVodCategoryProvider.notifier).state = id,
-          ),
-        ),
-        const SizedBox(height: 8),
-        // Filtres à gauche, bouton afficher/masquer à droite (même ligne).
+        // Catégories + bouton filtres à droite (en haut).
         Row(children: [
-          Expanded(child: showFilters ? FilterBar(filter: _filter, onChanged: (f) => setState(() => _filter = f)) : const SizedBox.shrink()),
+          Expanded(
+            child: cats.when(
+              loading: () => const SizedBox(height: 44),
+              error: (_, _) => const SizedBox(height: 44),
+              data: (list) => CategoryChips(
+                categories: [const Category(kAllCatId, '⭐ Toutes'), ...list],
+                selectedId: selected,
+                onSelect: (id) => ref.read(selectedVodCategoryProvider.notifier).state = id,
+              ),
+            ),
+          ),
           IconButton(
             tooltip: showFilters ? 'Masquer les filtres' : 'Afficher les filtres',
             icon: Icon(showFilters ? Icons.filter_list_off : Icons.filter_list, color: showFilters ? KtvColors.accent : KtvColors.muted),
@@ -62,6 +62,10 @@ class _VodScreenState extends ConsumerState<VodScreen> {
           ),
           const SizedBox(width: 8),
         ]),
+        if (showFilters) ...[
+          const SizedBox(height: 6),
+          FilterBar(filter: _filter, onChanged: (f) => setState(() => _filter = f)),
+        ],
         const SizedBox(height: 8),
         Expanded(
           child: AsyncView(
