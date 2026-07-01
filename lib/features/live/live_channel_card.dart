@@ -100,7 +100,7 @@ class LiveChannelCard extends ConsumerWidget {
           Text(channel.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
           if (now != null)
             InkWell(
-              onTap: () => showEpgProgram(context, channel.name, now),
+              onTap: () => showEpgProgram(context, ref, channel, now),
               child: Text('🔴 ${now.title}  ·  jusqu\'à ${epgTime(now.stop)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11.5, color: KtvColors.accent2)),
             ),
           if (next != null)

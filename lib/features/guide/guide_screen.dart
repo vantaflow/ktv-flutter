@@ -108,7 +108,7 @@ class _GuideRow extends ConsumerWidget {
                       // Programme en cours : titre + horaires + description (cliquable).
                       if (now != null)
                         InkWell(
-                          onTap: () => showEpgProgram(context, channel.name, now),
+                          onTap: () => showEpgProgram(context, ref, channel, now),
                           child: Padding(
                             padding: const EdgeInsets.only(bottom: 6),
                             child: Column(
@@ -135,7 +135,7 @@ class _GuideRow extends ConsumerWidget {
                           spacing: 8,
                           runSpacing: 6,
                           children: upcoming.map((p) => InkWell(
-                                onTap: () => showEpgProgram(context, channel.name, p),
+                                onTap: () => showEpgProgram(context, ref, channel, p),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
