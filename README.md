@@ -22,11 +22,13 @@ Le moteur `<video>` de Chromium (Electron) ne lit pas les MKV/HEVC/multi-pistes 
 - **Enregistrement** : sans couper la lecture, **heure de début précise**, qualité **compact (720p)** ou originale, indicateur REC, **dossier configurable**
 - **Trakt** : connexion (code), scrobble auto, **watchlist**, marquage films & épisodes
 - **Téléchargements** (file séquentielle, **dossier configurable**)
-- **Système** : **mise à jour in-app** (GitHub), **rafraîchissement automatique** catalogue/EPG, **diagnostic réseau**, **historique complet**
+- **Restream** : partage du flux en HLS sur le **réseau local** + **tunnel Cloudflare** (regarder sur un autre appareil)
+- **Picture-in-Picture** : fenêtre flottante toujours au premier plan
+- **Système** : **mise à jour in-app** (GitHub), **rafraîchissement automatique** catalogue/EPG, **diagnostic réseau**, **historique complet**, **accent personnalisable** (7 couleurs)
 - Démarrage agrandi · fenêtre centrée · thème sombre « premium »
 
 ### Feuille de route (à venir)
-Multi-sources M3U/Xtream fusionnées · Restream LAN + tunnel Cloudflare · Picture-in-Picture / mini-lecteur · thèmes clairs & accents personnalisables.
+Multi-sources M3U/Xtream fusionnées · thème clair complet · reprise inter-appareils.
 
 ## Développement
 
