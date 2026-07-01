@@ -14,6 +14,7 @@ import '../../core/models/models.dart';
 import '../../services/trakt/trakt_service.dart';
 import '../../services/trakt/trakt_providers.dart';
 import '../../services/recording/recording_service.dart';
+import '../../services/restream/restream_service.dart';
 import '../auth/auth_controller.dart';
 import '../live/live_providers.dart';
 import 'player_controls.dart';
@@ -523,6 +524,66 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     }
   }
 
+  void _restreamDialog() {
+    final urls = ref.read(xtreamUrlsProvider);
+    if (urls == null || _liveId == null) return;
+    showDialog(
+      context: context,
+      builder: (_) => Consumer(
+        builder: (ctx, r, _) {
+          final st = r.watch(restreamControllerProvider);
+          final ctrl = r.read(restreamControllerProvider.notifier);
+          return AlertDialog(
+            backgroundColor: KtvColors.panel,
+            title: const Text('Partager le flux'),
+            content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Diffuse « $_title » vers un autre appareil (VLC, navigateur…).', style: const TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+              const SizedBox(height: 14),
+              if (st.status == RestreamStatus.starting)
+                Row(children: [SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: KtvColors.accent)), SizedBox(width: 10), Text('Démarrage…')])
+              else if (st.status == RestreamStatus.live) ...[
+                _urlRow('Réseau local', st.lanUrl),
+                const SizedBox(height: 10),
+                if (st.publicUrl != null)
+                  _urlRow('Public (Cloudflare)', st.publicUrl)
+                else
+                  const Text('Tunnel public : en cours de création (ou cloudflared absent → LAN seulement).', style: TextStyle(color: KtvColors.muted, fontSize: 11.5)),
+              ] else if (st.status == RestreamStatus.error)
+                Text('Erreur : ${st.error}', style: const TextStyle(color: KtvColors.rec, fontSize: 12.5)),
+            ]),
+            actions: [
+              if (st.status == RestreamStatus.live)
+                FilledButton.tonalIcon(onPressed: () => ctrl.stop(), icon: const Icon(Icons.stop, size: 18), label: const Text('Arrêter'))
+              else if (st.status != RestreamStatus.starting)
+                FilledButton.icon(onPressed: () => ctrl.start(name: _title, url: urls.live(_liveId!, ext: 'ts')), icon: const Icon(Icons.cast, size: 18), label: const Text('Démarrer')),
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Fermer')),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _urlRow(String label, String? url) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(color: KtvColors.muted, fontSize: 11.5)),
+          Row(children: [
+            Expanded(child: SelectableText(url ?? '—', style: TextStyle(color: KtvColors.accent2, fontSize: 13, fontWeight: FontWeight.w600))),
+            if (url != null)
+              IconButton(
+                iconSize: 18,
+                tooltip: 'Copier',
+                icon: const Icon(Icons.copy, color: KtvColors.muted),
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: url));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Lien copié')));
+                },
+              ),
+          ]),
+        ],
+      );
+
   Future<void> _close() async {
     if (_closing) return;
     _closing = true;
@@ -615,6 +676,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                           icon: Icon(isRec ? Icons.stop_circle : Icons.fiber_manual_record, color: KtvColors.rec),
                         ),
                         IconButton(tooltip: 'Programmer', onPressed: _scheduleDialog, icon: const Icon(Icons.schedule, color: Colors.white)),
+                        IconButton(tooltip: 'Partager (restream LAN / tunnel)', onPressed: _restreamDialog, icon: const Icon(Icons.cast, color: Colors.white)),
                         if (widget.request.liveCategoryId != null)
                           IconButton(tooltip: 'Chaînes', onPressed: () => setState(() => _sidebarOpen = !_sidebarOpen), icon: Icon(Icons.dvr, color: _sidebarOpen ? KtvColors.accent : Colors.white)),
                       ],
