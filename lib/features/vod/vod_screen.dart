@@ -5,9 +5,13 @@ import '../../core/widgets/category_chips.dart';
 import '../../core/widgets/poster_card.dart';
 import '../../core/widgets/async_view.dart';
 import '../../core/widgets/filter_bar.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/providers.dart';
+import '../home/home_providers.dart';
 import 'movie_detail_sheet.dart';
 import 'vod_providers.dart';
+
+const kAllCatId = '__all__';
 
 class VodScreen extends ConsumerStatefulWidget {
   const VodScreen({super.key});
@@ -28,28 +32,41 @@ class _VodScreenState extends ConsumerState<VodScreen> {
     });
     final cats = ref.watch(vodCategoriesProvider);
     final selected = ref.watch(selectedVodCategoryProvider);
+    final prefs = ref.read(prefsProvider);
+    final showFilters = prefs.settingBool('catalogFilters', true);
+    final isAll = selected == kAllCatId;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text('Films', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Row(children: [
+            const Text('Films', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+            const Spacer(),
+            IconButton(
+              tooltip: showFilters ? 'Masquer les filtres' : 'Afficher les filtres',
+              icon: Icon(showFilters ? Icons.filter_list_off : Icons.filter_list, color: showFilters ? KtvColors.accent : KtvColors.muted),
+              onPressed: () async { await prefs.setSetting('catalogFilters', !showFilters); setState(() {}); },
+            ),
+          ]),
         ),
         cats.when(
           loading: () => const SizedBox(height: 44),
           error: (_, _) => const SizedBox(height: 44),
           data: (list) => CategoryChips(
-            categories: list,
+            categories: [const Category(kAllCatId, '⭐ Toutes'), ...list],
             selectedId: selected,
             onSelect: (id) => ref.read(selectedVodCategoryProvider.notifier).state = id,
           ),
         ),
         const SizedBox(height: 8),
-        FilterBar(filter: _filter, onChanged: (f) => setState(() => _filter = f)),
-        const SizedBox(height: 8),
+        if (showFilters) ...[
+          FilterBar(filter: _filter, onChanged: (f) => setState(() => _filter = f)),
+          const SizedBox(height: 8),
+        ],
         Expanded(
           child: AsyncView(
-            value: ref.watch(vodStreamsProvider),
+            value: isAll ? ref.watch(allVodProvider) : ref.watch(vodStreamsProvider),
             emptyBuilder: () => const Center(child: Text('Aucun film', style: TextStyle(color: Colors.white38))),
             data: (List<VodItem> all) {
               final movies = applyCatalogFilter(all, _filter, nameOf: (m) => m.name, ratingOf: (m) => m.rating, addedOf: (m) => m.added);

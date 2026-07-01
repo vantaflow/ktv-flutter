@@ -5,6 +5,10 @@ import '../../core/widgets/category_chips.dart';
 import '../../core/widgets/poster_card.dart';
 import '../../core/widgets/async_view.dart';
 import '../../core/widgets/filter_bar.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/providers.dart';
+import '../home/home_providers.dart';
+import '../vod/vod_screen.dart' show kAllCatId;
 import 'series_providers.dart';
 import 'series_detail_sheet.dart';
 
@@ -26,28 +30,41 @@ class _SeriesScreenState extends ConsumerState<SeriesScreen> {
     });
     final cats = ref.watch(seriesCategoriesProvider);
     final selected = ref.watch(selectedSeriesCategoryProvider);
+    final prefs = ref.read(prefsProvider);
+    final showFilters = prefs.settingBool('catalogFilters', true);
+    final isAll = selected == kAllCatId;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text('Séries', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Row(children: [
+            const Text('Séries', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+            const Spacer(),
+            IconButton(
+              tooltip: showFilters ? 'Masquer les filtres' : 'Afficher les filtres',
+              icon: Icon(showFilters ? Icons.filter_list_off : Icons.filter_list, color: showFilters ? KtvColors.accent : KtvColors.muted),
+              onPressed: () async { await prefs.setSetting('catalogFilters', !showFilters); setState(() {}); },
+            ),
+          ]),
         ),
         cats.when(
           loading: () => const SizedBox(height: 44),
           error: (_, _) => const SizedBox(height: 44),
           data: (list) => CategoryChips(
-            categories: list,
+            categories: [const Category(kAllCatId, '⭐ Toutes'), ...list],
             selectedId: selected,
             onSelect: (id) => ref.read(selectedSeriesCategoryProvider.notifier).state = id,
           ),
         ),
         const SizedBox(height: 8),
-        FilterBar(filter: _filter, onChanged: (f) => setState(() => _filter = f)),
-        const SizedBox(height: 8),
+        if (showFilters) ...[
+          FilterBar(filter: _filter, onChanged: (f) => setState(() => _filter = f)),
+          const SizedBox(height: 8),
+        ],
         Expanded(
           child: AsyncView(
-            value: ref.watch(seriesListProvider),
+            value: isAll ? ref.watch(allSeriesProvider) : ref.watch(seriesListProvider),
             emptyBuilder: () => const Center(child: Text('Aucune série', style: TextStyle(color: Colors.white38))),
             data: (List<SeriesItem> all) {
               final series = applyCatalogFilter(all, _filter, nameOf: (s) => s.name, ratingOf: (s) => s.rating, addedOf: (s) => s.lastModified);

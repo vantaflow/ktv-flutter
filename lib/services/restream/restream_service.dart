@@ -84,13 +84,20 @@ class RestreamController extends Notifier<RestreamState> {
       _ff = await Process.start(ff, [
         '-hide_banner', '-loglevel', 'error', '-user_agent', 'KTV',
         '-i', url,
-        '-c', 'copy',
+        '-c', 'copy', '-bsf:a', 'aac_adtstoasc',
         '-f', 'hls', '-hls_time', '4', '-hls_list_size', '6',
         '-hls_flags', 'delete_segments+append_list+omit_endlist',
         '-hls_segment_filename', '${dir.path}/seg%03d.ts',
         '${dir.path}/index.m3u8',
       ]);
-      _ff!.exitCode.then((_) { if (state.status != RestreamStatus.idle) stop(); });
+      // Si ffmpeg s'arrête pendant la diffusion (souvent : limite de connexions du
+      // fournisseur), on le signale au lieu de revenir silencieusement à l'état initial.
+      _ff!.exitCode.then((code) {
+        if (state.status == RestreamStatus.live || state.status == RestreamStatus.starting) {
+          _cleanup();
+          state = RestreamState(status: RestreamStatus.error, name: name, error: 'Flux interrompu (limite de connexions du fournisseur ?)');
+        }
+      });
 
       _server = await HttpServer.bind(InternetAddress.anyIPv4, _port, shared: true);
       _server!.listen((req) => _serve(req, dir));
