@@ -427,7 +427,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _card([
         const Text('KTV — Flutter + media_kit', style: TextStyle(fontWeight: FontWeight.w700)),
         const SizedBox(height: 4),
-        const Text('Version 0.1.4', style: TextStyle(color: KtvColors.muted, fontSize: 13)),
+        const Text('Version 0.1.5', style: TextStyle(color: KtvColors.muted, fontSize: 13)),
         const SizedBox(height: 12),
         FilledButton.tonalIcon(
           onPressed: () => _openUrl('https://github.com/khalilbenaz/ktv-flutter/releases'),

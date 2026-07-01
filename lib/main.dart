@@ -11,8 +11,9 @@ Future<void> main() async {
   MediaKit.ensureInitialized();
   await windowManager.ensureInitialized();
   await windowManager.waitUntilReadyToShow(
-    const WindowOptions(size: Size(1280, 800), minimumSize: Size(940, 600), title: 'KTV'),
+    const WindowOptions(size: Size(1280, 800), minimumSize: Size(940, 600), title: 'KTV', center: true),
     () async {
+      await windowManager.center(); // ouvre au centre de l'écran
       await windowManager.show();
       await windowManager.focus();
     },
