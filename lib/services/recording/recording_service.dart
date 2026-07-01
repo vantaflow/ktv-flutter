@@ -28,7 +28,7 @@ class RecordingController extends Notifier<List<Recording>> {
 
   bool get isRecording => _proc != null;
 
-  Future<String?> start({required String name, required String url}) async {
+  Future<String?> start({required String name, required String url, int? durationSec}) async {
     if (_proc != null) return 'Un enregistrement est déjà en cours.';
     final ff = await FfmpegLocator.path();
     if (ff == null) return 'ffmpeg introuvable.';
@@ -47,6 +47,7 @@ class RecordingController extends Notifier<List<Recording>> {
         '-i', url,
         '-c', 'copy', '-bsf:a', 'aac_adtstoasc',
         '-movflags', '+faststart',
+        if (durationSec != null && durationSec > 0) ...['-t', '$durationSec'],
         '-f', 'mp4', '-y', path,
       ]);
       state = [...state, Recording(id: id, name: safe, filePath: path)];

@@ -7,6 +7,8 @@ import '../../core/storage/prefs_store.dart';
 import '../../services/trakt/trakt_providers.dart';
 import '../../services/downloads/download_service.dart';
 import '../../services/recording/recording_service.dart';
+import '../../services/epg/epg_providers.dart';
+import '../home/home_providers.dart';
 import '../auth/auth_controller.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -58,7 +60,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         const SizedBox(height: 16),
         _downloadsSection(),
         const SizedBox(height: 16),
+        _tmdbSection(prefs),
+        const SizedBox(height: 16),
         _traktSection(prefs),
+        const SizedBox(height: 16),
+        _appSection(),
         const SizedBox(height: 16),
         _section('Profils enregistrés', [
           for (final p in profiles)
@@ -76,6 +82,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         FilledButton.tonal(onPressed: () => ref.read(authControllerProvider.notifier).logout(), child: const Text('Se déconnecter')),
       ],
     );
+  }
+
+  Widget _tmdbSection(PrefsStore prefs) {
+    return _section('Métadonnées (TMDB)', [
+      const Text('Laisse vide pour utiliser le proxy KTV. Ou colle ta clé v4 TMDB (appel direct).', style: TextStyle(color: KtvColors.muted, fontSize: 12)),
+      const SizedBox(height: 8),
+      TextField(
+        obscureText: true,
+        decoration: const InputDecoration(hintText: 'Clé TMDB v4 (optionnel)'),
+        controller: TextEditingController(text: prefs.settingStr('tmdbKey')),
+        onChanged: (v) => prefs.setSetting('tmdbKey', v.trim()),
+      ),
+    ]);
+  }
+
+  Widget _appSection() {
+    return _section('Application', [
+      const Text('KTV — Flutter + media_kit · v0.1.0', style: TextStyle(color: KtvColors.muted, fontSize: 13)),
+      const SizedBox(height: 10),
+      FilledButton.tonalIcon(
+        onPressed: () {
+          // Recharge catalogues + EPG.
+          ref.invalidate(allVodProvider);
+          ref.invalidate(allSeriesProvider);
+          ref.invalidate(latestVodProvider);
+          ref.invalidate(latestSeriesProvider);
+          ref.invalidate(epgIndexProvider);
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Catalogue et EPG rafraîchis')));
+        },
+        icon: const Icon(Icons.refresh),
+        label: const Text('Rafraîchir le catalogue et l\'EPG'),
+      ),
+    ]);
   }
 
   Widget _recordingsSection() {

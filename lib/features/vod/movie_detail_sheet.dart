@@ -10,10 +10,28 @@ import '../../services/downloads/download_service.dart';
 import '../auth/auth_controller.dart';
 import '../player/play_launcher.dart';
 
-/// Fiche film : backdrop + synopsis + note (TMDB), bouton Lire — façon KTV.
-class MovieDetailSheet extends ConsumerWidget {
+/// Ouvre la fiche film en dialogue centré (2 colonnes).
+void showMovieDetail(BuildContext context, VodItem movie) {
+  showDialog(
+    context: context,
+    barrierColor: Colors.black87,
+    builder: (_) => Dialog(
+      backgroundColor: KtvColors.panel,
+      insetPadding: const EdgeInsets.all(40),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      clipBehavior: Clip.antiAlias,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 900, maxHeight: 560),
+        child: MovieDetail(movie: movie),
+      ),
+    ),
+  );
+}
+
+/// Fiche film 2 colonnes : à gauche l'affiche + actions, à droite backdrop + infos + casting.
+class MovieDetail extends ConsumerWidget {
   final VodItem movie;
-  const MovieDetailSheet({super.key, required this.movie});
+  const MovieDetail({super.key, required this.movie});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,111 +43,106 @@ class MovieDetailSheet extends ConsumerWidget {
     final rating = (d?['vote_average'] as num?)?.toDouble() ?? movie.rating;
     final year = yearOf(movie.name);
 
-    return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.75,
-      maxChildSize: 0.95,
-      builder: (_, scroll) => ListView(
-        controller: scroll,
-        padding: EdgeInsets.zero,
-        children: [
-          Stack(
-            children: [
-              AspectRatio(
-                aspectRatio: 16 / 9,
-                child: backdrop.isNotEmpty
-                    ? CachedNetworkImage(imageUrl: backdrop, fit: BoxFit.cover, errorWidget: (_, _, _) => const ColoredBox(color: KtvColors.panel2))
-                    : const ColoredBox(color: KtvColors.panel2),
-              ),
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, KtvColors.panel]),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Colonne gauche : affiche + actions
+        SizedBox(
+          width: 240,
+          child: Container(
+            color: KtvColors.panel2,
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: (poster.isNotEmpty || (movie.cover ?? '').isNotEmpty)
+                        ? CachedNetworkImage(imageUrl: poster.isNotEmpty ? poster : movie.cover!, fit: BoxFit.cover, errorWidget: (_, _, _) => const ColoredBox(color: KtvColors.panel))
+                        : const ColoredBox(color: KtvColors.panel, child: Icon(Icons.movie_outlined, color: KtvColors.muted)),
                   ),
                 ),
-              ),
-              Positioned(top: 8, right: 8, child: IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close, color: Colors.white))),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (poster.isNotEmpty)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: CachedNetworkImage(imageUrl: poster, width: 90, fit: BoxFit.cover, errorWidget: (_, _, _) => const SizedBox()),
-                      ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(cleanTitle(movie.name), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-                          const SizedBox(height: 6),
-                          Row(children: [
-                            if (rating > 0) ...[
-                              const Icon(Icons.star, color: KtvColors.accent2, size: 16),
-                              const SizedBox(width: 4),
-                              Text(rating.toStringAsFixed(1), style: const TextStyle(color: KtvColors.accent2, fontWeight: FontWeight.w600)),
-                              const SizedBox(width: 12),
-                            ],
-                            if (year.isNotEmpty) Text(year, style: const TextStyle(color: KtvColors.muted)),
-                          ]),
-                          const SizedBox(height: 12),
-                          Row(children: [
-                            FilledButton.icon(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                PlayLauncher.movie(context, ref, movie);
-                              },
-                              icon: const Icon(Icons.play_arrow),
-                              label: const Text('Lire'),
-                            ),
-                            const SizedBox(width: 10),
-                            IconButton(
-                              tooltip: 'Télécharger',
-                              icon: const Icon(Icons.download_rounded),
-                              onPressed: () {
-                                final urls = ref.read(xtreamUrlsProvider);
-                                if (urls == null) return;
-                                ref.read(downloadControllerProvider.notifier).enqueue(
-                                      name: cleanTitle(movie.name),
-                                      url: urls.movie(movie.streamId, movie.ext),
-                                      ext: movie.ext,
-                                    );
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Téléchargement ajouté (Réglages → Téléchargements)')),
-                                );
-                              },
-                            ),
-                          ]),
-                        ],
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 14),
+                FilledButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    PlayLauncher.movie(context, ref, movie);
+                  },
+                  icon: const Icon(Icons.play_arrow),
+                  label: const Text('Lire'),
                 ),
-                const SizedBox(height: 16),
-                if (tmdb.isLoading) const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator(color: KtvColors.accent))),
-                if (overview.isNotEmpty)
-                  Text(overview, style: const TextStyle(color: KtvColors.txt, height: 1.4))
-                else if (!tmdb.isLoading)
-                  const Text('Aucune description disponible.', style: TextStyle(color: KtvColors.muted)),
-                if (d?['id'] is int) _CastRow(id: d!['id'] as int),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    final urls = ref.read(xtreamUrlsProvider);
+                    if (urls == null) return;
+                    ref.read(downloadControllerProvider.notifier).enqueue(name: cleanTitle(movie.name), url: urls.movie(movie.streamId, movie.ext), ext: movie.ext);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Téléchargement ajouté (Réglages → Téléchargements)')));
+                  },
+                  icon: const Icon(Icons.download_rounded),
+                  label: const Text('Télécharger'),
+                ),
               ],
             ),
           ),
-        ],
-      ),
+        ),
+        // Colonne droite : backdrop + titre + synopsis + casting
+        Expanded(
+          child: Stack(
+            children: [
+              ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  AspectRatio(
+                    aspectRatio: 16 / 8,
+                    child: backdrop.isNotEmpty
+                        ? CachedNetworkImage(imageUrl: backdrop, fit: BoxFit.cover, errorWidget: (_, _, _) => const ColoredBox(color: KtvColors.panel2))
+                        : const ColoredBox(color: KtvColors.panel2),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(cleanTitle(movie.name), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 8),
+                        Row(children: [
+                          if (rating > 0) ...[
+                            const Icon(Icons.star, color: KtvColors.accent2, size: 16),
+                            const SizedBox(width: 4),
+                            Text(rating.toStringAsFixed(1), style: const TextStyle(color: KtvColors.accent2, fontWeight: FontWeight.w600)),
+                            const SizedBox(width: 14),
+                          ],
+                          if (year.isNotEmpty) Text(year, style: const TextStyle(color: KtvColors.muted)),
+                        ]),
+                        const SizedBox(height: 14),
+                        if (tmdb.isLoading) const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator(color: KtvColors.accent))),
+                        if (overview.isNotEmpty)
+                          Text(overview, style: const TextStyle(color: KtvColors.txt, height: 1.45))
+                        else if (!tmdb.isLoading)
+                          const Text('Aucune description disponible.', style: TextStyle(color: KtvColors.muted)),
+                        if (d?['id'] is int) _CastRow(id: d!['id'] as int),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              Positioned(top: 8, right: 8, child: _closeBtn(context)),
+            ],
+          ),
+        ),
+      ],
     );
   }
+
+  Widget _closeBtn(BuildContext context) => Material(
+        color: Colors.black45,
+        shape: const CircleBorder(),
+        child: IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () => Navigator.pop(context)),
+      );
 }
 
-/// Rangée de casting (photos + noms) via TMDB credits.
 class _CastRow extends ConsumerWidget {
   final int id;
   const _CastRow({required this.id});
@@ -139,14 +152,14 @@ class _CastRow extends ConsumerWidget {
     final cast = (det?['credits']?['cast'] as List?)?.whereType<Map>().take(12).toList() ?? const [];
     if (cast.isEmpty) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.only(top: 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('Casting', style: TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
           SizedBox(
-            height: 128,
+            height: 120,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: cast.length,
@@ -155,19 +168,12 @@ class _CastRow extends ConsumerWidget {
                 final c = cast[i];
                 final photo = TmdbService.img(c['profile_path'] as String?, size: 'w185');
                 return SizedBox(
-                  width: 72,
-                  child: Column(
-                    children: [
-                      CircleAvatar(
-                        radius: 32,
-                        backgroundColor: KtvColors.panel2,
-                        backgroundImage: photo.isNotEmpty ? CachedNetworkImageProvider(photo) : null,
-                        child: photo.isEmpty ? const Icon(Icons.person, color: KtvColors.muted) : null,
-                      ),
-                      const SizedBox(height: 6),
-                      Text('${c['name'] ?? ''}', maxLines: 2, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11)),
-                    ],
-                  ),
+                  width: 70,
+                  child: Column(children: [
+                    CircleAvatar(radius: 30, backgroundColor: KtvColors.panel2, backgroundImage: photo.isNotEmpty ? CachedNetworkImageProvider(photo) : null, child: photo.isEmpty ? const Icon(Icons.person, color: KtvColors.muted) : null),
+                    const SizedBox(height: 6),
+                    Text('${c['name'] ?? ''}', maxLines: 2, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10.5)),
+                  ]),
                 );
               },
             ),

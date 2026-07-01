@@ -6,7 +6,7 @@ import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../auth/auth_controller.dart';
 import '../../services/recording/recording_service.dart';
-import 'live_providers.dart';
+import '../../services/epg/epg_providers.dart';
 
 /// Carte d'une chaîne live : logo + nom + programme EN COURS (EPG now/next).
 class LiveChannelCard extends ConsumerWidget {
@@ -17,10 +17,8 @@ class LiveChannelCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final prefs = ref.read(prefsProvider);
-    final epg = ref.watch(shortEpgProvider(channel.streamId));
-    final progs = epg.asData?.value ?? const <EpgProgram>[];
-    final now = progs.isNotEmpty ? progs.first : null;
-    final next = progs.length > 1 ? progs[1] : null;
+    final index = ref.watch(epgIndexProvider).asData?.value;
+    final (now, next) = index?.nowNext(channel) ?? (null, null);
 
     return InkWell(
       onTap: onTap,

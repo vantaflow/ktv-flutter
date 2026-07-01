@@ -4,7 +4,6 @@ import '../../core/models/models.dart';
 import '../../core/widgets/category_chips.dart';
 import '../../core/widgets/poster_card.dart';
 import '../../core/widgets/async_view.dart';
-import '../../core/theme/app_theme.dart';
 import 'series_providers.dart';
 import 'series_detail_sheet.dart';
 
@@ -72,13 +71,5 @@ class _SeriesScreenState extends ConsumerState<SeriesScreen> {
     );
   }
 
-  void _open(SeriesItem s) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: KtvColors.panel,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(18))),
-      builder: (_) => SeriesDetailSheet(series: s),
-    );
-  }
+  void _open(SeriesItem s) => showSeriesDetail(context, s);
 }

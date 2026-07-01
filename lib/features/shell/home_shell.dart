@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
@@ -7,6 +8,7 @@ import '../vod/vod_screen.dart';
 import '../series/series_screen.dart';
 import '../guide/guide_screen.dart';
 import '../search/search_screen.dart';
+import '../search/search_providers.dart';
 import '../settings/settings_screen.dart';
 
 class HomeShell extends ConsumerStatefulWidget {
@@ -17,6 +19,8 @@ class HomeShell extends ConsumerStatefulWidget {
 
 class _HomeShellState extends ConsumerState<HomeShell> {
   int _index = int.fromEnvironment('KTV_TAB', defaultValue: 0);
+  final _searchCtrl = TextEditingController();
+  Timer? _debounce;
 
   static const _dests = [
     (icon: Icons.home_rounded, label: 'Accueil'),
@@ -24,31 +28,105 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     (icon: Icons.movie_rounded, label: 'Films'),
     (icon: Icons.grid_view_rounded, label: 'Séries'),
     (icon: Icons.calendar_view_day_rounded, label: 'Guide'),
-    (icon: Icons.search_rounded, label: 'Recherche'),
     (icon: Icons.settings_rounded, label: 'Réglages'),
   ];
 
   @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onSearch(String v) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      ref.read(searchQueryProvider.notifier).state = v.trim();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final query = ref.watch(searchQueryProvider);
+    final searching = query.length >= 2;
     return Scaffold(
-      body: Row(
+      body: Column(
         children: [
-          _NavRail(index: _index, onSelect: (i) => setState(() => _index = i)),
-          const VerticalDivider(width: 1, color: KtvColors.line),
+          _TopBar(controller: _searchCtrl, onChanged: _onSearch, onClear: () {
+            _searchCtrl.clear();
+            ref.read(searchQueryProvider.notifier).state = '';
+          }),
+          const Divider(height: 1, color: KtvColors.line),
           Expanded(
-            child: IndexedStack(
-              index: _index,
-              children: const [
-                HomeScreen(),
-                LiveScreen(),
-                VodScreen(),
-                SeriesScreen(),
-                GuideScreen(),
-                SearchScreen(),
-                SettingsScreen(),
+            child: Row(
+              children: [
+                _NavRail(index: _index, onSelect: (i) => setState(() => _index = i)),
+                const VerticalDivider(width: 1, color: KtvColors.line),
+                Expanded(
+                  child: searching
+                      ? const SearchResults()
+                      : IndexedStack(
+                          index: _index,
+                          children: const [
+                            HomeScreen(),
+                            LiveScreen(),
+                            VodScreen(),
+                            SeriesScreen(),
+                            GuideScreen(),
+                            SettingsScreen(),
+                          ],
+                        ),
+                ),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TopBar extends StatelessWidget {
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+  const _TopBar({required this.controller, required this.onChanged, required this.onClear});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 56,
+      color: KtvColors.panel,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(gradient: KtvColors.accentGradient, borderRadius: BorderRadius.circular(8)),
+            child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 18),
+          ),
+          const SizedBox(width: 10),
+          const Text('KTV', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: 1)),
+          const SizedBox(width: 20),
+          Expanded(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: TextField(
+                controller: controller,
+                onChanged: onChanged,
+                decoration: InputDecoration(
+                  hintText: 'Rechercher chaînes, films, séries…',
+                  prefixIcon: const Icon(Icons.search, size: 20, color: KtvColors.muted),
+                  suffixIcon: controller.text.isEmpty
+                      ? null
+                      : IconButton(icon: const Icon(Icons.close, size: 18), onPressed: onClear),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+              ),
+            ),
+          ),
+          const Spacer(),
         ],
       ),
     );
@@ -65,31 +143,19 @@ class _NavRail extends StatelessWidget {
     return Container(
       width: 84,
       color: KtvColors.panel,
-      child: Column(
-        children: [
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(9),
-            decoration: BoxDecoration(gradient: KtvColors.accentGradient, borderRadius: BorderRadius.circular(12)),
-            child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 24),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  for (var i = 0; i < _HomeShellState._dests.length; i++)
-                    _NavItem(
-                      icon: _HomeShellState._dests[i].icon,
-                      label: _HomeShellState._dests[i].label,
-                      active: i == index,
-                      onTap: () => onSelect(i),
-                    ),
-                ],
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            for (var i = 0; i < _HomeShellState._dests.length; i++)
+              _NavItem(
+                icon: _HomeShellState._dests[i].icon,
+                label: _HomeShellState._dests[i].label,
+                active: i == index,
+                onTap: () => onSelect(i),
               ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -109,10 +175,7 @@ class _NavItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: active ? KtvColors.panel2 : null,
-          borderRadius: BorderRadius.circular(12),
-        ),
+        decoration: BoxDecoration(color: active ? KtvColors.panel2 : null, borderRadius: BorderRadius.circular(12)),
         child: Column(
           children: [
             Icon(icon, color: active ? KtvColors.accent : KtvColors.muted, size: 24),

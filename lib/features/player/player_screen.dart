@@ -13,6 +13,9 @@ import '../../core/theme/app_theme.dart';
 import '../../core/models/models.dart';
 import '../../services/trakt/trakt_service.dart';
 import '../../services/trakt/trakt_providers.dart';
+import '../../services/recording/recording_service.dart';
+import '../auth/auth_controller.dart';
+import '../live/live_providers.dart';
 import 'player_controls.dart';
 
 class PlayerScreen extends ConsumerStatefulWidget {
@@ -42,6 +45,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   List<SubtitleTrack> _subtitle = const [];
   String? _curAudioId;
   String? _curSubId;
+  bool _sidebarOpen = false;
+  late String _title = widget.request.title;
+  late String? _liveId = widget.request.liveStreamId;
   bool _resumeApplied = false;
   bool _watchedMarked = false;
   bool _controlsVisible = true;
@@ -205,6 +211,53 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   }
 
   bool _closing = false;
+  // Zapping : change de chaîne sans quitter le lecteur.
+  void _switchChannel(LiveChannel ch) {
+    final urls = ref.read(xtreamUrlsProvider);
+    if (urls == null) return;
+    setState(() {
+      _liveId = ch.streamId;
+      _title = ch.name;
+      _sidebarOpen = false;
+    });
+    _player.open(Media(urls.live(ch.streamId, ext: 'ts')));
+    _prefs.pushRecent(RecentEntry(kind: MediaKind.live, id: ch.streamId, name: ch.name, cover: ch.icon, ext: 'ts', at: DateTime.now().millisecondsSinceEpoch));
+  }
+
+  // Enregistre la chaîne courante (préempte la lecture : 1 connexion fournisseur).
+  Future<void> _record({int? durationSec}) async {
+    final urls = ref.read(xtreamUrlsProvider);
+    if (urls == null || _liveId == null) return;
+    final err = await ref.read(recordingControllerProvider.notifier).start(name: _title, url: urls.live(_liveId!, ext: 'ts'), durationSec: durationSec);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err ?? 'Enregistrement démarré (la lecture s\'arrête — 1 connexion). Voir Réglages.')));
+    }
+  }
+
+  Future<void> _scheduleDialog() async {
+    const presets = [(30, '30 min'), (60, '1 h'), (120, '2 h'), (150, 'Match (2 h 30)')];
+    await showDialog(
+      context: context,
+      builder: (dctx) => AlertDialog(
+        backgroundColor: KtvColors.panel,
+        title: const Text('Programmer l\'enregistrement'),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Text('Enregistre la chaîne courante pour la durée choisie (arrêt automatique).', style: TextStyle(color: KtvColors.muted, fontSize: 13)),
+          const SizedBox(height: 12),
+          for (final p in presets)
+            ListTile(
+              title: Text(p.$2),
+              trailing: const Icon(Icons.fiber_manual_record, color: KtvColors.rec, size: 16),
+              onTap: () {
+                Navigator.pop(dctx);
+                _record(durationSec: p.$1 * 60);
+              },
+            ),
+        ]),
+      ),
+    );
+  }
+
   Future<void> _close() async {
     if (_closing) return;
     _closing = true;
@@ -278,17 +331,37 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(widget.request.title,
+                            Text(_title,
                                 maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
                             if (widget.request.subtitle != null)
                               Text(widget.request.subtitle!, style: const TextStyle(color: Colors.white70, fontSize: 12)),
                           ],
                         ),
                       ),
+                      if (widget.request.isLive) ...[
+                        IconButton(tooltip: 'Enregistrer', onPressed: () => _record(), icon: const Icon(Icons.fiber_manual_record, color: KtvColors.rec)),
+                        IconButton(tooltip: 'Programmer', onPressed: _scheduleDialog, icon: const Icon(Icons.schedule, color: Colors.white)),
+                        if (widget.request.liveCategoryId != null)
+                          IconButton(tooltip: 'Chaînes', onPressed: () => setState(() => _sidebarOpen = !_sidebarOpen), icon: Icon(Icons.dvr, color: _sidebarOpen ? KtvColors.accent : Colors.white)),
+                      ],
                     ],
                   ),
                 ),
               ),
+              // Sidebar de zapping (chaînes de la même catégorie)
+              if (_sidebarOpen && widget.request.liveCategoryId != null)
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  bottom: 0,
+                  width: 300,
+                  child: _ZapSidebar(
+                    categoryId: widget.request.liveCategoryId!,
+                    currentId: _liveId,
+                    onPick: _switchChannel,
+                    onClose: () => setState(() => _sidebarOpen = false),
+                  ),
+                ),
               // Barre du bas : contrôles
               Positioned(
                 left: 0,
@@ -330,6 +403,54 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
           ),
         ),
       ),
+      ),
+    );
+  }
+}
+
+/// Panneau latéral de zapping : chaînes de la même catégorie.
+class _ZapSidebar extends ConsumerWidget {
+  final String categoryId;
+  final String? currentId;
+  final void Function(LiveChannel) onPick;
+  final VoidCallback onClose;
+  const _ZapSidebar({required this.categoryId, required this.currentId, required this.onPick, required this.onClose});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final chans = ref.watch(channelsByCategoryProvider(categoryId)).asData?.value ?? const <LiveChannel>[];
+    return Container(
+      color: KtvColors.panel.withValues(alpha: 0.96),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 6, 8),
+            child: Row(children: [
+              const Text('Chaînes', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+              const Spacer(),
+              IconButton(icon: const Icon(Icons.close, size: 18), onPressed: onClose),
+            ]),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: chans.length,
+              itemBuilder: (_, i) {
+                final ch = chans[i];
+                final active = ch.streamId == currentId;
+                return ListTile(
+                  dense: true,
+                  selected: active,
+                  selectedTileColor: KtvColors.panel2,
+                  leading: (ch.icon != null && ch.icon!.isNotEmpty)
+                      ? Image.network(ch.icon!, width: 40, height: 26, fit: BoxFit.contain, errorBuilder: (_, _, _) => const Icon(Icons.live_tv, size: 18, color: KtvColors.muted))
+                      : const Icon(Icons.live_tv, size: 18, color: KtvColors.muted),
+                  title: Text(ch.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12.5, color: active ? KtvColors.accent2 : KtvColors.txt)),
+                  onTap: () => onPick(ch),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

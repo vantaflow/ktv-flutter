@@ -5,7 +5,6 @@ import '../../core/widgets/category_chips.dart';
 import '../../core/widgets/poster_card.dart';
 import '../../core/widgets/async_view.dart';
 import '../../core/providers.dart';
-import '../../core/theme/app_theme.dart';
 import 'movie_detail_sheet.dart';
 import 'vod_providers.dart';
 
@@ -81,13 +80,5 @@ class _VodScreenState extends ConsumerState<VodScreen> {
     );
   }
 
-  void _play(VodItem m) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: KtvColors.panel,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(18))),
-      builder: (_) => MovieDetailSheet(movie: m),
-    );
-  }
+  void _play(VodItem m) => showMovieDetail(context, m);
 }

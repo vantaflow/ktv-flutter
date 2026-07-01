@@ -31,12 +31,12 @@ class MediaRail extends StatelessWidget {
             separatorBuilder: (_, _) => const SizedBox(width: 14),
             itemBuilder: (_, i) {
               final e = items[i];
-              final live = e.kind == MediaKind.live;
+              // Taille UNIFORME pour toutes les entrées (films/séries/chaînes).
               return PosterCard(
                 title: e.name,
                 imageUrl: e.cover,
-                width: live ? 220 : 120,
-                aspectRatio: live ? 16 / 10 : 2 / 3,
+                width: 130,
+                aspectRatio: 2 / 3,
                 progress: progressOf?.call(e) ?? 0,
                 onTap: () => onTap(e),
               );

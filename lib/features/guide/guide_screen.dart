@@ -5,6 +5,7 @@ import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/category_chips.dart';
 import '../../core/widgets/async_view.dart';
+import '../../services/epg/epg_providers.dart';
 import '../live/live_providers.dart';
 import '../player/play_launcher.dart';
 
@@ -76,7 +77,11 @@ class _GuideRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final progs = ref.watch(shortEpgProvider(channel.streamId)).asData?.value ?? const <EpgProgram>[];
+    final index = ref.watch(epgIndexProvider).asData?.value;
+    final t = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final all = index?.forChannel(channel) ?? const <EpgProgram>[];
+    // Programmes à partir de maintenant (en cours + à venir).
+    final progs = all.where((p) => p.stop > t).toList();
     return InkWell(
       onTap: () => PlayLauncher.live(context, ref, channel),
       child: Padding(

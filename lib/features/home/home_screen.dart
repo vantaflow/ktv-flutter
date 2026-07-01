@@ -56,6 +56,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: MediaRail(title: 'Vu récemment', items: recent, progressOf: progressOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
           ),
           SliverToBoxAdapter(child: _recoRail()),
+          SliverToBoxAdapter(child: _recoSeriesRail()),
           SliverToBoxAdapter(child: _latestVodRail()),
           SliverToBoxAdapter(child: _latestSeriesRail()),
           if (recent.isEmpty && favs.isEmpty)
@@ -80,6 +81,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Widget _recoSeriesRail() {
+    final recos = ref.watch(seriesRecommendationsProvider).asData?.value ?? const [];
+    return PosterRail(
+      title: 'Séries recommandées',
+      items: recos.map((s) => PosterRailItem(title: s.name, cover: s.cover, rating: s.rating, onTap: () => _openSeries(s))).toList(),
+    );
+  }
+
   Widget _latestVodRail() {
     final list = ref.watch(latestVodProvider).asData?.value ?? const [];
     return PosterRail(
@@ -96,21 +105,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _openMovie(VodItem m) => showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: KtvColors.panel,
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(18))),
-        builder: (_) => MovieDetailSheet(movie: m),
-      );
-
-  void _openSeries(SeriesItem s) => showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: KtvColors.panel,
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(18))),
-        builder: (_) => SeriesDetailSheet(series: s),
-      );
+  void _openMovie(VodItem m) => showMovieDetail(context, m);
+  void _openSeries(SeriesItem s) => showSeriesDetail(context, s);
 
   Widget _header(String? label) => Padding(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),

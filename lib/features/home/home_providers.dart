@@ -40,6 +40,34 @@ final latestSeriesProvider = FutureProvider<List<SeriesItem>>((ref) async {
   return list.take(24).toList();
 });
 
+/// Recommandations séries : seeds = séries récemment lues → TMDB tv recommandations
+/// → filtrées sur le catalogue séries.
+final seriesRecommendationsProvider = FutureProvider<List<SeriesItem>>((ref) async {
+  if (ref.watch(authControllerProvider) == null) return [];
+  final catalog = await ref.watch(allSeriesProvider.future);
+  if (catalog.isEmpty) return [];
+  final tmdb = ref.read(tmdbServiceProvider);
+  final seeds = ref.read(prefsProvider).recent().where((e) => e.kind == MediaKind.series).take(4).toList();
+  if (seeds.isEmpty) return [];
+  final seen = <int>{};
+  final suggestions = <Map<String, dynamic>>[];
+  for (final seed in seeds) {
+    final hit = await tmdb.search('tv', seed.name);
+    final id = hit?['id'];
+    if (id is! int) continue;
+    for (final r in await tmdb.recommendations('tv', id)) {
+      final rid = r['id'];
+      if (rid is! int || seen.contains(rid)) continue;
+      seen.add(rid);
+      final date = (r['first_air_date'] ?? '').toString();
+      suggestions.add({'title': (r['name'] ?? r['title'] ?? '').toString(), 'year': date.length >= 4 ? int.tryParse(date.substring(0, 4)) : null, 'ids': {'tmdb': rid}});
+    }
+  }
+  if (suggestions.isEmpty) return [];
+  final catalogMaps = catalog.map((s) => {'name': s.name, '_tmdbId': s.tmdbId, 'releaseDate': null, '__ref': s}).toList();
+  return matchRecommendationsToCatalog(suggestions, catalogMaps).map((mp) => mp['__ref'] as SeriesItem).take(24).toList();
+});
+
 /// Recommandations films : seeds = films récemment lus → TMDB recommandations →
 /// filtrées sur le catalogue (matchRecommendationsToCatalog). Vide si rien à amorcer.
 final movieRecommendationsProvider = FutureProvider<List<VodItem>>((ref) async {

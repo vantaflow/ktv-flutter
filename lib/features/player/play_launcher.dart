@@ -37,7 +37,7 @@ class PlayLauncher {
     final urls = ref.read(xtreamUrlsProvider);
     if (urls == null) return;
     ref.read(prefsProvider).pushRecent(RecentEntry(kind: MediaKind.live, id: ch.streamId, name: ch.name, cover: ch.icon, ext: 'ts', at: _now));
-    _open(context, ref, PlaybackRequest(url: urls.live(ch.streamId), title: ch.name, kind: MediaKind.live));
+    _open(context, ref, PlaybackRequest(url: urls.live(ch.streamId), title: ch.name, kind: MediaKind.live, liveStreamId: ch.streamId, liveCategoryId: ch.categoryId));
   }
 
   /// Rejoue une entrée d'historique depuis l'accueil.

@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/models.dart';
@@ -11,78 +10,37 @@ import '../series/series_detail_sheet.dart';
 import '../player/play_launcher.dart';
 import 'search_providers.dart';
 
-class SearchScreen extends ConsumerStatefulWidget {
-  const SearchScreen({super.key});
-  @override
-  ConsumerState<SearchScreen> createState() => _SearchScreenState();
-}
-
-class _SearchScreenState extends ConsumerState<SearchScreen> {
-  final _ctrl = TextEditingController();
-  Timer? _debounce;
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  void _onChanged(String v) {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 350), () {
-      ref.read(searchQueryProvider.notifier).state = v.trim();
-    });
-  }
+/// Résultats de recherche (le champ est dans la barre supérieure du shell).
+/// Affiché par-dessus le contenu dès que la requête ≥ 2 caractères.
+class SearchResults extends ConsumerWidget {
+  const SearchResults({super.key});
 
   bool _match(String name, String q) => name.toLowerCase().contains(q);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final q = ref.watch(searchQueryProvider).toLowerCase();
-    final movies = (ref.watch(allVodProvider).asData?.value ?? const <VodItem>[]);
-    final series = (ref.watch(allSeriesProvider).asData?.value ?? const <SeriesItem>[]);
-    final live = (ref.watch(allLiveProvider).asData?.value ?? const <LiveChannel>[]);
+    if (q.length < 2) {
+      return const Center(child: Text('Tape au moins 2 caractères', style: TextStyle(color: KtvColors.muted)));
+    }
+    final movies = ref.watch(allVodProvider).asData?.value ?? const <VodItem>[];
+    final series = ref.watch(allSeriesProvider).asData?.value ?? const <SeriesItem>[];
+    final live = ref.watch(allLiveProvider).asData?.value ?? const <LiveChannel>[];
 
-    final mHit = q.length < 2 ? <VodItem>[] : movies.where((m) => _match(m.name, q)).take(30).toList();
-    final sHit = q.length < 2 ? <SeriesItem>[] : series.where((s) => _match(s.name, q)).take(30).toList();
-    final cHit = q.length < 2 ? <LiveChannel>[] : live.where((c) => _match(c.name, q)).take(30).toList();
+    final mHit = movies.where((m) => _match(m.name, q)).take(30).toList();
+    final sHit = series.where((s) => _match(s.name, q)).take(30).toList();
+    final cHit = live.where((c) => _match(c.name, q)).take(30).toList();
 
-    return SafeArea(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-            child: TextField(
-              controller: _ctrl,
-              autofocus: true,
-              onChanged: _onChanged,
-              decoration: const InputDecoration(
-                hintText: 'Rechercher chaînes, films, séries…',
-                prefixIcon: Icon(Icons.search, color: KtvColors.muted),
-              ),
-            ),
-          ),
-          Expanded(
-            child: q.length < 2
-                ? const Center(child: Text('Tape au moins 2 caractères', style: TextStyle(color: KtvColors.muted)))
-                : (mHit.isEmpty && sHit.isEmpty && cHit.isEmpty)
-                    ? const Center(child: Text('Aucun résultat', style: TextStyle(color: KtvColors.muted)))
-                    : ListView(
-                        padding: const EdgeInsets.only(bottom: 24),
-                        children: [
-                          _section('📺 Chaînes', cHit.length),
-                          if (cHit.isNotEmpty) _liveGrid(cHit),
-                          _section('🎬 Films', mHit.length),
-                          if (mHit.isNotEmpty) _posterGrid(mHit.map((m) => _Item(m.name, m.cover, m.rating, () => _openMovie(m))).toList()),
-                          _section('🎞️ Séries', sHit.length),
-                          if (sHit.isNotEmpty) _posterGrid(sHit.map((s) => _Item(s.name, s.cover, s.rating, () => _openSeries(s))).toList()),
-                        ],
-                      ),
-          ),
-        ],
-      ),
+    if (mHit.isEmpty && sHit.isEmpty && cHit.isEmpty) {
+      return const Center(child: Text('Aucun résultat', style: TextStyle(color: KtvColors.muted)));
+    }
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 24, top: 8),
+      children: [
+        if (cHit.isNotEmpty) ...[_section('📺 Chaînes', cHit.length), _liveGrid(context, ref, cHit)],
+        if (mHit.isNotEmpty) ...[_section('🎬 Films', mHit.length), _posterGrid(mHit.map((m) => _Item(m.name, m.cover, m.rating, () => showMovieDetail(context, m))).toList())],
+        if (sHit.isNotEmpty) ...[_section('🎞️ Séries', sHit.length), _posterGrid(sHit.map((s) => _Item(s.name, s.cover, s.rating, () => showSeriesDetail(context, s))).toList())],
+      ],
     );
   }
 
@@ -100,7 +58,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         itemBuilder: (_, i) => PosterCard(title: items[i].name, imageUrl: items[i].cover, rating: items[i].rating, onTap: items[i].onTap),
       );
 
-  Widget _liveGrid(List<LiveChannel> ch) => GridView.builder(
+  Widget _liveGrid(BuildContext context, WidgetRef ref, List<LiveChannel> ch) => GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -108,16 +66,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         itemCount: ch.length,
         itemBuilder: (_, i) => LiveChannelCard(channel: ch[i], onTap: () => PlayLauncher.live(context, ref, ch[i])),
       );
-
-  void _openMovie(VodItem m) => showModalBottomSheet(
-        context: context, isScrollControlled: true, backgroundColor: KtvColors.panel,
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(18))),
-        builder: (_) => MovieDetailSheet(movie: m));
-
-  void _openSeries(SeriesItem s) => showModalBottomSheet(
-        context: context, isScrollControlled: true, backgroundColor: KtvColors.panel,
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(18))),
-        builder: (_) => SeriesDetailSheet(series: s));
 }
 
 class _Item {

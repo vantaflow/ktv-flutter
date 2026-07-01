@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/models.dart';
 import '../../core/logic/duration_parse.dart';
+import '../../core/logic/text_utils.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/async_view.dart';
 import '../../core/providers.dart';
@@ -11,115 +12,133 @@ import '../../services/tmdb/tmdb_providers.dart';
 import '../player/play_launcher.dart';
 import 'series_providers.dart';
 
-/// Feuille détail d'une série : sélecteur de saison + liste d'épisodes.
-class SeriesDetailSheet extends ConsumerStatefulWidget {
-  final SeriesItem series;
-  const SeriesDetailSheet({super.key, required this.series});
-  @override
-  ConsumerState<SeriesDetailSheet> createState() => _SeriesDetailSheetState();
+/// Ouvre la fiche série en dialogue centré (2 colonnes).
+void showSeriesDetail(BuildContext context, SeriesItem series) {
+  showDialog(
+    context: context,
+    barrierColor: Colors.black87,
+    builder: (_) => Dialog(
+      backgroundColor: KtvColors.panel,
+      insetPadding: const EdgeInsets.all(40),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      clipBehavior: Clip.antiAlias,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 940, maxHeight: 600),
+        child: SeriesDetail(series: series),
+      ),
+    ),
+  );
 }
 
-class _SeriesDetailSheetState extends ConsumerState<SeriesDetailSheet> {
+/// 2 colonnes : gauche = affiche + synopsis TMDB ; droite = saisons + épisodes.
+class SeriesDetail extends ConsumerStatefulWidget {
+  final SeriesItem series;
+  const SeriesDetail({super.key, required this.series});
+  @override
+  ConsumerState<SeriesDetail> createState() => _SeriesDetailState();
+}
+
+class _SeriesDetailState extends ConsumerState<SeriesDetail> {
   String? _season;
 
   @override
   Widget build(BuildContext context) {
     final info = ref.watch(seriesInfoProvider(widget.series.seriesId));
-    return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.7,
-      maxChildSize: 0.92,
-      builder: (_, scroll) => Column(
-        children: [
-          Container(width: 40, height: 4, margin: const EdgeInsets.symmetric(vertical: 10), decoration: BoxDecoration(color: KtvColors.line, borderRadius: BorderRadius.circular(2))),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
+    final d = ref.watch(tmdbSearchProvider((type: 'tv', name: widget.series.name))).asData?.value;
+    final poster = TmdbService.img(d?['poster_path'] as String?, size: 'w342');
+    final overview = (d?['overview'] as String?)?.trim() ?? '';
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Colonne gauche : affiche + synopsis
+        SizedBox(
+          width: 260,
+          child: Container(
+            color: KtvColors.panel2,
+            padding: const EdgeInsets.all(18),
+            child: ListView(
               children: [
-                Expanded(child: Text(widget.series.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800))),
-                IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: AspectRatio(
+                    aspectRatio: 2 / 3,
+                    child: (poster.isNotEmpty || (widget.series.cover ?? '').isNotEmpty)
+                        ? CachedNetworkImage(imageUrl: poster.isNotEmpty ? poster : widget.series.cover!, fit: BoxFit.cover, errorWidget: (_, _, _) => const ColoredBox(color: KtvColors.panel))
+                        : const ColoredBox(color: KtvColors.panel, child: Icon(Icons.grid_view_rounded, color: KtvColors.muted)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(cleanTitle(widget.series.name), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+                if (widget.series.rating > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Row(children: [
+                      const Icon(Icons.star, color: KtvColors.accent2, size: 15),
+                      const SizedBox(width: 4),
+                      Text(widget.series.rating.toStringAsFixed(1), style: const TextStyle(color: KtvColors.accent2)),
+                    ]),
+                  ),
+                if (overview.isNotEmpty)
+                  Padding(padding: const EdgeInsets.only(top: 10), child: Text(overview, style: const TextStyle(color: KtvColors.muted, height: 1.4, fontSize: 12.5))),
               ],
             ),
           ),
-          _tmdbHeader(),
-          Expanded(
-            child: AsyncView<Map<String, List<Episode>>>(
-              value: info,
-              isEmpty: (m) => m.isEmpty,
-              emptyBuilder: () => const Center(child: Text('Aucun épisode', style: TextStyle(color: KtvColors.muted))),
-              data: (seasons) {
-                final keys = seasons.keys.toList()..sort((a, b) => (int.tryParse(a) ?? 0).compareTo(int.tryParse(b) ?? 0));
-                final season = _season ?? keys.first;
-                final eps = seasons[season] ?? [];
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: DropdownButton<String>(
-                        value: season,
-                        dropdownColor: KtvColors.panel2,
-                        underline: const SizedBox(),
-                        items: keys.map((k) => DropdownMenuItem(value: k, child: Text('Saison $k'))).toList(),
-                        onChanged: (v) => setState(() => _season = v),
+        ),
+        // Colonne droite : saisons + épisodes
+        Expanded(
+          child: Stack(
+            children: [
+              AsyncView<Map<String, List<Episode>>>(
+                value: info,
+                isEmpty: (m) => m.isEmpty,
+                emptyBuilder: () => const Center(child: Text('Aucun épisode', style: TextStyle(color: KtvColors.muted))),
+                data: (seasons) {
+                  final keys = seasons.keys.toList()..sort((a, b) => (int.tryParse(a) ?? 0).compareTo(int.tryParse(b) ?? 0));
+                  final season = _season ?? keys.first;
+                  final eps = seasons[season] ?? [];
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+                        child: DropdownButton<String>(
+                          value: season,
+                          dropdownColor: KtvColors.panel2,
+                          underline: const SizedBox(),
+                          items: keys.map((k) => DropdownMenuItem(value: k, child: Text('Saison $k'))).toList(),
+                          onChanged: (v) => setState(() => _season = v),
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: ListView.builder(
-                        controller: scroll,
-                        itemCount: eps.length,
-                        itemBuilder: (_, i) {
-                          final ep = eps[i];
-                          final prefs = ref.read(prefsProvider);
-                          final watched = prefs.isWatched('series:${ep.id}');
-                          return ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: KtvColors.panel2,
-                              child: Text('${ep.episodeNum}', style: const TextStyle(color: KtvColors.txt)),
-                            ),
-                            title: Text(ep.title.isEmpty ? 'Épisode ${ep.episodeNum}' : ep.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                            trailing: watched ? const Icon(Icons.check_circle, color: KtvColors.accent, size: 18) : const Icon(Icons.play_arrow),
-                            onTap: () => _play(ep, season),
-                          );
-                        },
+                      Expanded(
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          itemCount: eps.length,
+                          itemBuilder: (_, i) {
+                            final ep = eps[i];
+                            final watched = ref.read(prefsProvider).isWatched('series:${ep.id}');
+                            return ListTile(
+                              leading: CircleAvatar(backgroundColor: KtvColors.panel2, child: Text('${ep.episodeNum}', style: const TextStyle(color: KtvColors.txt))),
+                              title: Text(ep.title.isEmpty ? 'Épisode ${ep.episodeNum}' : ep.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                              trailing: watched ? const Icon(Icons.check_circle, color: KtvColors.accent, size: 18) : const Icon(Icons.play_arrow),
+                              onTap: () => _play(ep, season),
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _tmdbHeader() {
-    final d = ref.watch(tmdbSearchProvider((type: 'tv', name: widget.series.name))).asData?.value;
-    if (d == null) return const SizedBox.shrink();
-    final backdrop = TmdbService.img(d['backdrop_path'] as String?, size: 'w780');
-    final overview = (d['overview'] as String?)?.trim() ?? '';
-    if (backdrop.isEmpty && overview.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (backdrop.isNotEmpty)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: AspectRatio(
-                aspectRatio: 16 / 7,
-                child: CachedNetworkImage(imageUrl: backdrop, fit: BoxFit.cover, errorWidget: (_, _, _) => const ColoredBox(color: KtvColors.panel2)),
+                    ],
+                  );
+                },
               ),
-            ),
-          if (overview.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(overview, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(color: KtvColors.muted, height: 1.35, fontSize: 13)),
-            ),
-        ],
-      ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Material(color: Colors.black45, shape: const CircleBorder(), child: IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () => Navigator.pop(context))),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
