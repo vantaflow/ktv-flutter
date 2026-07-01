@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../core/process/ffmpeg_locator.dart';
+import '../../core/providers.dart';
 
 enum RecStatus { scheduled, recording, done, error }
 
@@ -54,8 +55,10 @@ class RecordingController extends Notifier<List<Recording>> {
     if (_proc != null) return 'Un enregistrement est déjà en cours.';
     final ff = await FfmpegLocator.path();
     if (ff == null) return 'ffmpeg introuvable.';
-    final dir = await getApplicationDocumentsDirectory();
-    final folder = Directory('${dir.path}/KTV Enregistrements')..createSync(recursive: true);
+    final custom = ref.read(prefsProvider).settingStr('recordingsDir');
+    final folder = custom.isNotEmpty
+        ? (Directory(custom)..createSync(recursive: true))
+        : (Directory('${(await getApplicationDocumentsDirectory()).path}/KTV Enregistrements')..createSync(recursive: true));
     final safe = name.replaceAll(RegExp(r'[^\w\-. À-ÿ]'), '_').trim();
     final stamp = DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
     final path = '${folder.path}/${safe}_$stamp.mp4';

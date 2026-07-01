@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers.dart';
 import '../../core/storage/prefs_store.dart';
@@ -311,7 +313,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return [
       _card([
         const Text('Bouton ● sur une chaîne Live pour enregistrer, ⏱ dans le lecteur pour programmer. La lecture continue pendant l\'enregistrement.', style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
+        _folderRow('recordingsDir', 'Documents/KTV Enregistrements'),
+        const Divider(height: 24, color: KtvColors.line),
         if (recs.isEmpty)
           const Text('Aucun enregistrement.', style: TextStyle(color: KtvColors.muted, fontSize: 13))
         else
@@ -359,6 +363,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final jobs = ref.watch(downloadControllerProvider);
     return [
       _card([
+        _folderRow('downloadsDir', 'Documents/KTV Téléchargements'),
+        const Divider(height: 24, color: KtvColors.line),
         if (jobs.isEmpty)
           const Text('Aucun téléchargement. Bouton ⬇ sur un film ou un épisode.', style: TextStyle(color: KtvColors.muted, fontSize: 13))
         else
@@ -427,7 +433,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _card([
         const Text('KTV — Flutter + media_kit', style: TextStyle(fontWeight: FontWeight.w700)),
         const SizedBox(height: 4),
-        const Text('Version 0.1.5', style: TextStyle(color: KtvColors.muted, fontSize: 13)),
+        const Text('Version 0.1.6', style: TextStyle(color: KtvColors.muted, fontSize: 13)),
         const SizedBox(height: 12),
         FilledButton.tonalIcon(
           onPressed: () => _openUrl('https://github.com/khalilbenaz/ktv-flutter/releases'),
@@ -442,6 +448,54 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   // ---------- helpers ----------
   void _toast(String m) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+
+  /// Ligne « Dossier … » + boutons Changer / Réinitialiser / Ouvrir.
+  Widget _folderRow(String key, String defLabel) {
+    final prefs = ref.read(prefsProvider);
+    final path = prefs.settingStr(key);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(children: [
+          const Icon(Icons.folder_open, size: 16, color: KtvColors.accent2),
+          const SizedBox(width: 8),
+          Expanded(child: Text(path.isEmpty ? '$defLabel (par défaut)' : path, style: const TextStyle(color: KtvColors.muted, fontSize: 12.5))),
+        ]),
+        const SizedBox(height: 8),
+        Wrap(spacing: 8, runSpacing: 6, children: [
+          FilledButton.tonalIcon(onPressed: () => _pickFolder(key), icon: const Icon(Icons.drive_folder_upload, size: 18), label: const Text('Changer le dossier…')),
+          TextButton.icon(onPressed: () => _openFolder(key, defLabel), icon: const Icon(Icons.open_in_new, size: 16), label: const Text('Ouvrir')),
+          if (path.isNotEmpty) TextButton(onPressed: () async { await prefs.setSetting(key, null); setState(() {}); }, child: const Text('Réinitialiser')),
+        ]),
+      ],
+    );
+  }
+
+  Future<void> _pickFolder(String key) async {
+    final dir = await FilePicker.platform.getDirectoryPath(dialogTitle: 'Choisir le dossier');
+    if (dir != null && dir.isNotEmpty) {
+      await ref.read(prefsProvider).setSetting(key, dir);
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _openFolder(String key, String defLabel) async {
+    var path = ref.read(prefsProvider).settingStr(key);
+    if (path.isEmpty) {
+      final docs = await getApplicationDocumentsDirectory();
+      // defLabel = "Documents/<nom>"
+      final name = defLabel.split('/').last;
+      final folder = Directory('${docs.path}/$name')..createSync(recursive: true);
+      path = folder.path;
+    }
+    try {
+      if (Platform.isMacOS) {
+        await Process.run('open', [path]);
+      } else if (Platform.isWindows) {
+        await Process.run('explorer', [path]);
+      }
+    } catch (_) {}
+  }
 
   Future<void> _openUrl(String url) async {
     try {

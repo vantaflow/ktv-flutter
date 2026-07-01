@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
+import '../../core/providers.dart';
 
 enum DownloadStatus { queued, downloading, done, error, canceled }
 
@@ -60,8 +61,10 @@ class DownloadController extends Notifier<List<DownloadJob>> {
     _running = true;
     _update(next.id, status: DownloadStatus.downloading);
     try {
-      final dir = await getApplicationDocumentsDirectory();
-      final folder = Directory('${dir.path}/KTV Téléchargements')..createSync(recursive: true);
+      final custom = ref.read(prefsProvider).settingStr('downloadsDir');
+      final folder = custom.isNotEmpty
+          ? (Directory(custom)..createSync(recursive: true))
+          : (Directory('${(await getApplicationDocumentsDirectory()).path}/KTV Téléchargements')..createSync(recursive: true));
       final path = '${folder.path}/${_sanitize(next.name)}.${next.ext}';
       _current = CancelToken();
       await _dio.download(next.url, path, cancelToken: _current, onReceiveProgress: (r, t) {
