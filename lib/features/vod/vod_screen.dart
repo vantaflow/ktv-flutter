@@ -4,6 +4,7 @@ import '../../core/models/models.dart';
 import '../../core/widgets/category_chips.dart';
 import '../../core/widgets/poster_card.dart';
 import '../../core/widgets/async_view.dart';
+import '../../core/widgets/filter_bar.dart';
 import '../../core/providers.dart';
 import 'movie_detail_sheet.dart';
 import 'vod_providers.dart';
@@ -15,6 +16,7 @@ class VodScreen extends ConsumerStatefulWidget {
 }
 
 class _VodScreenState extends ConsumerState<VodScreen> {
+  CatalogFilter _filter = const CatalogFilter();
   @override
   Widget build(BuildContext context) {
     // Auto-sélection de la 1re catégorie.
@@ -43,11 +45,16 @@ class _VodScreenState extends ConsumerState<VodScreen> {
           ),
         ),
         const SizedBox(height: 8),
+        FilterBar(filter: _filter, onChanged: (f) => setState(() => _filter = f)),
+        const SizedBox(height: 8),
         Expanded(
           child: AsyncView(
             value: ref.watch(vodStreamsProvider),
             emptyBuilder: () => const Center(child: Text('Aucun film', style: TextStyle(color: Colors.white38))),
-            data: (List<VodItem> movies) => GridView.builder(
+            data: (List<VodItem> all) {
+              final movies = applyCatalogFilter(all, _filter, nameOf: (m) => m.name, ratingOf: (m) => m.rating, addedOf: (m) => m.added);
+              if (movies.isEmpty) return const Center(child: Text('Aucun film pour ces filtres', style: TextStyle(color: Colors.white38)));
+              return GridView.builder(
               padding: const EdgeInsets.all(16),
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: 170,
@@ -73,7 +80,8 @@ class _VodScreenState extends ConsumerState<VodScreen> {
                   onTap: () => _play(m),
                 );
               },
-            ),
+              );
+            },
           ),
         ),
       ],

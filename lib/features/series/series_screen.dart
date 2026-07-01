@@ -4,6 +4,7 @@ import '../../core/models/models.dart';
 import '../../core/widgets/category_chips.dart';
 import '../../core/widgets/poster_card.dart';
 import '../../core/widgets/async_view.dart';
+import '../../core/widgets/filter_bar.dart';
 import 'series_providers.dart';
 import 'series_detail_sheet.dart';
 
@@ -14,6 +15,7 @@ class SeriesScreen extends ConsumerStatefulWidget {
 }
 
 class _SeriesScreenState extends ConsumerState<SeriesScreen> {
+  CatalogFilter _filter = const CatalogFilter();
   @override
   Widget build(BuildContext context) {
     ref.listen(seriesCategoriesProvider, (_, next) {
@@ -41,30 +43,36 @@ class _SeriesScreenState extends ConsumerState<SeriesScreen> {
           ),
         ),
         const SizedBox(height: 8),
+        FilterBar(filter: _filter, onChanged: (f) => setState(() => _filter = f)),
+        const SizedBox(height: 8),
         Expanded(
           child: AsyncView(
             value: ref.watch(seriesListProvider),
             emptyBuilder: () => const Center(child: Text('Aucune série', style: TextStyle(color: Colors.white38))),
-            data: (List<SeriesItem> series) => GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 170,
-                childAspectRatio: 0.52,
-                crossAxisSpacing: 14,
-                mainAxisSpacing: 18,
-              ),
-              itemCount: series.length,
-              itemBuilder: (_, i) {
-                final s = series[i];
-                return PosterCard(
-                  title: s.name,
-                  imageUrl: s.cover,
-                  rating: s.rating,
-                  width: 170,
-                  onTap: () => _open(s),
-                );
-              },
-            ),
+            data: (List<SeriesItem> all) {
+              final series = applyCatalogFilter(all, _filter, nameOf: (s) => s.name, ratingOf: (s) => s.rating, addedOf: (s) => s.lastModified);
+              if (series.isEmpty) return const Center(child: Text('Aucune série pour ces filtres', style: TextStyle(color: Colors.white38)));
+              return GridView.builder(
+                padding: const EdgeInsets.all(16),
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 170,
+                  childAspectRatio: 0.52,
+                  crossAxisSpacing: 14,
+                  mainAxisSpacing: 18,
+                ),
+                itemCount: series.length,
+                itemBuilder: (_, i) {
+                  final s = series[i];
+                  return PosterCard(
+                    title: s.name,
+                    imageUrl: s.cover,
+                    rating: s.rating,
+                    width: 170,
+                    onTap: () => _open(s),
+                  );
+                },
+              );
+            },
           ),
         ),
       ],
