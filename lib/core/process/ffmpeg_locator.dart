@@ -11,9 +11,11 @@ class FfmpegLocator {
   static Future<String?> path() async {
     if (_cached != null && File(_cached!).existsSync()) return _cached;
     try {
+      final isWin = Platform.isWindows;
+      final assetName = isWin ? 'assets/bin/ffmpeg.exe' : 'assets/bin/ffmpeg';
       final support = await getApplicationSupportDirectory();
-      final exe = File('${support.path}/ffmpeg');
-      final data = await rootBundle.load('assets/bin/ffmpeg');
+      final exe = File('${support.path}/${isWin ? 'ffmpeg.exe' : 'ffmpeg'}');
+      final data = await rootBundle.load(assetName);
       // Réécrit si absent ou taille différente.
       if (!exe.existsSync() || exe.lengthSync() != data.lengthInBytes) {
         await exe.writeAsBytes(data.buffer.asUint8List(), flush: true);
