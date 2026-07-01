@@ -88,7 +88,7 @@ class PosterCard extends StatelessWidget {
               title,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12.5, height: 1.2, color: KtvColors.txt),
+              style: TextStyle(fontSize: 12.5, height: 1.2, color: KtvColors.txt),
             ),
           ],
         ),
@@ -101,7 +101,7 @@ class PosterCard extends StatelessWidget {
     return CachedNetworkImage(
       imageUrl: imageUrl!,
       fit: BoxFit.cover,
-      placeholder: (_, _) => const ColoredBox(color: KtvColors.panel2),
+      placeholder: (_, _) => ColoredBox(color: KtvColors.panel2),
       errorWidget: (_, _, _) => const _PosterFallback(),
     );
   }
@@ -116,7 +116,7 @@ class PosterCard extends StatelessWidget {
 class _PosterFallback extends StatelessWidget {
   const _PosterFallback();
   @override
-  Widget build(BuildContext context) => const ColoredBox(
+  Widget build(BuildContext context) => ColoredBox(
         color: KtvColors.panel2,
         child: Center(child: Icon(Icons.movie_outlined, color: KtvColors.muted, size: 32)),
       );

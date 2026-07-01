@@ -4,18 +4,19 @@ import 'package:flutter/material.dart';
 /// accent personnalisable) : ce sont des `static` réassignés par [KtvColors.apply],
 /// puis l'app est reconstruite (themeVersionProvider). `rec` reste fixe (rouge).
 class KtvColors {
-  // Palette sombre fixe (le mode clair complet viendra dans un lot dédié).
-  static const bg = Color(0xFF0E0F13);
-  static const panel = Color(0xFF16181F);
-  static const panel2 = Color(0xFF1E212B);
-  static const line = Color(0xFF2A2D38);
-  static const txt = Color(0xFFE8EAF0);
-  static const muted = Color(0xFF8A8F9E);
+  // Palette DYNAMIQUE (clair/sombre + accent). Réassignée par [apply] puis rebuild
+  // via themeVersionProvider. `rec` (rouge) reste fixe.
+  static Color bg = const Color(0xFF0E0F13);
+  static Color panel = const Color(0xFF16181F);
+  static Color panel2 = const Color(0xFF1E212B);
+  static Color line = const Color(0xFF2A2D38);
+  static Color txt = const Color(0xFFE8EAF0);
+  static Color muted = const Color(0xFF8A8F9E);
   static const rec = Color(0xFFFF4D4D);
 
-  // Accent DYNAMIQUE (personnalisable). Réassigné par [apply] puis rebuild.
   static Color accent = const Color(0xFFFF6A2C);
   static Color accent2 = const Color(0xFFFFB85A);
+  static bool isLight = false;
 
   static LinearGradient get accentGradient =>
       LinearGradient(colors: [accent, accent2], begin: Alignment.centerLeft, end: Alignment.centerRight);
@@ -31,16 +32,32 @@ class KtvColors {
     'teal': (Color(0xFF14B8B8), Color(0xFF6EE0E0)),
   };
 
-  static void apply({required String accentKey}) {
+  static void apply({required bool light, required String accentKey}) {
     final a = accents[accentKey] ?? accents['orange']!;
     accent = a.$1;
     accent2 = a.$2;
+    isLight = light;
+    if (light) {
+      bg = const Color(0xFFF2F3F7);
+      panel = const Color(0xFFFFFFFF);
+      panel2 = const Color(0xFFE7EAF1);
+      line = const Color(0xFFD5DAE4);
+      txt = const Color(0xFF15171E);
+      muted = const Color(0xFF636A78);
+    } else {
+      bg = const Color(0xFF0E0F13);
+      panel = const Color(0xFF16181F);
+      panel2 = const Color(0xFF1E212B);
+      line = const Color(0xFF2A2D38);
+      txt = const Color(0xFFE8EAF0);
+      muted = const Color(0xFF8A8F9E);
+    }
   }
 }
 
 ThemeData buildKtvTheme() {
   final scheme = ColorScheme(
-    brightness: Brightness.dark,
+    brightness: KtvColors.isLight ? Brightness.light : Brightness.dark,
     primary: KtvColors.accent,
     onPrimary: Colors.white,
     secondary: KtvColors.accent2,
@@ -53,13 +70,13 @@ ThemeData buildKtvTheme() {
   );
   return ThemeData(
     useMaterial3: true,
-    brightness: Brightness.dark,
+    brightness: KtvColors.isLight ? Brightness.light : Brightness.dark,
     scaffoldBackgroundColor: KtvColors.bg,
     colorScheme: scheme,
     fontFamily: 'SF Pro Display',
     dividerColor: KtvColors.line,
     splashFactory: InkSparkle.splashFactory,
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       backgroundColor: KtvColors.bg,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
@@ -69,14 +86,14 @@ ThemeData buildKtvTheme() {
       filled: true,
       fillColor: KtvColors.panel2,
       isDense: true,
-      hintStyle: const TextStyle(color: KtvColors.muted),
+      hintStyle: TextStyle(color: KtvColors.muted),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: KtvColors.line),
+        borderSide: BorderSide(color: KtvColors.line),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: KtvColors.line),
+        borderSide: BorderSide(color: KtvColors.line),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),

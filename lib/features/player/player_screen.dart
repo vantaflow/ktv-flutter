@@ -452,7 +452,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
             title: const Text('Programmer l\'enregistrement'),
             content: SingleChildScrollView(
               child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Chaîne : $_title', style: const TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+                Text('Chaîne : $_title', style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
                 const SizedBox(height: 14),
                 const Text('Début', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
                 const SizedBox(height: 6),
@@ -558,7 +558,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
             backgroundColor: KtvColors.panel,
             title: const Text('Partager le flux'),
             content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Diffuse « $_title » vers un autre appareil (VLC, navigateur…).', style: const TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+              Text('Diffuse « $_title » vers un autre appareil (VLC, navigateur…).', style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
               const SizedBox(height: 14),
               if (st.status == RestreamStatus.starting)
                 Row(children: [SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: KtvColors.accent)), SizedBox(width: 10), Text('Démarrage…')])
@@ -568,7 +568,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                 if (st.publicUrl != null)
                   _urlRow('Public (Cloudflare)', st.publicUrl)
                 else
-                  const Text('Tunnel public : en cours de création (ou cloudflared absent → LAN seulement).', style: TextStyle(color: KtvColors.muted, fontSize: 11.5)),
+                  Text('Tunnel public : en cours de création (ou cloudflared absent → LAN seulement).', style: TextStyle(color: KtvColors.muted, fontSize: 11.5)),
               ] else if (st.status == RestreamStatus.error)
                 Text('Erreur : ${st.error}', style: const TextStyle(color: KtvColors.rec, fontSize: 12.5)),
             ]),
@@ -588,14 +588,14 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   Widget _urlRow(String label, String? url) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: KtvColors.muted, fontSize: 11.5)),
+          Text(label, style: TextStyle(color: KtvColors.muted, fontSize: 11.5)),
           Row(children: [
             Expanded(child: SelectableText(url ?? '—', style: TextStyle(color: KtvColors.accent2, fontSize: 13, fontWeight: FontWeight.w600))),
             if (url != null)
               IconButton(
                 iconSize: 18,
                 tooltip: 'Copier',
-                icon: const Icon(Icons.copy, color: KtvColors.muted),
+                icon: Icon(Icons.copy, color: KtvColors.muted),
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: url));
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Lien copié')));
@@ -822,8 +822,8 @@ class _ZapSidebar extends ConsumerWidget {
                   selected: active,
                   selectedTileColor: KtvColors.panel2,
                   leading: (ch.icon != null && ch.icon!.isNotEmpty)
-                      ? Image.network(ch.icon!, width: 40, height: 26, fit: BoxFit.contain, errorBuilder: (_, _, _) => const Icon(Icons.live_tv, size: 18, color: KtvColors.muted))
-                      : const Icon(Icons.live_tv, size: 18, color: KtvColors.muted),
+                      ? Image.network(ch.icon!, width: 40, height: 26, fit: BoxFit.contain, errorBuilder: (_, _, _) => Icon(Icons.live_tv, size: 18, color: KtvColors.muted))
+                      : Icon(Icons.live_tv, size: 18, color: KtvColors.muted),
                   title: Text(ch.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12.5, color: active ? KtvColors.accent2 : KtvColors.txt)),
                   onTap: () => onPick(ch),
                 );

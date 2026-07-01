@@ -81,7 +81,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       _logo(),
                       const SizedBox(height: 24),
                       if (profiles.isNotEmpty) ...[
-                        const Text('Profils enregistrés', style: TextStyle(color: KtvColors.muted, fontSize: 12)),
+                        Text('Profils enregistrés', style: TextStyle(color: KtvColors.muted, fontSize: 12)),
                         const SizedBox(height: 8),
                         Wrap(
                           spacing: 8,
@@ -90,12 +90,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               .map((p) => ActionChip(
                                     label: Text(p.label),
                                     backgroundColor: KtvColors.panel2,
-                                    side: const BorderSide(color: KtvColors.line),
+                                    side: BorderSide(color: KtvColors.line),
                                     onPressed: _loading ? null : () => _useProfile(p),
                                   ))
                               .toList(),
                         ),
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.symmetric(vertical: 16),
                           child: Divider(color: KtvColors.line),
                         ),
@@ -157,7 +157,7 @@ class _AnimatedBackdrop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: RadialGradient(
           center: Alignment(-0.6, -0.7),
           radius: 1.4,

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../core/process/ffmpeg_locator.dart';
+import '../../core/process/cloudflared_locator.dart';
 
 enum RestreamStatus { idle, starting, live, error }
 
@@ -31,7 +32,10 @@ class RestreamController extends Notifier<RestreamState> {
     return const RestreamState();
   }
 
-  static String? _findCloudflared() {
+  /// Résout cloudflared : binaire bundlé en priorité, sinon installation système.
+  static Future<String?> _resolveCloudflared() async {
+    final bundled = await CloudflaredLocator.path();
+    if (bundled != null) return bundled;
     for (final p in ['/opt/homebrew/bin/cloudflared', '/usr/local/bin/cloudflared', '/usr/bin/cloudflared', 'C:/Program Files/cloudflared/cloudflared.exe']) {
       if (File(p).existsSync()) return p;
     }
@@ -102,8 +106,8 @@ class RestreamController extends Notifier<RestreamState> {
     }
   }
 
-  void _startTunnel() {
-    final cf = _findCloudflared();
+  Future<void> _startTunnel() async {
+    final cf = await _resolveCloudflared();
     if (cf == null) return; // pas de cloudflared → LAN seulement
     Process.start(cf, ['tunnel', '--url', 'http://localhost:$_port', '--no-autoupdate']).then((p) {
       _cf = p;

@@ -44,6 +44,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Binaires ffmpeg bundlés (récupérés au build via tool/fetch_ffmpeg, trop lourds pour git)
+# Binaires bundlés (récupérés au build via tool/fetch_ffmpeg, trop lourds pour git)
 assets/bin/ffmpeg
 assets/bin/ffmpeg.exe
+assets/bin/cloudflared
+assets/bin/cloudflared.exe

@@ -31,7 +31,7 @@ class MediaRail extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
-          child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: KtvColors.txt)),
+          child: Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: KtvColors.txt)),
         ),
         if (grid)
           Padding(

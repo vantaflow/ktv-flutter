@@ -22,7 +22,7 @@ class SearchResults extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final q = ref.watch(searchQueryProvider).toLowerCase();
     if (q.length < 2) {
-      return const Center(child: Text('Tape au moins 2 caractères', style: TextStyle(color: KtvColors.muted)));
+      return Center(child: Text('Tape au moins 2 caractères', style: TextStyle(color: KtvColors.muted)));
     }
     final movies = ref.watch(allVodProvider).asData?.value ?? const <VodItem>[];
     final series = ref.watch(allSeriesProvider).asData?.value ?? const <SeriesItem>[];
@@ -47,7 +47,7 @@ class SearchResults extends ConsumerWidget {
     }
 
     if (mHit.isEmpty && sHit.isEmpty && cHit.isEmpty && eHit.isEmpty) {
-      return const Center(child: Text('Aucun résultat', style: TextStyle(color: KtvColors.muted)));
+      return Center(child: Text('Aucun résultat', style: TextStyle(color: KtvColors.muted)));
     }
     return ListView(
       padding: const EdgeInsets.only(bottom: 24, top: 8),
@@ -86,10 +86,10 @@ class SearchResults extends ConsumerWidget {
           for (final h in hits)
             ListTile(
               leading: (h.channel.icon != null && h.channel.icon!.isNotEmpty)
-                  ? Image.network(h.channel.icon!, width: 46, height: 30, fit: BoxFit.contain, errorBuilder: (_, _, _) => const Icon(Icons.live_tv, color: KtvColors.muted))
-                  : const Icon(Icons.live_tv, color: KtvColors.muted),
+                  ? Image.network(h.channel.icon!, width: 46, height: 30, fit: BoxFit.contain, errorBuilder: (_, _, _) => Icon(Icons.live_tv, color: KtvColors.muted))
+                  : Icon(Icons.live_tv, color: KtvColors.muted),
               title: Text('🔴 ${h.program.title}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-              subtitle: Text('${h.channel.name}  ·  ${_time(h.program.start)} → ${_time(h.program.stop)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: KtvColors.muted, fontSize: 12)),
+              subtitle: Text('${h.channel.name}  ·  ${_time(h.program.start)} → ${_time(h.program.stop)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: KtvColors.muted, fontSize: 12)),
               trailing: Icon(Icons.play_arrow, color: KtvColors.accent2),
               onTap: () => PlayLauncher.live(context, ref, h.channel),
             ),

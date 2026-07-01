@@ -154,7 +154,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 setState(() {});
               },
             ),
-            if (label != null) ...[const SizedBox(width: 14), Text(label, style: const TextStyle(color: KtvColors.muted, fontSize: 12))],
+            if (label != null) ...[const SizedBox(width: 14), Text(label, style: TextStyle(color: KtvColors.muted, fontSize: 12))],
           ],
         ),
       );
@@ -167,11 +167,11 @@ class _EmptyHome extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.play_circle_outline, color: KtvColors.muted, size: 56),
+            Icon(Icons.play_circle_outline, color: KtvColors.muted, size: 56),
             const SizedBox(height: 16),
             const Text('Rien à reprendre pour le moment', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
-            const Text('Lance un film, une série ou une chaîne — ça apparaîtra ici.',
+            Text('Lance un film, une série ou une chaîne — ça apparaîtra ici.',
                 style: TextStyle(color: KtvColors.muted)),
           ],
         ),

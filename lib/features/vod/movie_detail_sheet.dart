@@ -88,8 +88,8 @@ class _MovieDetailState extends ConsumerState<MovieDetail> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: (poster.isNotEmpty || (movie.cover ?? '').isNotEmpty)
-                        ? CachedNetworkImage(imageUrl: poster.isNotEmpty ? poster : movie.cover!, fit: BoxFit.cover, errorWidget: (_, _, _) => const ColoredBox(color: KtvColors.panel))
-                        : const ColoredBox(color: KtvColors.panel, child: Icon(Icons.movie_outlined, color: KtvColors.muted)),
+                        ? CachedNetworkImage(imageUrl: poster.isNotEmpty ? poster : movie.cover!, fit: BoxFit.cover, errorWidget: (_, _, _) => ColoredBox(color: KtvColors.panel))
+                        : ColoredBox(color: KtvColors.panel, child: Icon(Icons.movie_outlined, color: KtvColors.muted)),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -133,8 +133,8 @@ class _MovieDetailState extends ConsumerState<MovieDetail> {
                   AspectRatio(
                     aspectRatio: 16 / 8,
                     child: backdrop.isNotEmpty
-                        ? CachedNetworkImage(imageUrl: backdrop, fit: BoxFit.cover, errorWidget: (_, _, _) => const ColoredBox(color: KtvColors.panel2))
-                        : const ColoredBox(color: KtvColors.panel2),
+                        ? CachedNetworkImage(imageUrl: backdrop, fit: BoxFit.cover, errorWidget: (_, _, _) => ColoredBox(color: KtvColors.panel2))
+                        : ColoredBox(color: KtvColors.panel2),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(20),
@@ -150,14 +150,14 @@ class _MovieDetailState extends ConsumerState<MovieDetail> {
                             Text(rating.toStringAsFixed(1), style: TextStyle(color: KtvColors.accent2, fontWeight: FontWeight.w600)),
                             const SizedBox(width: 14),
                           ],
-                          if (year.isNotEmpty) Text(year, style: const TextStyle(color: KtvColors.muted)),
+                          if (year.isNotEmpty) Text(year, style: TextStyle(color: KtvColors.muted)),
                         ]),
                         const SizedBox(height: 14),
                         if (tmdb.isLoading) Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator(color: KtvColors.accent))),
                         if (overview.isNotEmpty)
-                          Text(overview, style: const TextStyle(color: KtvColors.txt, height: 1.45))
+                          Text(overview, style: TextStyle(color: KtvColors.txt, height: 1.45))
                         else if (!tmdb.isLoading)
-                          const Text('Aucune description disponible.', style: TextStyle(color: KtvColors.muted)),
+                          Text('Aucune description disponible.', style: TextStyle(color: KtvColors.muted)),
                         if (d?['id'] is int) _CastRow(id: d!['id'] as int),
                       ],
                     ),
@@ -206,7 +206,7 @@ class _CastRow extends ConsumerWidget {
                 return SizedBox(
                   width: 70,
                   child: Column(children: [
-                    CircleAvatar(radius: 30, backgroundColor: KtvColors.panel2, backgroundImage: photo.isNotEmpty ? CachedNetworkImageProvider(photo) : null, child: photo.isEmpty ? const Icon(Icons.person, color: KtvColors.muted) : null),
+                    CircleAvatar(radius: 30, backgroundColor: KtvColors.panel2, backgroundImage: photo.isNotEmpty ? CachedNetworkImageProvider(photo) : null, child: photo.isEmpty ? Icon(Icons.person, color: KtvColors.muted) : null),
                     const SizedBox(height: 6),
                     Text('${c['name'] ?? ''}', maxLines: 2, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10.5)),
                   ]),

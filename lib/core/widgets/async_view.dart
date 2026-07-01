@@ -18,7 +18,7 @@ class AsyncView<T> extends StatelessWidget {
       error: (e, _) => Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text('Erreur : $e', style: const TextStyle(color: KtvColors.muted), textAlign: TextAlign.center),
+          child: Text('Erreur : $e', style: TextStyle(color: KtvColors.muted), textAlign: TextAlign.center),
         ),
       ),
       data: (d) {

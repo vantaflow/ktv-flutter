@@ -39,7 +39,7 @@ class LiveChannelCard extends ConsumerWidget {
                     CachedNetworkImage(
                       imageUrl: channel.icon!,
                       fit: BoxFit.contain,
-                      placeholder: (_, _) => const ColoredBox(color: KtvColors.panel2),
+                      placeholder: (_, _) => ColoredBox(color: KtvColors.panel2),
                       errorWidget: (_, _, _) => const _LiveFallback(),
                     )
                   else
@@ -104,7 +104,7 @@ class LiveChannelCard extends ConsumerWidget {
               child: Text('🔴 ${now.title}  ·  jusqu\'à ${epgTime(now.stop)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11.5, color: KtvColors.accent2)),
             ),
           if (next != null)
-            Text('Puis ${epgTime(next.start)} · ${next.title}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: KtvColors.muted)),
+            Text('Puis ${epgTime(next.start)} · ${next.title}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: KtvColors.muted)),
         ],
       ),
     );
@@ -134,5 +134,5 @@ class _LiveFallback extends StatelessWidget {
   const _LiveFallback();
   @override
   Widget build(BuildContext context) =>
-      const ColoredBox(color: KtvColors.panel2, child: Center(child: Icon(Icons.live_tv, color: KtvColors.muted, size: 30)));
+      ColoredBox(color: KtvColors.panel2, child: Center(child: Icon(Icons.live_tv, color: KtvColors.muted, size: 30)));
 }

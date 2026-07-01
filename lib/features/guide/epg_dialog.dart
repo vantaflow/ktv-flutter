@@ -67,7 +67,7 @@ void showEpgProgram(BuildContext context, WidgetRef ref, LiveChannel channel, Ep
                     decoration: BoxDecoration(color: KtvColors.rec, borderRadius: BorderRadius.circular(6)),
                     child: const Text('EN DIRECT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white)),
                   ),
-                Expanded(child: Text(channel.name, style: const TextStyle(color: KtvColors.muted, fontSize: 13, fontWeight: FontWeight.w600))),
+                Expanded(child: Text(channel.name, style: TextStyle(color: KtvColors.muted, fontSize: 13, fontWeight: FontWeight.w600))),
               ]),
               const SizedBox(height: 10),
               Text(p.title.isEmpty ? 'Programme' : p.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
@@ -80,9 +80,9 @@ void showEpgProgram(BuildContext context, WidgetRef ref, LiveChannel channel, Ep
               ]),
               const SizedBox(height: 14),
               if (p.description.isNotEmpty)
-                Flexible(child: SingleChildScrollView(child: Text(p.description, style: const TextStyle(color: KtvColors.txt, height: 1.45, fontSize: 13.5))))
+                Flexible(child: SingleChildScrollView(child: Text(p.description, style: TextStyle(color: KtvColors.txt, height: 1.45, fontSize: 13.5))))
               else
-                const Text('Aucune description disponible.', style: TextStyle(color: KtvColors.muted)),
+                Text('Aucune description disponible.', style: TextStyle(color: KtvColors.muted)),
               const SizedBox(height: 18),
               Wrap(
                 spacing: 8,

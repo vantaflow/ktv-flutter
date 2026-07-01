@@ -50,11 +50,11 @@ class GuideScreen extends ConsumerWidget {
                 ? const SizedBox()
                 : AsyncView<List<LiveChannel>>(
                     value: ref.watch(channelsByCategoryProvider(selected)),
-                    emptyBuilder: () => const Center(child: Text('Aucune chaîne', style: TextStyle(color: KtvColors.muted))),
+                    emptyBuilder: () => Center(child: Text('Aucune chaîne', style: TextStyle(color: KtvColors.muted))),
                     data: (channels) => ListView.separated(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       itemCount: channels.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1, color: KtvColors.line),
+                      separatorBuilder: (_, _) => Divider(height: 1, color: KtvColors.line),
                       itemBuilder: (_, i) => _GuideRow(channel: channels[i]),
                     ),
                   ),
@@ -101,7 +101,7 @@ class _GuideRow extends ConsumerWidget {
           const SizedBox(width: 12),
           Expanded(
             child: progs.isEmpty
-                ? const Text('—', style: TextStyle(color: KtvColors.muted))
+                ? Text('—', style: TextStyle(color: KtvColors.muted))
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -118,12 +118,12 @@ class _GuideRow extends ConsumerWidget {
                                   const Icon(Icons.fiber_manual_record, size: 10, color: KtvColors.rec),
                                   const SizedBox(width: 5),
                                   Expanded(child: Text(now.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: KtvColors.accent2))),
-                                  Text('${epgTime(now.start)}–${epgTime(now.stop)}', style: const TextStyle(fontSize: 11, color: KtvColors.muted)),
+                                  Text('${epgTime(now.start)}–${epgTime(now.stop)}', style: TextStyle(fontSize: 11, color: KtvColors.muted)),
                                 ]),
                                 if (now.description.isNotEmpty)
                                   Padding(
                                     padding: const EdgeInsets.only(top: 2, left: 15),
-                                    child: Text(now.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11.5, color: KtvColors.muted, height: 1.3)),
+                                    child: Text(now.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11.5, color: KtvColors.muted, height: 1.3)),
                                   ),
                               ],
                             ),
@@ -143,7 +143,7 @@ class _GuideRow extends ConsumerWidget {
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(color: KtvColors.line),
                                   ),
-                                  child: Text('${epgTime(p.start)}  ${p.title}', style: const TextStyle(fontSize: 11.5, color: KtvColors.txt)),
+                                  child: Text('${epgTime(p.start)}  ${p.title}', style: TextStyle(fontSize: 11.5, color: KtvColors.txt)),
                                 ),
                               )).toList(),
                         ),

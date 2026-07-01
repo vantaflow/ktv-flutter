@@ -67,8 +67,8 @@ class _SeriesDetailState extends ConsumerState<SeriesDetail> {
                   child: AspectRatio(
                     aspectRatio: 2 / 3,
                     child: (poster.isNotEmpty || (widget.series.cover ?? '').isNotEmpty)
-                        ? CachedNetworkImage(imageUrl: poster.isNotEmpty ? poster : widget.series.cover!, fit: BoxFit.cover, errorWidget: (_, _, _) => const ColoredBox(color: KtvColors.panel))
-                        : const ColoredBox(color: KtvColors.panel, child: Icon(Icons.grid_view_rounded, color: KtvColors.muted)),
+                        ? CachedNetworkImage(imageUrl: poster.isNotEmpty ? poster : widget.series.cover!, fit: BoxFit.cover, errorWidget: (_, _, _) => ColoredBox(color: KtvColors.panel))
+                        : ColoredBox(color: KtvColors.panel, child: Icon(Icons.grid_view_rounded, color: KtvColors.muted)),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -83,7 +83,7 @@ class _SeriesDetailState extends ConsumerState<SeriesDetail> {
                     ]),
                   ),
                 if (overview.isNotEmpty)
-                  Padding(padding: const EdgeInsets.only(top: 10), child: Text(overview, style: const TextStyle(color: KtvColors.muted, height: 1.4, fontSize: 12.5))),
+                  Padding(padding: const EdgeInsets.only(top: 10), child: Text(overview, style: TextStyle(color: KtvColors.muted, height: 1.4, fontSize: 12.5))),
               ],
             ),
           ),
@@ -95,7 +95,7 @@ class _SeriesDetailState extends ConsumerState<SeriesDetail> {
               AsyncView<Map<String, List<Episode>>>(
                 value: info,
                 isEmpty: (m) => m.isEmpty,
-                emptyBuilder: () => const Center(child: Text('Aucun épisode', style: TextStyle(color: KtvColors.muted))),
+                emptyBuilder: () => Center(child: Text('Aucun épisode', style: TextStyle(color: KtvColors.muted))),
                 data: (seasons) {
                   final keys = seasons.keys.toList()..sort((a, b) => (int.tryParse(a) ?? 0).compareTo(int.tryParse(b) ?? 0));
                   final season = _season ?? keys.first;
@@ -131,7 +131,7 @@ class _SeriesDetailState extends ConsumerState<SeriesDetail> {
                             final ep = eps[i];
                             final watched = ref.read(prefsProvider).isWatched('series:${ep.id}');
                             return ListTile(
-                              leading: CircleAvatar(backgroundColor: KtvColors.panel2, child: Text('${ep.episodeNum}', style: const TextStyle(color: KtvColors.txt))),
+                              leading: CircleAvatar(backgroundColor: KtvColors.panel2, child: Text('${ep.episodeNum}', style: TextStyle(color: KtvColors.txt))),
                               title: Text(ep.title.isEmpty ? 'Épisode ${ep.episodeNum}' : ep.title, maxLines: 1, overflow: TextOverflow.ellipsis),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -139,7 +139,7 @@ class _SeriesDetailState extends ConsumerState<SeriesDetail> {
                                   IconButton(
                                     tooltip: 'Télécharger',
                                     visualDensity: VisualDensity.compact,
-                                    icon: const Icon(Icons.download_rounded, size: 18, color: KtvColors.muted),
+                                    icon: Icon(Icons.download_rounded, size: 18, color: KtvColors.muted),
                                     onPressed: () => _downloadEpisode(ep, season),
                                   ),
                                   IconButton(

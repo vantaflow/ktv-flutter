@@ -71,7 +71,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
               setState(() => _index = 5); // Réglages → section Enregistrements
             },
           ),
-          const Divider(height: 1, color: KtvColors.line),
+          Divider(height: 1, color: KtvColors.line),
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch, // rail pleine hauteur → couleur uniforme
@@ -80,7 +80,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                   _clearSearch(); // choisir un onglet quitte les résultats de recherche
                   setState(() => _index = i);
                 }),
-                const VerticalDivider(width: 1, color: KtvColors.line),
+                VerticalDivider(width: 1, color: KtvColors.line),
                 Expanded(
                   child: searching
                       ? const SearchResults()
@@ -137,7 +137,7 @@ class _TopBar extends StatelessWidget {
                 onChanged: onChanged,
                 decoration: InputDecoration(
                   hintText: 'Rechercher chaînes, films, séries…',
-                  prefixIcon: const Icon(Icons.search, size: 20, color: KtvColors.muted),
+                  prefixIcon: Icon(Icons.search, size: 20, color: KtvColors.muted),
                   suffixIcon: controller.text.isEmpty
                       ? null
                       : IconButton(icon: const Icon(Icons.close, size: 18), onPressed: onClear),

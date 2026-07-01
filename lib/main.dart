@@ -21,7 +21,7 @@ Future<void> main() async {
   );
   final prefs = await PrefsStore.create();
   // Applique le thème enregistré avant le 1er rendu.
-  KtvColors.apply(accentKey: prefs.settingStr('accentColor', 'orange'));
+  KtvColors.apply(light: prefs.settingBool('themeLight', false), accentKey: prefs.settingStr('accentColor', 'orange'));
   runApp(
     ProviderScope(
       overrides: [prefsProvider.overrideWithValue(prefs)],

@@ -54,7 +54,7 @@ class FilterBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          const Icon(Icons.sort, size: 16, color: KtvColors.muted),
+          Icon(Icons.sort, size: 16, color: KtvColors.muted),
           const SizedBox(width: 6),
           _sortChip('Récents', CatalogSort.recent),
           const SizedBox(width: 6),
