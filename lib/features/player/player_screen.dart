@@ -61,6 +61,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   double _rate = 1.0;
   double _subDelay = 0.0; // secondes
   int _audioBoost = 100; // % (jusqu'à 200)
+  bool _pip = false;
 
   int? get _knownDurSec => _reqKnownDur ?? ((_mkDuration != null && _mkDuration!.inSeconds > 0) ? _mkDuration!.inSeconds : null);
   bool get _hasNext => (widget.request.playlist != null) && (_plIndex + 1 < widget.request.playlist!.length);
@@ -203,6 +204,26 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     _hideTimer = Timer(const Duration(seconds: 3), () {
       if (mounted && _playing) setState(() => _controlsVisible = false);
     });
+  }
+
+  // Picture-in-Picture desktop : petite fenêtre toujours au premier plan.
+  Future<void> _togglePip() async {
+    _pip = !_pip;
+    try {
+      if (_pip) {
+        if (_fullscreen) {
+          await windowManager.setFullScreen(false);
+          _fullscreen = false;
+        }
+        await windowManager.setAlwaysOnTop(true);
+        await windowManager.setSize(const Size(460, 270));
+        await windowManager.setAlignment(Alignment.topRight);
+      } else {
+        await windowManager.setAlwaysOnTop(false);
+        await windowManager.maximize();
+      }
+    } catch (_) {}
+    if (mounted) setState(() {});
   }
 
   Future<void> _toggleFullscreen() async {
@@ -596,6 +617,12 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
         await windowManager.setFullScreen(false);
       } catch (_) {}
     }
+    if (_pip) {
+      try {
+        await windowManager.setAlwaysOnTop(false);
+        await windowManager.maximize();
+      } catch (_) {}
+    }
     if (mounted) Navigator.of(context).maybePop();
   }
 
@@ -669,6 +696,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                       if (_hasNext)
                         IconButton(tooltip: 'Épisode suivant', onPressed: _playNext, icon: const Icon(Icons.skip_next, color: Colors.white)),
                       IconButton(tooltip: 'Réglages de lecture (vitesse, audio, sous-titres)', onPressed: _openPlaybackSheet, icon: const Icon(Icons.tune, color: Colors.white)),
+                      IconButton(tooltip: _pip ? 'Quitter le mode fenêtre' : 'Fenêtre flottante (PiP)', onPressed: _togglePip, icon: Icon(_pip ? Icons.close_fullscreen : Icons.picture_in_picture_alt, color: _pip ? KtvColors.accent : Colors.white)),
                       if (widget.request.isLive) ...[
                         IconButton(
                           tooltip: isRec ? 'Arrêter l\'enregistrement' : 'Enregistrer',
