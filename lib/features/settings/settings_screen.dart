@@ -5,6 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:dio/dio.dart';
+import '../../core/models/models.dart';
+import '../player/play_launcher.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers.dart';
 import '../../core/version.dart';
@@ -30,10 +33,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _checkingUpdate = false;
   UpdateInfo? _update;
   double? _dlProgress;
+  bool _diagRunning = false;
+  String? _diagText;
 
   static const _tabs = [
     (icon: Icons.person_rounded, label: 'Compte & abonnement'),
     (icon: Icons.play_circle_outline, label: 'Lecture & tampon'),
+    (icon: Icons.home_rounded, label: 'Accueil'),
     (icon: Icons.event_note_rounded, label: 'EPG externe'),
     (icon: Icons.movie_filter_rounded, label: 'Catalogue'),
     (icon: Icons.theaters_rounded, label: 'Enrichissement TMDB'),
@@ -41,6 +47,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     (icon: Icons.autorenew_rounded, label: 'Mise à jour auto'),
     (icon: Icons.fiber_manual_record, label: 'Enregistrements'),
     (icon: Icons.download_rounded, label: 'Téléchargements'),
+    (icon: Icons.history_rounded, label: 'Historique'),
+    (icon: Icons.speed_rounded, label: 'Diagnostic'),
     (icon: Icons.switch_account_rounded, label: 'Profils'),
     (icon: Icons.info_outline_rounded, label: 'Application'),
   ];
@@ -79,17 +87,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               children: [
                 Text(_tabs[tab].label, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 18),
-                ...switch (tab) {
-                  0 => _account(),
-                  1 => _playback(prefs),
-                  2 => _epg(),
-                  3 => _catalog(),
-                  4 => _tmdb(prefs),
-                  5 => _trakt(prefs),
-                  6 => _autoRefresh(prefs),
-                  7 => _recordings(),
-                  8 => _downloads(),
-                  9 => _profiles(),
+                ...switch (_tabs[tab].label) {
+                  'Compte & abonnement' => _account(),
+                  'Lecture & tampon' => _playback(prefs),
+                  'Accueil' => _homeCategories(prefs),
+                  'EPG externe' => _epg(),
+                  'Catalogue' => _catalog(),
+                  'Enrichissement TMDB' => _tmdb(prefs),
+                  'Synchronisation Trakt' => _trakt(prefs),
+                  'Mise à jour auto' => _autoRefresh(prefs),
+                  'Enregistrements' => _recordings(),
+                  'Téléchargements' => _downloads(),
+                  'Historique' => _history(),
+                  'Diagnostic' => _diagnostic(),
+                  'Profils' => _profiles(),
                   _ => _app(),
                 },
               ],
@@ -440,6 +451,125 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         FilledButton.tonalIcon(onPressed: () => ref.read(authControllerProvider.notifier).logout(), icon: const Icon(Icons.logout), label: const Text('Se déconnecter')),
       ]),
     ];
+  }
+
+  // --- 🏠 Accueil (rangées affichées) ---
+  List<Widget> _homeCategories(PrefsStore prefs) {
+    const rails = [
+      ('home_favs', 'Chaînes favorites'),
+      ('home_resume', 'Reprendre la lecture'),
+      ('home_recent', 'Vu récemment'),
+      ('home_watchlist', 'Ma liste (Trakt)'),
+      ('home_recoMovies', 'Recommandé pour vous'),
+      ('home_recoSeries', 'Séries recommandées'),
+      ('home_latestMovies', 'Derniers films ajoutés'),
+      ('home_latestSeries', 'Dernières séries ajoutées'),
+    ];
+    return [
+      _card([
+        const Text('Coche les rangées à afficher sur l\'accueil.', style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+        for (final r in rails)
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            activeThumbColor: KtvColors.accent,
+            title: Text(r.$2),
+            value: prefs.settingBool(r.$1, true),
+            onChanged: (v) async { await prefs.setSetting(r.$1, v); setState(() {}); },
+          ),
+      ]),
+    ];
+  }
+
+  // --- 🕘 Historique complet ---
+  List<Widget> _history() {
+    final recent = ref.read(prefsProvider).recent();
+    return [
+      _card([
+        Row(children: [
+          Expanded(child: Text('${recent.length} entrée(s)', style: const TextStyle(color: KtvColors.muted, fontSize: 12.5))),
+          if (recent.isNotEmpty)
+            TextButton.icon(
+              onPressed: () async { await ref.read(prefsProvider).clearRecent(); setState(() {}); _toast('Historique effacé'); },
+              icon: const Icon(Icons.delete_outline, size: 18),
+              label: const Text('Effacer'),
+            ),
+        ]),
+        if (recent.isEmpty)
+          const Text('Aucun historique.', style: TextStyle(color: KtvColors.muted, fontSize: 13))
+        else
+          for (final e in recent)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              leading: Icon(
+                switch (e.kind) { MediaKind.live => Icons.live_tv, MediaKind.movie => Icons.movie_outlined, MediaKind.series => Icons.grid_view_rounded },
+                color: KtvColors.muted,
+                size: 20,
+              ),
+              title: Text(e.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+              subtitle: e.subtitle != null ? Text(e.subtitle!, style: const TextStyle(color: KtvColors.muted, fontSize: 11)) : null,
+              trailing: const Icon(Icons.play_arrow, color: KtvColors.accent2),
+              onTap: () => PlayLauncher.recent(context, ref, e),
+            ),
+      ]),
+    ];
+  }
+
+  // --- 📶 Diagnostic du fournisseur ---
+  List<Widget> _diagnostic() {
+    return [
+      _card([
+        const Text('Teste la latence de l\'API, les connexions et le débit du flux.', style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+        const SizedBox(height: 12),
+        FilledButton.icon(
+          onPressed: _diagRunning ? null : _runDiagnostic,
+          icon: _diagRunning ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.speed),
+          label: const Text('Lancer le test'),
+        ),
+        if (_diagText != null) ...[
+          const SizedBox(height: 14),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: KtvColors.panel2, borderRadius: BorderRadius.circular(10)),
+            child: Text(_diagText!, style: const TextStyle(fontSize: 13, height: 1.5, fontFeatures: [FontFeature.tabularFigures()])),
+          ),
+        ],
+      ]),
+    ];
+  }
+
+  Future<void> _runDiagnostic() async {
+    setState(() { _diagRunning = true; _diagText = null; });
+    final client = ref.read(xtreamClientProvider);
+    final urls = ref.read(xtreamUrlsProvider);
+    final sw = Stopwatch()..start();
+    UserInfo? ui;
+    try { ui = await client?.authenticate(); } catch (_) {}
+    final latency = sw.elapsedMilliseconds;
+    double mbps = 0;
+    if (urls != null) {
+      try {
+        final dio = Dio();
+        final sw2 = Stopwatch()..start();
+        var bytes = 0;
+        final rs = await dio.get<ResponseBody>(urls.xmltv(), options: Options(responseType: ResponseType.stream, headers: {'User-Agent': 'KTV'}));
+        await for (final chunk in rs.data!.stream) {
+          bytes += chunk.length;
+          if (sw2.elapsedMilliseconds > 3000 || bytes > 8 * 1024 * 1024) break;
+        }
+        if (sw2.elapsedMilliseconds > 0) mbps = (bytes * 8 / 1e6) / (sw2.elapsedMilliseconds / 1000);
+      } catch (_) {}
+    }
+    if (!mounted) return;
+    setState(() {
+      _diagRunning = false;
+      _diagText = 'Latence API      : $latency ms\n'
+          'Statut           : ${ui?.status ?? '—'}\n'
+          'Connexions       : ${ui?.activeCons ?? '?'} / ${ui?.maxCons ?? '?'}\n'
+          'Débit (approx.)  : ${mbps.toStringAsFixed(1)} Mb/s';
+    });
   }
 
   // --- ⬆️ Application ---

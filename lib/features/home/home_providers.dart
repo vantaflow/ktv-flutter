@@ -7,6 +7,7 @@ import '../auth/auth_controller.dart';
 import '../vod/vod_providers.dart';
 import '../series/series_providers.dart';
 import '../../services/tmdb/tmdb_providers.dart';
+import '../../services/trakt/trakt_providers.dart';
 import '../../services/epg/epg_providers.dart';
 
 /// Rafraîchissement périodique en arrière-plan (catalogue + EPG) selon le réglage
@@ -137,6 +138,19 @@ final seriesRecommendationsProvider = FutureProvider<List<SeriesItem>>((ref) asy
   if (suggestions.isEmpty) return [];
   final catalogMaps = catalog.map((s) => {'name': s.name, '_tmdbId': s.tmdbId, 'releaseDate': null, '__ref': s}).toList();
   return matchRecommendationsToCatalog(suggestions, catalogMaps).map((mp) => mp['__ref'] as SeriesItem).take(40).toList();
+});
+
+/// Watchlist Trakt (films « à voir ») filtrée sur le catalogue disponible.
+final traktWatchlistProvider = FutureProvider<List<VodItem>>((ref) async {
+  if (ref.watch(authControllerProvider) == null) return [];
+  final trakt = ref.read(traktServiceProvider);
+  if (!trakt.connected) return [];
+  final catalog = await ref.watch(allVodProvider.future);
+  if (catalog.isEmpty) return [];
+  final wl = await trakt.watchlist('movies');
+  if (wl.isEmpty) return [];
+  final catalogMaps = catalog.map((m) => {'name': m.name, '_tmdbId': m.tmdbId, 'releaseDate': null, '__ref': m}).toList();
+  return matchRecommendationsToCatalog(wl, catalogMaps).map((mp) => mp['__ref'] as VodItem).take(40).toList();
 });
 
 /// Recommandations films : seeds = films récemment lus → TMDB recommandations →

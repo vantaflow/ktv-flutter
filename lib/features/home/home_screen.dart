@@ -46,22 +46,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: _header(prof?.label, grid)),
-          // Rails (chacun se masque tout seul s'il est vide).
-          SliverToBoxAdapter(
-            child: MediaRail(title: 'Chaînes favorites', items: favs, grid: grid, onTap: (e) => PlayLauncher.recent(context, ref, e)),
-          ),
-          SliverToBoxAdapter(
-            child: MediaRail(title: 'Reprendre la lecture', items: resume, grid: grid, progressOf: progressOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
-          ),
-          SliverToBoxAdapter(
-            child: MediaRail(title: 'Vu récemment', items: recent, grid: grid, progressOf: progressOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
-          ),
+          // Rails (chacun se masque tout seul s'il est vide ; activables dans Réglages → Accueil).
+          if (prefs.settingBool('home_favs', true))
+            SliverToBoxAdapter(
+              child: MediaRail(title: 'Chaînes favorites', items: favs, grid: grid, onTap: (e) => PlayLauncher.recent(context, ref, e)),
+            ),
+          if (prefs.settingBool('home_resume', true))
+            SliverToBoxAdapter(
+              child: MediaRail(title: 'Reprendre la lecture', items: resume, grid: grid, progressOf: progressOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
+            ),
+          if (prefs.settingBool('home_recent', true))
+            SliverToBoxAdapter(
+              child: MediaRail(title: 'Vu récemment', items: recent, grid: grid, progressOf: progressOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
+            ),
+          if (prefs.settingBool('home_watchlist', true)) SliverToBoxAdapter(child: _watchlistRail(grid)),
           if (prefs.settingBool('traktRecommendationsEnabled', true)) ...[
-            SliverToBoxAdapter(child: _recoRail(grid)),
-            SliverToBoxAdapter(child: _recoSeriesRail(grid)),
+            if (prefs.settingBool('home_recoMovies', true)) SliverToBoxAdapter(child: _recoRail(grid)),
+            if (prefs.settingBool('home_recoSeries', true)) SliverToBoxAdapter(child: _recoSeriesRail(grid)),
           ],
-          SliverToBoxAdapter(child: _latestVodRail(grid)),
-          SliverToBoxAdapter(child: _latestSeriesRail(grid)),
+          if (prefs.settingBool('home_latestMovies', true)) SliverToBoxAdapter(child: _latestVodRail(grid)),
+          if (prefs.settingBool('home_latestSeries', true)) SliverToBoxAdapter(child: _latestSeriesRail(grid)),
           if (recent.isEmpty && favs.isEmpty)
             SliverToBoxAdapter(child: Padding(padding: const EdgeInsets.only(top: 40), child: _loadingOrEmpty())),
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -74,6 +78,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final loading = ref.watch(latestVodProvider).isLoading || ref.watch(latestSeriesProvider).isLoading;
     if (loading) return const Center(child: CircularProgressIndicator(color: KtvColors.accent));
     return const _EmptyHome();
+  }
+
+  Widget _watchlistRail(bool grid) {
+    final list = ref.watch(traktWatchlistProvider).asData?.value ?? const [];
+    return PosterRail(
+      title: 'Ma liste (Trakt)',
+      grid: grid,
+      items: list.map((m) => PosterRailItem(title: m.name, cover: m.cover, rating: m.rating, onTap: () => _openMovie(m))).toList(),
+    );
   }
 
   Widget _recoRail(bool grid) {

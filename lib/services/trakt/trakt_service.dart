@@ -118,6 +118,23 @@ class TraktService {
     });
   }
 
+  /// Watchlist Trakt (films OU séries) → suggestions {title, year, ids} pour le
+  /// matching catalogue. [type] = 'movies' | 'shows'.
+  Future<List<Map<String, dynamic>>> watchlist(String type) async {
+    final r = await _req('/sync/watchlist/$type');
+    if (r?.statusCode != 200 || r?.data is! List) return [];
+    final key = type == 'shows' ? 'show' : 'movie';
+    final out = <Map<String, dynamic>>[];
+    for (final it in (r!.data as List)) {
+      final m = (it is Map) ? it[key] : null;
+      if (m is Map && m['title'] != null) {
+        final ids = (m['ids'] is Map) ? Map<String, dynamic>.from(m['ids']) : <String, dynamic>{};
+        out.add({'title': m['title'].toString(), 'year': m['year'], 'ids': {'tmdb': ids['tmdb']}});
+      }
+    }
+    return out;
+  }
+
   /// Récupère les films vus sur Trakt (clé titre|année) pour marquer le catalogue.
   Future<Set<String>> pullWatchedMovieKeys() async {
     final r = await _req('/sync/watched/movies');

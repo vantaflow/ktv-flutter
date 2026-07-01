@@ -12,19 +12,21 @@ Le moteur `<video>` de Chromium (Electron) ne lit pas les MKV/HEVC/multi-pistes 
 
 ## Fonctionnalités
 
-- **Connexion Xtream** multi-profils (reconnexion auto)
-- **Accueil cinématographique** : Reprendre la lecture · Vu récemment · Chaînes favorites · **Recommandé pour vous** (TMDB, contextuel) · Derniers films/séries ajoutés
-- **Live TV** : grille par catégorie (FR), **EPG en cours** + progression, favoris, enregistrement
-- **Films / Séries** : fiches enrichies **TMDB** (affiche, backdrop, synopsis, note, **casting**), épisodes par saison
-- **Guide TV** : grille EPG par chaîne (en cours + à venir)
-- **Recherche globale** (chaînes + films + séries)
-- **Lecteur** : MKV/HEVC natif, seek instantané, **pistes audio & sous-titres**, plein écran, raccourcis clavier, **reprise de lecture**, tampon réglable
-- **Trakt** : connexion (code), scrobble automatique à ~90 %
-- **Téléchargements** (file séquentielle) · **Enregistrement** MP4 (ffmpeg)
-- Thème sombre « premium » (accent orange)
+- **Connexion Xtream** multi-profils (bascule + infos abonnement)
+- **Accueil personnalisable** : affichage **rangées ou grille**, choix des sections affichées · Reprendre · Vu récemment · Favoris · **Recommandé pour vous** (TMDB fondé sur ton catalogue) · **Ma liste (Trakt)** · Derniers ajouts
+- **Live TV** : EPG en cours (description + horaires), favoris, enregistrement, **recherche par programme en cours**
+- **Films / Séries** : fiches TMDB (affiche, backdrop, synopsis, note, casting), **filtres & tri** (note, 4K/HDR), **téléchargement par épisode/saison**, **marquer vu** (Trakt)
+- **Guide TV → action** : **catch-up** (revoir un programme passé), regarder en direct, **programmer l'enregistrement** sur la plage du programme
+- **Recherche globale** (chaînes + films + séries + programmes EPG)
+- **Lecteur avancé** : MKV/HEVC natif, seek instantané, pistes audio & sous-titres **mémorisées par contenu**, **vitesse**, **boost audio**, **délai sous-titres**, **autoplay épisode suivant**, zapping, plein écran, raccourcis, reprise, tampon réglable
+- **Enregistrement** : sans couper la lecture, **heure de début précise**, qualité **compact (720p)** ou originale, indicateur REC, **dossier configurable**
+- **Trakt** : connexion (code), scrobble auto, **watchlist**, marquage films & épisodes
+- **Téléchargements** (file séquentielle, **dossier configurable**)
+- **Système** : **mise à jour in-app** (GitHub), **rafraîchissement automatique** catalogue/EPG, **diagnostic réseau**, **historique complet**
+- Démarrage agrandi · fenêtre centrée · thème sombre « premium »
 
-### Feuille de route
-Restream LAN + tunnel Cloudflare · export WhatsApp · sources multiples M3U · catch-up/timeshift · mise à jour automatique in-app.
+### Feuille de route (à venir)
+Multi-sources M3U/Xtream fusionnées · Restream LAN + tunnel Cloudflare · Picture-in-Picture / mini-lecteur · thèmes clairs & accents personnalisables.
 
 ## Développement
 
