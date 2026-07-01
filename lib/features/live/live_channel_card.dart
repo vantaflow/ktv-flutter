@@ -7,6 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../auth/auth_controller.dart';
 import '../../services/recording/recording_service.dart';
 import '../../services/epg/epg_providers.dart';
+import '../guide/epg_dialog.dart';
 
 /// Carte d'une chaîne live : logo + nom + programme EN COURS (EPG now/next).
 class LiveChannelCard extends ConsumerWidget {
@@ -91,9 +92,12 @@ class LiveChannelCard extends ConsumerWidget {
           const SizedBox(height: 6),
           Text(channel.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
           if (now != null)
-            Text('🔴 ${now.title}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11.5, color: KtvColors.accent2)),
+            InkWell(
+              onTap: () => showEpgProgram(context, channel.name, now),
+              child: Text('🔴 ${now.title}  ·  jusqu\'à ${epgTime(now.stop)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11.5, color: KtvColors.accent2)),
+            ),
           if (next != null)
-            Text('Puis · ${next.title}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: KtvColors.muted)),
+            Text('Puis ${epgTime(next.start)} · ${next.title}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: KtvColors.muted)),
         ],
       ),
     );

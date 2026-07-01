@@ -8,6 +8,7 @@ import '../live/live_channel_card.dart';
 import '../vod/movie_detail_sheet.dart';
 import '../series/series_detail_sheet.dart';
 import '../player/play_launcher.dart';
+import '../../services/epg/epg_providers.dart';
 import 'search_providers.dart';
 
 /// Résultats de recherche (le champ est dans la barre supérieure du shell).
@@ -31,12 +32,27 @@ class SearchResults extends ConsumerWidget {
     final sHit = series.where((s) => _match(s.name, q)).take(30).toList();
     final cHit = live.where((c) => _match(c.name, q)).take(30).toList();
 
-    if (mHit.isEmpty && sHit.isEmpty && cHit.isEmpty) {
+    // Recherche EPG : programmes EN COURS dont le titre correspond → afficher la chaîne.
+    final epg = ref.watch(epgIndexProvider).asData?.value;
+    final eHit = <_EpgHit>[];
+    if (epg != null) {
+      final seenCh = cHit.map((c) => c.streamId).toSet();
+      for (final ch in live) {
+        final (now, _) = epg.nowNext(ch);
+        if (now != null && now.title.toLowerCase().contains(q) && seenCh.add(ch.streamId)) {
+          eHit.add(_EpgHit(ch, now));
+          if (eHit.length >= 20) break;
+        }
+      }
+    }
+
+    if (mHit.isEmpty && sHit.isEmpty && cHit.isEmpty && eHit.isEmpty) {
       return const Center(child: Text('Aucun résultat', style: TextStyle(color: KtvColors.muted)));
     }
     return ListView(
       padding: const EdgeInsets.only(bottom: 24, top: 8),
       children: [
+        if (eHit.isNotEmpty) ...[_section('📡 En ce moment à la TV', eHit.length), _epgList(context, ref, eHit)],
         if (cHit.isNotEmpty) ...[_section('📺 Chaînes', cHit.length), _liveGrid(context, ref, cHit)],
         if (mHit.isNotEmpty) ...[_section('🎬 Films', mHit.length), _posterGrid(mHit.map((m) => _Item(m.name, m.cover, m.rating, () => showMovieDetail(context, m))).toList())],
         if (sHit.isNotEmpty) ...[_section('🎞️ Séries', sHit.length), _posterGrid(sHit.map((s) => _Item(s.name, s.cover, s.rating, () => showSeriesDetail(context, s))).toList())],
@@ -58,6 +74,28 @@ class SearchResults extends ConsumerWidget {
         itemBuilder: (_, i) => PosterCard(title: items[i].name, imageUrl: items[i].cover, rating: items[i].rating, onTap: items[i].onTap),
       );
 
+  String _time(int ts) {
+    if (ts == 0) return '';
+    final d = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${two(d.hour)}:${two(d.minute)}';
+  }
+
+  Widget _epgList(BuildContext context, WidgetRef ref, List<_EpgHit> hits) => Column(
+        children: [
+          for (final h in hits)
+            ListTile(
+              leading: (h.channel.icon != null && h.channel.icon!.isNotEmpty)
+                  ? Image.network(h.channel.icon!, width: 46, height: 30, fit: BoxFit.contain, errorBuilder: (_, _, _) => const Icon(Icons.live_tv, color: KtvColors.muted))
+                  : const Icon(Icons.live_tv, color: KtvColors.muted),
+              title: Text('🔴 ${h.program.title}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+              subtitle: Text('${h.channel.name}  ·  ${_time(h.program.start)} → ${_time(h.program.stop)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: KtvColors.muted, fontSize: 12)),
+              trailing: const Icon(Icons.play_arrow, color: KtvColors.accent2),
+              onTap: () => PlayLauncher.live(context, ref, h.channel),
+            ),
+        ],
+      );
+
   Widget _liveGrid(BuildContext context, WidgetRef ref, List<LiveChannel> ch) => GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -74,4 +112,10 @@ class _Item {
   final double? rating;
   final VoidCallback onTap;
   _Item(this.name, this.cover, this.rating, this.onTap);
+}
+
+class _EpgHit {
+  final LiveChannel channel;
+  final EpgProgram program;
+  _EpgHit(this.channel, this.program);
 }

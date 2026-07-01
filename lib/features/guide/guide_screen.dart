@@ -8,6 +8,7 @@ import '../../core/widgets/async_view.dart';
 import '../../services/epg/epg_providers.dart';
 import '../live/live_providers.dart';
 import '../player/play_launcher.dart';
+import 'epg_dialog.dart';
 
 final _selectedGuideCatProvider = StateProvider<String?>((ref) => null);
 
@@ -68,13 +69,6 @@ class _GuideRow extends ConsumerWidget {
   final LiveChannel channel;
   const _GuideRow({required this.channel});
 
-  String _time(int ts) {
-    if (ts == 0) return '';
-    final d = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${two(d.hour)}:${two(d.minute)}';
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final index = ref.watch(epgIndexProvider).asData?.value;
@@ -82,43 +76,81 @@ class _GuideRow extends ConsumerWidget {
     final all = index?.forChannel(channel) ?? const <EpgProgram>[];
     // Programmes à partir de maintenant (en cours + à venir).
     final progs = all.where((p) => p.stop > t).toList();
-    return InkWell(
-      onTap: () => PlayLauncher.live(context, ref, channel),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 130,
-              child: Text(channel.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+    final now = progs.isNotEmpty && progs.first.isNow ? progs.first : null;
+    final upcoming = (now != null ? progs.skip(1) : progs).take(4).toList();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 130,
+            child: InkWell(
+              onTap: () => PlayLauncher.live(context, ref, channel),
+              child: Row(children: [
+                if (channel.icon != null && channel.icon!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Image.network(channel.icon!, width: 30, height: 22, fit: BoxFit.contain, errorBuilder: (_, _, _) => const SizedBox.shrink()),
+                  ),
+                Expanded(child: Text(channel.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+              ]),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: progs.isEmpty
-                  ? const Text('—', style: TextStyle(color: KtvColors.muted))
-                  : Wrap(
-                      spacing: 8,
-                      runSpacing: 6,
-                      children: progs.take(4).map((p) {
-                        final now = p.isNow;
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: now ? KtvColors.accent.withValues(alpha: 0.18) : KtvColors.panel2,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: now ? KtvColors.accent : KtvColors.line),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: progs.isEmpty
+                ? const Text('—', style: TextStyle(color: KtvColors.muted))
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Programme en cours : titre + horaires + description (cliquable).
+                      if (now != null)
+                        InkWell(
+                          onTap: () => showEpgProgram(context, channel.name, now),
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(children: [
+                                  const Icon(Icons.fiber_manual_record, size: 10, color: KtvColors.rec),
+                                  const SizedBox(width: 5),
+                                  Expanded(child: Text(now.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: KtvColors.accent2))),
+                                  Text('${epgTime(now.start)}–${epgTime(now.stop)}', style: const TextStyle(fontSize: 11, color: KtvColors.muted)),
+                                ]),
+                                if (now.description.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2, left: 15),
+                                    child: Text(now.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11.5, color: KtvColors.muted, height: 1.3)),
+                                  ),
+                              ],
+                            ),
                           ),
-                          child: Text(
-                            '${_time(p.start)}  ${p.title}',
-                            style: TextStyle(fontSize: 11.5, color: now ? KtvColors.accent2 : KtvColors.txt),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-            ),
-          ],
-        ),
+                        ),
+                      // À suivre : puces horaire + titre (cliquables).
+                      if (upcoming.isNotEmpty)
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
+                          children: upcoming.map((p) => InkWell(
+                                onTap: () => showEpgProgram(context, channel.name, p),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: KtvColors.panel2,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: KtvColors.line),
+                                  ),
+                                  child: Text('${epgTime(p.start)}  ${p.title}', style: const TextStyle(fontSize: 11.5, color: KtvColors.txt)),
+                                ),
+                              )).toList(),
+                        ),
+                    ],
+                  ),
+          ),
+        ],
       ),
     );
   }

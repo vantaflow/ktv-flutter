@@ -9,6 +9,9 @@ import '../../core/widgets/async_view.dart';
 import '../../core/providers.dart';
 import '../../services/tmdb/tmdb_service.dart';
 import '../../services/tmdb/tmdb_providers.dart';
+import '../../services/downloads/download_service.dart';
+import '../../services/trakt/trakt_providers.dart';
+import '../auth/auth_controller.dart';
 import '../player/play_launcher.dart';
 import 'series_providers.dart';
 
@@ -101,13 +104,23 @@ class _SeriesDetailState extends ConsumerState<SeriesDetail> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
-                        child: DropdownButton<String>(
-                          value: season,
-                          dropdownColor: KtvColors.panel2,
-                          underline: const SizedBox(),
-                          items: keys.map((k) => DropdownMenuItem(value: k, child: Text('Saison $k'))).toList(),
-                          onChanged: (v) => setState(() => _season = v),
+                        padding: const EdgeInsets.fromLTRB(20, 18, 12, 8),
+                        child: Row(
+                          children: [
+                            DropdownButton<String>(
+                              value: season,
+                              dropdownColor: KtvColors.panel2,
+                              underline: const SizedBox(),
+                              items: keys.map((k) => DropdownMenuItem(value: k, child: Text('Saison $k'))).toList(),
+                              onChanged: (v) => setState(() => _season = v),
+                            ),
+                            const Spacer(),
+                            TextButton.icon(
+                              onPressed: () => _downloadSeason(season, eps),
+                              icon: const Icon(Icons.download_rounded, size: 18),
+                              label: Text('Saison (${eps.length})'),
+                            ),
+                          ],
                         ),
                       ),
                       Expanded(
@@ -120,7 +133,24 @@ class _SeriesDetailState extends ConsumerState<SeriesDetail> {
                             return ListTile(
                               leading: CircleAvatar(backgroundColor: KtvColors.panel2, child: Text('${ep.episodeNum}', style: const TextStyle(color: KtvColors.txt))),
                               title: Text(ep.title.isEmpty ? 'Épisode ${ep.episodeNum}' : ep.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                              trailing: watched ? const Icon(Icons.check_circle, color: KtvColors.accent, size: 18) : const Icon(Icons.play_arrow),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    tooltip: 'Télécharger',
+                                    visualDensity: VisualDensity.compact,
+                                    icon: const Icon(Icons.download_rounded, size: 18, color: KtvColors.muted),
+                                    onPressed: () => _downloadEpisode(ep, season),
+                                  ),
+                                  IconButton(
+                                    tooltip: watched ? 'Marquer non vu' : 'Marquer comme vu',
+                                    visualDensity: VisualDensity.compact,
+                                    icon: Icon(watched ? Icons.check_circle : Icons.check_circle_outline, size: 18, color: watched ? KtvColors.accent : KtvColors.muted),
+                                    onPressed: () => _toggleEpisodeWatched(ep, season),
+                                  ),
+                                  const Icon(Icons.play_arrow, color: KtvColors.accent2),
+                                ],
+                              ),
                               onTap: () => _play(ep, season),
                             );
                           },
@@ -146,5 +176,38 @@ class _SeriesDetailState extends ConsumerState<SeriesDetail> {
     final dur = parseXtreamDuration(ep.info);
     Navigator.pop(context);
     PlayLauncher.episode(context, ref, widget.series, ep, durationSec: dur);
+  }
+
+  String _epName(Episode ep, String season) =>
+      '${cleanTitle(widget.series.name)} S${season.padLeft(2, '0')}E${ep.episodeNum.toString().padLeft(2, '0')}';
+
+  void _downloadEpisode(Episode ep, String season) {
+    final urls = ref.read(xtreamUrlsProvider);
+    if (urls == null) return;
+    ref.read(downloadControllerProvider.notifier).enqueue(name: _epName(ep, season), url: urls.series(ep.id, ep.ext), ext: ep.ext);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Épisode ajouté aux téléchargements (Réglages)')));
+  }
+
+  void _downloadSeason(String season, List<Episode> eps) {
+    final urls = ref.read(xtreamUrlsProvider);
+    if (urls == null) return;
+    final dl = ref.read(downloadControllerProvider.notifier);
+    for (final ep in eps) {
+      dl.enqueue(name: _epName(ep, season), url: urls.series(ep.id, ep.ext), ext: ep.ext);
+    }
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saison $season (${eps.length} épisodes) ajoutée aux téléchargements')));
+  }
+
+  Future<void> _toggleEpisodeWatched(Episode ep, String season) async {
+    final prefs = ref.read(prefsProvider);
+    final key = 'series:${ep.id}';
+    final was = prefs.isWatched(key);
+    await prefs.setWatched(key, !was);
+    // Scrobble Trakt (épisode) si connecté et nouvellement vu.
+    final trakt = ref.read(traktServiceProvider);
+    if (!was && trakt.connected) {
+      trakt.markEpisodeWatched(widget.series.name, int.tryParse(season) ?? 0, ep.episodeNum);
+    }
+    if (mounted) setState(() {});
   }
 }

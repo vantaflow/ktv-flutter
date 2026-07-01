@@ -235,27 +235,91 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   }
 
   Future<void> _scheduleDialog() async {
-    const presets = [(30, '30 min'), (60, '1 h'), (120, '2 h'), (150, 'Match (2 h 30)')];
+    const starts = [(0, 'Maintenant'), (5, 'Dans 5 min'), (15, 'Dans 15 min'), (30, 'Dans 30 min'), (60, 'Dans 1 h')];
+    const durations = [(30, '30 min'), (60, '1 h'), (120, '2 h'), (150, '2 h 30 (match)'), (180, '3 h')];
+    int startMin = 0;
+    int durMin = 120;
     await showDialog(
       context: context,
-      builder: (dctx) => AlertDialog(
-        backgroundColor: KtvColors.panel,
-        title: const Text('Programmer l\'enregistrement'),
-        content: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text('Enregistre la chaîne courante pour la durée choisie (arrêt automatique).', style: TextStyle(color: KtvColors.muted, fontSize: 13)),
-          const SizedBox(height: 12),
-          for (final p in presets)
-            ListTile(
-              title: Text(p.$2),
-              trailing: const Icon(Icons.fiber_manual_record, color: KtvColors.rec, size: 16),
-              onTap: () {
-                Navigator.pop(dctx);
-                _record(durationSec: p.$1 * 60);
-              },
-            ),
-        ]),
+      builder: (dctx) => StatefulBuilder(
+        builder: (dctx, setLocal) {
+          String startLabel() {
+            if (startMin == 0) return 'maintenant';
+            final at = DateTime.now().add(Duration(minutes: startMin));
+            String two(int n) => n.toString().padLeft(2, '0');
+            return 'à ${two(at.hour)}:${two(at.minute)}';
+          }
+
+          return AlertDialog(
+            backgroundColor: KtvColors.panel,
+            title: const Text('Programmer l\'enregistrement'),
+            content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Chaîne : $_title', style: const TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+              const SizedBox(height: 14),
+              const Text('Début', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+              const SizedBox(height: 6),
+              Wrap(spacing: 8, children: [
+                for (final s in starts)
+                  ChoiceChip(
+                    label: Text(s.$2),
+                    selected: startMin == s.$1,
+                    selectedColor: KtvColors.accent,
+                    backgroundColor: KtvColors.panel2,
+                    onSelected: (_) => setLocal(() => startMin = s.$1),
+                  ),
+              ]),
+              const SizedBox(height: 14),
+              const Text('Durée', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+              const SizedBox(height: 6),
+              Wrap(spacing: 8, children: [
+                for (final dd in durations)
+                  ChoiceChip(
+                    label: Text(dd.$2),
+                    selected: durMin == dd.$1,
+                    selectedColor: KtvColors.accent,
+                    backgroundColor: KtvColors.panel2,
+                    onSelected: (_) => setLocal(() => durMin = dd.$1),
+                  ),
+              ]),
+              const SizedBox(height: 14),
+              Text('Enregistrera ${startLabel()} pendant ${durMin >= 60 ? '${durMin ~/ 60} h${durMin % 60 == 0 ? '' : ' ${durMin % 60}'}' : '$durMin min'} (arrêt auto).',
+                  style: const TextStyle(color: KtvColors.accent2, fontSize: 12.5)),
+            ]),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(dctx), child: const Text('Annuler')),
+              FilledButton.icon(
+                icon: const Icon(Icons.fiber_manual_record, size: 16),
+                label: Text(startMin == 0 ? 'Enregistrer' : 'Programmer'),
+                onPressed: () {
+                  Navigator.pop(dctx);
+                  if (startMin == 0) {
+                    _record(durationSec: durMin * 60);
+                  } else {
+                    _scheduleRecord(startMin, durMin);
+                  }
+                },
+              ),
+            ],
+          );
+        },
       ),
     );
+  }
+
+  void _scheduleRecord(int startMin, int durMin) {
+    final urls = ref.read(xtreamUrlsProvider);
+    if (urls == null || _liveId == null) return;
+    final at = DateTime.now().add(Duration(minutes: startMin));
+    ref.read(recordingControllerProvider.notifier).schedule(
+          name: _title,
+          url: urls.live(_liveId!, ext: 'ts'),
+          at: at,
+          durationSec: durMin * 60,
+        );
+    String two(int n) => n.toString().padLeft(2, '0');
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Programmé à ${two(at.hour)}:${two(at.minute)} — $_title (Réglages → Enregistrements)')));
+    }
   }
 
   Future<void> _close() async {

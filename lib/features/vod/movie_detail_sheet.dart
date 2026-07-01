@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/models.dart';
 import '../../core/logic/text_utils.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/providers.dart';
 import '../../services/tmdb/tmdb_service.dart';
 import '../../services/tmdb/tmdb_providers.dart';
 import '../../services/downloads/download_service.dart';
+import '../../services/trakt/trakt_providers.dart';
 import '../auth/auth_controller.dart';
 import '../player/play_launcher.dart';
 
@@ -29,12 +31,39 @@ void showMovieDetail(BuildContext context, VodItem movie) {
 }
 
 /// Fiche film 2 colonnes : à gauche l'affiche + actions, à droite backdrop + infos + casting.
-class MovieDetail extends ConsumerWidget {
+class MovieDetail extends ConsumerStatefulWidget {
   final VodItem movie;
   const MovieDetail({super.key, required this.movie});
+  @override
+  ConsumerState<MovieDetail> createState() => _MovieDetailState();
+}
+
+class _MovieDetailState extends ConsumerState<MovieDetail> {
+  Future<void> _toggleWatched() async {
+    final movie = widget.movie;
+    final prefs = ref.read(prefsProvider);
+    final key = 'movie:${movie.streamId}';
+    final was = prefs.isWatched(key);
+    await prefs.setWatched(key, !was);
+    // Sync Trakt si connecté.
+    final trakt = ref.read(traktServiceProvider);
+    if (trakt.connected) {
+      if (!was) {
+        trakt.markMovieWatched(movie.name);
+      } else {
+        trakt.unmarkMovieWatched(movie.name);
+      }
+    }
+    if (mounted) {
+      setState(() {});
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(was ? 'Retiré des films vus' : 'Marqué comme vu${trakt.connected ? ' · synchronisé Trakt' : ''}')));
+    }
+  }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final movie = widget.movie;
+    final watched = ref.watch(prefsProvider).isWatched('movie:${movie.streamId}');
     final tmdb = ref.watch(tmdbSearchProvider((type: 'movie', name: movie.name)));
     final d = tmdb.asData?.value;
     final backdrop = TmdbService.img(d?['backdrop_path'] as String?, size: 'w780');
@@ -82,6 +111,13 @@ class MovieDetail extends ConsumerWidget {
                   },
                   icon: const Icon(Icons.download_rounded),
                   label: const Text('Télécharger'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: _toggleWatched,
+                  icon: Icon(watched ? Icons.check_circle : Icons.check_circle_outline, color: watched ? KtvColors.accent : null),
+                  label: Text(watched ? 'Vu' : 'Marquer comme vu'),
+                  style: watched ? OutlinedButton.styleFrom(foregroundColor: KtvColors.accent) : null,
                 ),
               ],
             ),

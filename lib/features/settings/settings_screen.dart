@@ -99,7 +99,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _appSection() {
     return _section('Application', [
-      const Text('KTV — Flutter + media_kit · v0.1.0', style: TextStyle(color: KtvColors.muted, fontSize: 13)),
+      const Text('KTV — Flutter + media_kit · v0.1.2', style: TextStyle(color: KtvColors.muted, fontSize: 13)),
       const SizedBox(height: 10),
       FilledButton.tonalIcon(
         onPressed: () {
@@ -117,26 +117,53 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     ]);
   }
 
+  String _hhmm(int epochMs) {
+    final d = DateTime.fromMillisecondsSinceEpoch(epochMs);
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${two(d.hour)}:${two(d.minute)}';
+  }
+
   Widget _recordingsSection() {
     final recs = ref.watch(recordingControllerProvider);
     final rec = ref.watch(recordingControllerProvider.notifier);
     return _section('Enregistrements', [
       if (recs.isEmpty)
-        const Text('Aucun enregistrement. Bouton ● sur une chaîne Live.', style: TextStyle(color: KtvColors.muted, fontSize: 13))
+        const Text('Aucun enregistrement. Bouton ● sur une chaîne Live, ou ⏱ pour programmer.', style: TextStyle(color: KtvColors.muted, fontSize: 13))
       else
         for (final r in recs.reversed)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
             child: Row(children: [
               Icon(
-                r.status == RecStatus.recording ? Icons.fiber_manual_record : (r.status == RecStatus.done ? Icons.check_circle : Icons.error),
+                switch (r.status) {
+                  RecStatus.scheduled => Icons.schedule,
+                  RecStatus.recording => Icons.fiber_manual_record,
+                  RecStatus.done => Icons.check_circle,
+                  RecStatus.error => Icons.error,
+                },
                 size: 16,
-                color: r.status == RecStatus.recording ? KtvColors.rec : (r.status == RecStatus.done ? KtvColors.accent : KtvColors.muted),
+                color: switch (r.status) {
+                  RecStatus.recording => KtvColors.rec,
+                  RecStatus.done => KtvColors.accent,
+                  RecStatus.scheduled => KtvColors.accent2,
+                  RecStatus.error => KtvColors.muted,
+                },
               ),
               const SizedBox(width: 8),
-              Expanded(child: Text(r.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(r.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13)),
+                    if (r.status == RecStatus.scheduled && r.startAt != null)
+                      Text('Programmé — commence à ${_hhmm(r.startAt!)}', style: const TextStyle(color: KtvColors.muted, fontSize: 11)),
+                  ],
+                ),
+              ),
               if (r.status == RecStatus.recording)
-                TextButton(onPressed: () => rec.stop(), child: const Text('Arrêter')),
+                TextButton(onPressed: () => rec.stop(), child: const Text('Arrêter'))
+              else if (r.status == RecStatus.scheduled)
+                TextButton(onPressed: () => rec.cancelScheduled(r.id), child: const Text('Annuler')),
             ]),
           ),
     ]);

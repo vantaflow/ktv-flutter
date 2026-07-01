@@ -90,6 +90,34 @@ class TraktService {
     });
   }
 
+  /// Retire un film de l'historique vu (par titre + année).
+  Future<void> unmarkMovieWatched(String rawName) async {
+    final title = cleanTitle(rawName);
+    final year = yearOf(rawName);
+    await _req('/sync/history/remove', method: 'POST', body: {
+      'movies': [
+        {'title': title, if (year.isNotEmpty) 'year': int.tryParse(year)}
+      ]
+    });
+  }
+
+  /// Marque un épisode de série comme vu (titre série + saison + n° épisode).
+  Future<void> markEpisodeWatched(String showRawName, int season, int number) async {
+    final title = cleanTitle(showRawName);
+    final year = yearOf(showRawName);
+    await _req('/sync/history', method: 'POST', body: {
+      'shows': [
+        {
+          'title': title,
+          if (year.isNotEmpty) 'year': int.tryParse(year),
+          'seasons': [
+            {'number': season, 'episodes': [{'number': number}]}
+          ]
+        }
+      ]
+    });
+  }
+
   /// Récupère les films vus sur Trakt (clé titre|année) pour marquer le catalogue.
   Future<Set<String>> pullWatchedMovieKeys() async {
     final r = await _req('/sync/watched/movies');

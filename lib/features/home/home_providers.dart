@@ -40,15 +40,25 @@ final latestSeriesProvider = FutureProvider<List<SeriesItem>>((ref) async {
   return list.take(24).toList();
 });
 
+/// Transforme un résultat TMDB brut en « suggestion » pour matchRecommendationsToCatalog.
+Map<String, dynamic> _toSuggestion(Map r) {
+  final date = (r['release_date'] ?? r['first_air_date'] ?? '').toString();
+  return {
+    'title': (r['title'] ?? r['name'] ?? '').toString(),
+    'year': date.length >= 4 ? int.tryParse(date.substring(0, 4)) : null,
+    'ids': {'tmdb': r['id']},
+  };
+}
+
 /// Recommandations séries : seeds = séries récemment lues → TMDB tv recommandations
-/// → filtrées sur le catalogue séries.
+/// → filtrées sur le catalogue. Si aucun seed/aucune correspondance → tendances TMDB.
 final seriesRecommendationsProvider = FutureProvider<List<SeriesItem>>((ref) async {
   if (ref.watch(authControllerProvider) == null) return [];
   final catalog = await ref.watch(allSeriesProvider.future);
   if (catalog.isEmpty) return [];
   final tmdb = ref.read(tmdbServiceProvider);
   final seeds = ref.read(prefsProvider).recent().where((e) => e.kind == MediaKind.series).take(4).toList();
-  if (seeds.isEmpty) return [];
+
   final seen = <int>{};
   final suggestions = <Map<String, dynamic>>[];
   for (final seed in seeds) {
@@ -59,8 +69,16 @@ final seriesRecommendationsProvider = FutureProvider<List<SeriesItem>>((ref) asy
       final rid = r['id'];
       if (rid is! int || seen.contains(rid)) continue;
       seen.add(rid);
-      final date = (r['first_air_date'] ?? '').toString();
-      suggestions.add({'title': (r['name'] ?? r['title'] ?? '').toString(), 'year': date.length >= 4 ? int.tryParse(date.substring(0, 4)) : null, 'ids': {'tmdb': rid}});
+      suggestions.add(_toSuggestion(r));
+    }
+  }
+  // Fallback : tendances de la semaine (la rangée n'est jamais vide).
+  if (suggestions.isEmpty) {
+    for (final r in await tmdb.trending('tv')) {
+      final rid = r['id'];
+      if (rid is! int || seen.contains(rid)) continue;
+      seen.add(rid);
+      suggestions.add(_toSuggestion(r));
     }
   }
   if (suggestions.isEmpty) return [];
@@ -69,22 +87,16 @@ final seriesRecommendationsProvider = FutureProvider<List<SeriesItem>>((ref) asy
 });
 
 /// Recommandations films : seeds = films récemment lus → TMDB recommandations →
-/// filtrées sur le catalogue (matchRecommendationsToCatalog). Vide si rien à amorcer.
+/// filtrées sur le catalogue. Si aucun seed/aucune correspondance → tendances TMDB.
 final movieRecommendationsProvider = FutureProvider<List<VodItem>>((ref) async {
-  final prefs = ref.watch(authControllerProvider); // recrée si profil change
-  if (prefs == null) return [];
+  final prof = ref.watch(authControllerProvider); // recrée si profil change
+  if (prof == null) return [];
   final catalog = await ref.watch(allVodProvider.future);
   if (catalog.isEmpty) return [];
   final tmdb = ref.read(tmdbServiceProvider);
 
-  // Seeds : films récemment lus (max 4), plus la reprise en cours.
-  final recentMovies = ref
-      .read(prefsProvider)
-      .recent()
-      .where((e) => e.kind == MediaKind.movie)
-      .take(4)
-      .toList();
-  if (recentMovies.isEmpty) return [];
+  // Seeds : films récemment lus (max 4).
+  final recentMovies = ref.read(prefsProvider).recent().where((e) => e.kind == MediaKind.movie).take(4).toList();
 
   // Agrège les recommandations TMDB de chaque seed.
   final seen = <int>{};
@@ -93,30 +105,27 @@ final movieRecommendationsProvider = FutureProvider<List<VodItem>>((ref) async {
     final hit = await tmdb.search('movie', seed.name);
     final id = hit?['id'];
     if (id is! int) continue;
-    final recs = await tmdb.recommendations('movie', id);
-    for (final r in recs) {
+    for (final r in await tmdb.recommendations('movie', id)) {
       final rid = r['id'];
       if (rid is! int || seen.contains(rid)) continue;
       seen.add(rid);
-      final date = (r['release_date'] ?? '').toString();
-      suggestions.add({
-        'title': (r['title'] ?? r['name'] ?? '').toString(),
-        'year': date.length >= 4 ? int.tryParse(date.substring(0, 4)) : null,
-        'ids': {'tmdb': rid},
-      });
+      suggestions.add(_toSuggestion(r));
+    }
+  }
+  // Fallback : tendances de la semaine (la rangée n'est jamais vide).
+  if (suggestions.isEmpty) {
+    for (final r in await tmdb.trending('movie')) {
+      final rid = r['id'];
+      if (rid is! int || seen.contains(rid)) continue;
+      seen.add(rid);
+      suggestions.add(_toSuggestion(r));
     }
   }
   if (suggestions.isEmpty) return [];
 
   // Matche contre le catalogue (par titre nettoyé + année) et exclut le déjà-vu.
-  final catalogMaps = catalog
-      .map((m) => {'name': m.name, '_tmdbId': m.tmdbId, 'releaseDate': null, '__ref': m})
-      .toList();
+  final catalogMaps = catalog.map((m) => {'name': m.name, '_tmdbId': m.tmdbId, 'releaseDate': null, '__ref': m}).toList();
   final matched = matchRecommendationsToCatalog(suggestions, catalogMaps);
   final watchedIds = ref.read(prefsProvider).watchedMap().keys.toSet();
-  return matched
-      .map((mp) => mp['__ref'] as VodItem)
-      .where((m) => !watchedIds.contains('movie:${m.streamId}'))
-      .take(24)
-      .toList();
+  return matched.map((mp) => mp['__ref'] as VodItem).where((m) => !watchedIds.contains('movie:${m.streamId}')).take(24).toList();
 });

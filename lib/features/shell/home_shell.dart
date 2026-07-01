@@ -45,6 +45,12 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     });
   }
 
+  void _clearSearch() {
+    _debounce?.cancel();
+    _searchCtrl.clear();
+    ref.read(searchQueryProvider.notifier).state = '';
+  }
+
   @override
   Widget build(BuildContext context) {
     final query = ref.watch(searchQueryProvider);
@@ -52,15 +58,16 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     return Scaffold(
       body: Column(
         children: [
-          _TopBar(controller: _searchCtrl, onChanged: _onSearch, onClear: () {
-            _searchCtrl.clear();
-            ref.read(searchQueryProvider.notifier).state = '';
-          }),
+          _TopBar(controller: _searchCtrl, onChanged: _onSearch, onClear: _clearSearch),
           const Divider(height: 1, color: KtvColors.line),
           Expanded(
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch, // rail pleine hauteur → couleur uniforme
               children: [
-                _NavRail(index: _index, onSelect: (i) => setState(() => _index = i)),
+                _NavRail(index: _index, onSelect: (i) {
+                  _clearSearch(); // choisir un onglet quitte les résultats de recherche
+                  setState(() => _index = i);
+                }),
                 const VerticalDivider(width: 1, color: KtvColors.line),
                 Expanded(
                   child: searching

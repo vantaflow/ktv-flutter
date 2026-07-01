@@ -68,6 +68,24 @@ class TmdbService {
     return v;
   }
 
+  /// Tendances de la semaine (fallback quand aucun seed de recommandation).
+  Future<List<Map<String, dynamic>>> trending(String type) async {
+    final ck = 't|$type';
+    final cached = _prefs.tmdbCacheGet(ck);
+    if (!identical(cached, PrefsStore.sentinelMissing)) {
+      return (cached as List?)?.map((e) => Map<String, dynamic>.from(e)).toList() ?? [];
+    }
+    List<Map<String, dynamic>> v = [];
+    try {
+      final d = await _get('/trending/$type/week');
+      v = (d?['results'] as List?)?.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList() ?? [];
+    } catch (_) {
+      v = [];
+    }
+    await _prefs.tmdbCacheSet(ck, v);
+    return v;
+  }
+
   /// Détails complets (synopsis long, genres, casting) pour un id.
   Future<Map<String, dynamic>?> details(String type, int id) async {
     final ck = 'd|$type|$id';
