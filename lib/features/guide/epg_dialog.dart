@@ -73,10 +73,10 @@ void showEpgProgram(BuildContext context, WidgetRef ref, LiveChannel channel, Ep
               Text(p.title.isEmpty ? 'Programme' : p.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
               Row(children: [
-                const Icon(Icons.schedule, size: 15, color: KtvColors.accent2),
+                Icon(Icons.schedule, size: 15, color: KtvColors.accent2),
                 const SizedBox(width: 6),
                 Text('${epgTime(p.start)} → ${epgTime(p.stop)}${dur.isEmpty ? '' : '  ·  $dur'}',
-                    style: const TextStyle(color: KtvColors.accent2, fontSize: 13, fontWeight: FontWeight.w600)),
+                    style: TextStyle(color: KtvColors.accent2, fontSize: 13, fontWeight: FontWeight.w600)),
               ]),
               const SizedBox(height: 14),
               if (p.description.isNotEmpty)

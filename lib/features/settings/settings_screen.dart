@@ -39,6 +39,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   static const _tabs = [
     (icon: Icons.person_rounded, label: 'Compte & abonnement'),
     (icon: Icons.play_circle_outline, label: 'Lecture & tampon'),
+    (icon: Icons.palette_rounded, label: 'Thème'),
     (icon: Icons.home_rounded, label: 'Accueil'),
     (icon: Icons.event_note_rounded, label: 'EPG externe'),
     (icon: Icons.movie_filter_rounded, label: 'Catalogue'),
@@ -90,6 +91,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ...switch (_tabs[tab].label) {
                   'Compte & abonnement' => _account(),
                   'Lecture & tampon' => _playback(prefs),
+                  'Thème' => _theme(prefs),
                   'Accueil' => _homeCategories(prefs),
                   'EPG externe' => _epg(),
                   'Catalogue' => _catalog(),
@@ -117,7 +119,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final prof = ref.watch(authControllerProvider);
     return [
       info.when(
-        loading: () => const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator(color: KtvColors.accent))),
+        loading: () => Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator(color: KtvColors.accent))),
         error: (_, _) => const Text('Impossible de récupérer les infos d\'abonnement.', style: TextStyle(color: KtvColors.muted)),
         data: (ui) {
           if (ui == null) return const Text('Non connecté.', style: TextStyle(color: KtvColors.muted));
@@ -139,7 +141,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             if (ui.message.isNotEmpty) ...[
               const SizedBox(height: 14),
-              Text(ui.message, style: const TextStyle(color: KtvColors.accent2, fontSize: 12.5)),
+              Text(ui.message, style: TextStyle(color: KtvColors.accent2, fontSize: 12.5)),
             ],
           ]);
         },
@@ -442,13 +444,62 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: Text(p.label),
             subtitle: Text(p.srv, style: const TextStyle(color: KtvColors.muted, fontSize: 12)),
             trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-              if (p.id == prof?.id) const Icon(Icons.check_circle, color: KtvColors.accent, size: 18),
+              if (p.id == prof?.id) Icon(Icons.check_circle, color: KtvColors.accent, size: 18),
               if (p.id != prof?.id) TextButton(onPressed: () => ref.read(authControllerProvider.notifier).switchTo(p), child: const Text('Activer')),
               IconButton(icon: const Icon(Icons.delete_outline, color: KtvColors.muted), onPressed: () => ref.read(authControllerProvider.notifier).deleteProfile(p.id)),
             ]),
           ),
         const SizedBox(height: 12),
         FilledButton.tonalIcon(onPressed: () => ref.read(authControllerProvider.notifier).logout(), icon: const Icon(Icons.logout), label: const Text('Se déconnecter')),
+      ]),
+    ];
+  }
+
+  // --- 🎨 Thème (accent) ---
+  List<Widget> _theme(PrefsStore prefs) {
+    const labels = {
+      'orange': 'Orange', 'blue': 'Bleu', 'green': 'Vert', 'purple': 'Violet',
+      'red': 'Rouge', 'pink': 'Rose', 'teal': 'Turquoise',
+    };
+    final current = prefs.settingStr('accentColor', 'orange');
+    return [
+      _card([
+        const Text('Couleur d\'accent', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+        const SizedBox(height: 4),
+        const Text('S\'applique immédiatement à toute l\'interface.', style: TextStyle(color: KtvColors.muted, fontSize: 12)),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            for (final e in KtvColors.accents.entries)
+              InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () async {
+                  await prefs.setSetting('accentColor', e.key);
+                  KtvColors.apply(accentKey: e.key);
+                  ref.read(themeVersionProvider.notifier).state++;
+                  setState(() {});
+                },
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [e.value.$1, e.value.$2]),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: current == e.key ? Colors.white : KtvColors.line, width: current == e.key ? 3 : 1),
+                    ),
+                    child: current == e.key ? const Icon(Icons.check, color: Colors.white) : null,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(labels[e.key] ?? e.key, style: const TextStyle(fontSize: 11.5, color: KtvColors.muted)),
+                ]),
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        const Text('Thème clair : prévu dans une prochaine version.', style: TextStyle(color: KtvColors.muted, fontSize: 12)),
       ]),
     ];
   }
@@ -509,7 +560,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               title: Text(e.name, maxLines: 1, overflow: TextOverflow.ellipsis),
               subtitle: e.subtitle != null ? Text(e.subtitle!, style: const TextStyle(color: KtvColors.muted, fontSize: 11)) : null,
-              trailing: const Icon(Icons.play_arrow, color: KtvColors.accent2),
+              trailing: Icon(Icons.play_arrow, color: KtvColors.accent2),
               onTap: () => PlayLauncher.recent(context, ref, e),
             ),
       ]),
@@ -595,7 +646,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         if (u != null) ...[
           const SizedBox(height: 14),
           if (u.isNewer) ...[
-            Text('Nouvelle version disponible : v${u.tag}', style: const TextStyle(color: KtvColors.accent2, fontWeight: FontWeight.w700)),
+            Text('Nouvelle version disponible : v${u.tag}', style: TextStyle(color: KtvColors.accent2, fontWeight: FontWeight.w700)),
             if (u.notes.isNotEmpty)
               Container(
                 margin: const EdgeInsets.only(top: 8),
@@ -608,14 +659,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             if (_dlProgress == null)
               FilledButton.tonalIcon(onPressed: u.assetUrl == null ? null : _downloadUpdate, icon: const Icon(Icons.download_rounded), label: Text(u.assetUrl == null ? 'Archive indisponible' : 'Télécharger v${u.tag}'))
             else if (_dlProgress! < 1)
-              Row(children: [Expanded(child: LinearProgressIndicator(value: _dlProgress, backgroundColor: KtvColors.panel2, valueColor: const AlwaysStoppedAnimation(KtvColors.accent))), const SizedBox(width: 10), Text('${(_dlProgress! * 100).round()}%')])
+              Row(children: [Expanded(child: LinearProgressIndicator(value: _dlProgress, backgroundColor: KtvColors.panel2, valueColor: AlwaysStoppedAnimation(KtvColors.accent))), const SizedBox(width: 10), Text('${(_dlProgress! * 100).round()}%')])
             else
-              const Text('✓ Téléchargé — remplace KTV.app dans /Applications puis relance.', style: TextStyle(color: KtvColors.accent, fontSize: 12.5)),
+              Text('✓ Téléchargé — remplace KTV.app dans /Applications puis relance.', style: TextStyle(color: KtvColors.accent, fontSize: 12.5)),
           ] else
-            const Text('✓ Vous avez la dernière version.', style: TextStyle(color: KtvColors.accent, fontWeight: FontWeight.w600)),
+            Text('✓ Vous avez la dernière version.', style: TextStyle(color: KtvColors.accent, fontWeight: FontWeight.w600)),
         ],
         const SizedBox(height: 10),
-        const SelectableText('github.com/khalilbenaz/ktv-flutter', style: TextStyle(color: KtvColors.accent2, fontSize: 12)),
+        SelectableText('github.com/khalilbenaz/ktv-flutter', style: TextStyle(color: KtvColors.accent2, fontSize: 12)),
       ]),
     ];
   }
@@ -660,7 +711,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(children: [
-          const Icon(Icons.folder_open, size: 16, color: KtvColors.accent2),
+          Icon(Icons.folder_open, size: 16, color: KtvColors.accent2),
           const SizedBox(width: 8),
           Expanded(child: Text(path.isEmpty ? '$defLabel (par défaut)' : path, style: const TextStyle(color: KtvColors.muted, fontSize: 12.5))),
         ]),
@@ -785,12 +836,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           title: const Text('Connexion Trakt'),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
             const Text('Va sur :', style: TextStyle(color: KtvColors.muted)),
-            SelectableText(url, style: const TextStyle(color: KtvColors.accent2, fontWeight: FontWeight.w700)),
+            SelectableText(url, style: TextStyle(color: KtvColors.accent2, fontWeight: FontWeight.w700)),
             const SizedBox(height: 12),
             const Text('et saisis le code :', style: TextStyle(color: KtvColors.muted)),
             SelectableText(userCode, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: 3)),
             const SizedBox(height: 12),
-            const CircularProgressIndicator(color: KtvColors.accent),
+            CircularProgressIndicator(color: KtvColors.accent),
           ]),
         );
       },

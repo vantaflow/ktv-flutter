@@ -76,7 +76,7 @@ class PosterCard extends StatelessWidget {
                           value: progress.clamp(0.04, 1),
                           minHeight: 3,
                           backgroundColor: Colors.black45,
-                          valueColor: const AlwaysStoppedAnimation(KtvColors.accent),
+                          valueColor: AlwaysStoppedAnimation(KtvColors.accent),
                         ),
                       ),
                   ],
@@ -109,7 +109,7 @@ class PosterCard extends StatelessWidget {
   Widget _badge(String text) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.65), borderRadius: BorderRadius.circular(6)),
-        child: Text(text, style: const TextStyle(fontSize: 11, color: KtvColors.accent2, fontWeight: FontWeight.w600)),
+        child: Text(text, style: TextStyle(fontSize: 11, color: KtvColors.accent2, fontWeight: FontWeight.w600)),
       );
 }
 
@@ -127,7 +127,7 @@ class _WatchedDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(3),
-        decoration: const BoxDecoration(color: KtvColors.accent, shape: BoxShape.circle),
+        decoration: BoxDecoration(color: KtvColors.accent, shape: BoxShape.circle),
         child: const Icon(Icons.check, size: 12, color: Colors.white),
       );
 }

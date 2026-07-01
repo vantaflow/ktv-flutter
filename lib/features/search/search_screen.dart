@@ -90,7 +90,7 @@ class SearchResults extends ConsumerWidget {
                   : const Icon(Icons.live_tv, color: KtvColors.muted),
               title: Text('🔴 ${h.program.title}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
               subtitle: Text('${h.channel.name}  ·  ${_time(h.program.start)} → ${_time(h.program.stop)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: KtvColors.muted, fontSize: 12)),
-              trailing: const Icon(Icons.play_arrow, color: KtvColors.accent2),
+              trailing: Icon(Icons.play_arrow, color: KtvColors.accent2),
               onTap: () => PlayLauncher.live(context, ref, h.channel),
             ),
         ],

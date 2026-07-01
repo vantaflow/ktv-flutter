@@ -11,3 +11,6 @@ final connectionLockProvider = Provider<ConnectionLock>((ref) => ConnectionLock(
 
 /// Incrémenté à chaque lecture (historise) → l'accueil se rafraîchit.
 final recentTickProvider = StateProvider<int>((ref) => 0);
+
+/// Incrémenté à chaque changement de thème → MaterialApp se reconstruit.
+final themeVersionProvider = StateProvider<int>((ref) => 0);

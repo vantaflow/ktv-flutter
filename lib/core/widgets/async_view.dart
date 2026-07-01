@@ -14,7 +14,7 @@ class AsyncView<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return value.when(
-      loading: () => const Center(child: CircularProgressIndicator(color: KtvColors.accent)),
+      loading: () => Center(child: CircularProgressIndicator(color: KtvColors.accent)),
       error: (e, _) => Center(
         child: Padding(
           padding: const EdgeInsets.all(24),

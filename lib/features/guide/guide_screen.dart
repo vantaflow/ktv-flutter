@@ -117,7 +117,7 @@ class _GuideRow extends ConsumerWidget {
                                 Row(children: [
                                   const Icon(Icons.fiber_manual_record, size: 10, color: KtvColors.rec),
                                   const SizedBox(width: 5),
-                                  Expanded(child: Text(now.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: KtvColors.accent2))),
+                                  Expanded(child: Text(now.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: KtvColors.accent2))),
                                   Text('${epgTime(now.start)}–${epgTime(now.stop)}', style: const TextStyle(fontSize: 11, color: KtvColors.muted)),
                                 ]),
                                 if (now.description.isNotEmpty)

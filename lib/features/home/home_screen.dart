@@ -76,7 +76,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _loadingOrEmpty() {
     final loading = ref.watch(latestVodProvider).isLoading || ref.watch(latestSeriesProvider).isLoading;
-    if (loading) return const Center(child: CircularProgressIndicator(color: KtvColors.accent));
+    if (loading) return Center(child: CircularProgressIndicator(color: KtvColors.accent));
     return const _EmptyHome();
   }
 

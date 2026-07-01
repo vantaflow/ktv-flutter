@@ -101,7 +101,7 @@ class LiveChannelCard extends ConsumerWidget {
           if (now != null)
             InkWell(
               onTap: () => showEpgProgram(context, ref, channel, now),
-              child: Text('🔴 ${now.title}  ·  jusqu\'à ${epgTime(now.stop)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11.5, color: KtvColors.accent2)),
+              child: Text('🔴 ${now.title}  ·  jusqu\'à ${epgTime(now.stop)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11.5, color: KtvColors.accent2)),
             ),
           if (next != null)
             Text('Puis ${epgTime(next.start)} · ${next.title}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: KtvColors.muted)),
@@ -125,7 +125,7 @@ class _ProgressBar extends StatelessWidget {
       value: v,
       minHeight: 3,
       backgroundColor: Colors.black45,
-      valueColor: const AlwaysStoppedAnimation(KtvColors.accent),
+      valueColor: AlwaysStoppedAnimation(KtvColors.accent),
     );
   }
 }

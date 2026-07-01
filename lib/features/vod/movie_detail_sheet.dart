@@ -145,15 +145,15 @@ class _MovieDetailState extends ConsumerState<MovieDetail> {
                         const SizedBox(height: 8),
                         Row(children: [
                           if (rating > 0) ...[
-                            const Icon(Icons.star, color: KtvColors.accent2, size: 16),
+                            Icon(Icons.star, color: KtvColors.accent2, size: 16),
                             const SizedBox(width: 4),
-                            Text(rating.toStringAsFixed(1), style: const TextStyle(color: KtvColors.accent2, fontWeight: FontWeight.w600)),
+                            Text(rating.toStringAsFixed(1), style: TextStyle(color: KtvColors.accent2, fontWeight: FontWeight.w600)),
                             const SizedBox(width: 14),
                           ],
                           if (year.isNotEmpty) Text(year, style: const TextStyle(color: KtvColors.muted)),
                         ]),
                         const SizedBox(height: 14),
-                        if (tmdb.isLoading) const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator(color: KtvColors.accent))),
+                        if (tmdb.isLoading) Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator(color: KtvColors.accent))),
                         if (overview.isNotEmpty)
                           Text(overview, style: const TextStyle(color: KtvColors.txt, height: 1.45))
                         else if (!tmdb.isLoading)

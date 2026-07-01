@@ -483,7 +483,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                 ]),
                 const SizedBox(height: 14),
                 Text('Enregistrera $startLabel() pendant ${durMin >= 60 ? '${durMin ~/ 60} h${durMin % 60 == 0 ? '' : ' ${durMin % 60}'}' : '$durMin min'} · ${compress ? 'compact' : 'original'} (arrêt auto).',
-                    style: const TextStyle(color: KtvColors.accent2, fontSize: 12.5)),
+                    style: TextStyle(color: KtvColors.accent2, fontSize: 12.5)),
               ]),
             ),
             actions: [

@@ -77,9 +77,9 @@ class _SeriesDetailState extends ConsumerState<SeriesDetail> {
                   Padding(
                     padding: const EdgeInsets.only(top: 6),
                     child: Row(children: [
-                      const Icon(Icons.star, color: KtvColors.accent2, size: 15),
+                      Icon(Icons.star, color: KtvColors.accent2, size: 15),
                       const SizedBox(width: 4),
-                      Text(widget.series.rating.toStringAsFixed(1), style: const TextStyle(color: KtvColors.accent2)),
+                      Text(widget.series.rating.toStringAsFixed(1), style: TextStyle(color: KtvColors.accent2)),
                     ]),
                   ),
                 if (overview.isNotEmpty)
@@ -148,7 +148,7 @@ class _SeriesDetailState extends ConsumerState<SeriesDetail> {
                                     icon: Icon(watched ? Icons.check_circle : Icons.check_circle_outline, size: 18, color: watched ? KtvColors.accent : KtvColors.muted),
                                     onPressed: () => _toggleEpisodeWatched(ep, season),
                                   ),
-                                  const Icon(Icons.play_arrow, color: KtvColors.accent2),
+                                  Icon(Icons.play_arrow, color: KtvColors.accent2),
                                 ],
                               ),
                               onTap: () => _play(ep, season, eps),

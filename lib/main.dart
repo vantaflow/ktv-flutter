@@ -5,6 +5,7 @@ import 'package:window_manager/window_manager.dart';
 import 'app.dart';
 import 'core/providers.dart';
 import 'core/storage/prefs_store.dart';
+import 'core/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +20,8 @@ Future<void> main() async {
     },
   );
   final prefs = await PrefsStore.create();
+  // Applique le thème enregistré avant le 1er rendu.
+  KtvColors.apply(accentKey: prefs.settingStr('accentColor', 'orange'));
   runApp(
     ProviderScope(
       overrides: [prefsProvider.overrideWithValue(prefs)],
