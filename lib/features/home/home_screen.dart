@@ -26,6 +26,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.watch(recentTickProvider); // se rafraîchit après chaque lecture
     final prefs = ref.read(prefsProvider);
     final recent = prefs.recent();
+    final grid = prefs.settingBool('homeGridView', false); // rangées vs grille multi-lignes
 
     double progressOf(RecentEntry e) {
       if (e.resumeKey == null) return 0;
@@ -44,23 +45,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return SafeArea(
       child: CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(child: _header(prof?.label)),
+          SliverToBoxAdapter(child: _header(prof?.label, grid)),
           // Rails (chacun se masque tout seul s'il est vide).
           SliverToBoxAdapter(
-            child: MediaRail(title: 'Chaînes favorites', items: favs, onTap: (e) => PlayLauncher.recent(context, ref, e)),
+            child: MediaRail(title: 'Chaînes favorites', items: favs, grid: grid, onTap: (e) => PlayLauncher.recent(context, ref, e)),
           ),
           SliverToBoxAdapter(
-            child: MediaRail(title: 'Reprendre la lecture', items: resume, progressOf: progressOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
+            child: MediaRail(title: 'Reprendre la lecture', items: resume, grid: grid, progressOf: progressOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
           ),
           SliverToBoxAdapter(
-            child: MediaRail(title: 'Vu récemment', items: recent, progressOf: progressOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
+            child: MediaRail(title: 'Vu récemment', items: recent, grid: grid, progressOf: progressOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
           ),
           if (prefs.settingBool('traktRecommendationsEnabled', true)) ...[
-            SliverToBoxAdapter(child: _recoRail()),
-            SliverToBoxAdapter(child: _recoSeriesRail()),
+            SliverToBoxAdapter(child: _recoRail(grid)),
+            SliverToBoxAdapter(child: _recoSeriesRail(grid)),
           ],
-          SliverToBoxAdapter(child: _latestVodRail()),
-          SliverToBoxAdapter(child: _latestSeriesRail()),
+          SliverToBoxAdapter(child: _latestVodRail(grid)),
+          SliverToBoxAdapter(child: _latestSeriesRail(grid)),
           if (recent.isEmpty && favs.isEmpty)
             SliverToBoxAdapter(child: Padding(padding: const EdgeInsets.only(top: 40), child: _loadingOrEmpty())),
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -75,34 +76,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return const _EmptyHome();
   }
 
-  Widget _recoRail() {
+  Widget _recoRail(bool grid) {
     final recos = ref.watch(movieRecommendationsProvider).asData?.value ?? const [];
     return PosterRail(
       title: 'Recommandé pour vous',
+      grid: grid,
       items: recos.map((m) => PosterRailItem(title: m.name, cover: m.cover, rating: m.rating, onTap: () => _openMovie(m))).toList(),
     );
   }
 
-  Widget _recoSeriesRail() {
+  Widget _recoSeriesRail(bool grid) {
     final recos = ref.watch(seriesRecommendationsProvider).asData?.value ?? const [];
     return PosterRail(
       title: 'Séries recommandées',
+      grid: grid,
       items: recos.map((s) => PosterRailItem(title: s.name, cover: s.cover, rating: s.rating, onTap: () => _openSeries(s))).toList(),
     );
   }
 
-  Widget _latestVodRail() {
+  Widget _latestVodRail(bool grid) {
     final list = ref.watch(latestVodProvider).asData?.value ?? const [];
     return PosterRail(
       title: 'Derniers films ajoutés',
+      grid: grid,
       items: list.map((m) => PosterRailItem(title: m.name, cover: m.cover, rating: m.rating, onTap: () => _openMovie(m))).toList(),
     );
   }
 
-  Widget _latestSeriesRail() {
+  Widget _latestSeriesRail(bool grid) {
     final list = ref.watch(latestSeriesProvider).asData?.value ?? const [];
     return PosterRail(
       title: 'Dernières séries ajoutées',
+      grid: grid,
       items: list.map((s) => PosterRailItem(title: s.name, cover: s.cover, rating: s.rating, onTap: () => _openSeries(s))).toList(),
     );
   }
@@ -110,7 +115,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _openMovie(VodItem m) => showMovieDetail(context, m);
   void _openSeries(SeriesItem s) => showSeriesDetail(context, s);
 
-  Widget _header(String? label) => Padding(
+  Widget _header(String? label, bool grid) => Padding(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
         child: Row(
           children: [
@@ -122,7 +127,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SizedBox(width: 12),
             const Text('Accueil', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
             const Spacer(),
-            if (label != null) Text(label, style: const TextStyle(color: KtvColors.muted, fontSize: 12)),
+            // Bascule d'affichage : rangées (défilement) ⇄ grille (plusieurs lignes).
+            SegmentedButton<bool>(
+              showSelectedIcon: false,
+              style: ButtonStyle(visualDensity: VisualDensity.compact, textStyle: WidgetStateProperty.all(const TextStyle(fontSize: 12))),
+              segments: const [
+                ButtonSegment(value: false, icon: Icon(Icons.view_carousel_outlined, size: 16), label: Text('Rangées')),
+                ButtonSegment(value: true, icon: Icon(Icons.grid_view_rounded, size: 16), label: Text('Grille')),
+              ],
+              selected: {grid},
+              onSelectionChanged: (s) async {
+                await ref.read(prefsProvider).setSetting('homeGridView', s.first);
+                setState(() {});
+              },
+            ),
+            if (label != null) ...[const SizedBox(width: 14), Text(label, style: const TextStyle(color: KtvColors.muted, fontSize: 12))],
           ],
         ),
       );

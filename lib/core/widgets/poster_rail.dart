@@ -10,11 +10,13 @@ class PosterRailItem {
   const PosterRailItem({required this.title, this.cover, this.rating, required this.onTap});
 }
 
-/// Rangée horizontale d'affiches (films/séries) pour l'accueil.
+/// Rangée d'affiches (films/séries) pour l'accueil. [grid] = plusieurs lignes
+/// (au lieu du défilement horizontal).
 class PosterRail extends StatelessWidget {
   final String title;
   final List<PosterRailItem> items;
-  const PosterRail({super.key, required this.title, required this.items});
+  final bool grid;
+  const PosterRail({super.key, required this.title, required this.items, this.grid = false});
 
   @override
   Widget build(BuildContext context) {
@@ -26,19 +28,29 @@ class PosterRail extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
           child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: KtvColors.txt)),
         ),
-        SizedBox(
-          height: 245,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
+        if (grid)
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: items.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 14),
-            itemBuilder: (_, i) {
-              final it = items[i];
-              return PosterCard(title: it.title, imageUrl: it.cover, rating: it.rating, width: 120, onTap: it.onTap);
-            },
+            child: Wrap(
+              spacing: 14,
+              runSpacing: 16,
+              children: [for (final it in items) PosterCard(title: it.title, imageUrl: it.cover, rating: it.rating, width: 120, onTap: it.onTap)],
+            ),
+          )
+        else
+          SizedBox(
+            height: 245,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: items.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 14),
+              itemBuilder: (_, i) {
+                final it = items[i];
+                return PosterCard(title: it.title, imageUrl: it.cover, rating: it.rating, width: 120, onTap: it.onTap);
+              },
+            ),
           ),
-        ),
       ],
     );
   }
