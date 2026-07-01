@@ -152,6 +152,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ]),
         const SizedBox(height: 8),
         const Text('Appliqué au prochain lancement de lecture (propriété mpv cache-secs).', style: TextStyle(color: KtvColors.muted, fontSize: 11.5)),
+        const Divider(height: 24, color: KtvColors.line),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          activeThumbColor: KtvColors.accent,
+          title: const Text('Lecture auto de l\'épisode suivant'),
+          subtitle: const Text('Enchaîne la série à la fin d\'un épisode', style: TextStyle(color: KtvColors.muted, fontSize: 12)),
+          value: prefs.settingBool('autoplayNext', true),
+          onChanged: (v) async { await prefs.setSetting('autoplayNext', v); setState(() {}); },
+        ),
       ]),
     ];
   }
@@ -433,7 +442,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _card([
         const Text('KTV — Flutter + media_kit', style: TextStyle(fontWeight: FontWeight.w700)),
         const SizedBox(height: 4),
-        const Text('Version 0.1.9', style: TextStyle(color: KtvColors.muted, fontSize: 13)),
+        const Text('Version 0.1.10', style: TextStyle(color: KtvColors.muted, fontSize: 13)),
         const SizedBox(height: 12),
         FilledButton.tonalIcon(
           onPressed: () => _openUrl('https://github.com/khalilbenaz/ktv-flutter/releases'),

@@ -48,6 +48,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   bool _sidebarOpen = false;
   late String _title = widget.request.title;
   late String? _liveId = widget.request.liveStreamId;
+  late String? _subLine = widget.request.subtitle;
+  late String? _resumeKey = widget.request.resumeKey;
+  late int? _reqKnownDur = widget.request.knownDurationSec;
+  late int _plIndex = widget.request.playlistIndex;
   bool _resumeApplied = false;
   bool _watchedMarked = false;
   bool _controlsVisible = true;
@@ -57,7 +61,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   double _subDelay = 0.0; // secondes
   int _audioBoost = 100; // % (jusqu'à 200)
 
-  int? get _knownDurSec => widget.request.knownDurationSec ?? ((_mkDuration != null && _mkDuration!.inSeconds > 0) ? _mkDuration!.inSeconds : null);
+  int? get _knownDurSec => _reqKnownDur ?? ((_mkDuration != null && _mkDuration!.inSeconds > 0) ? _mkDuration!.inSeconds : null);
+  bool get _hasNext => (widget.request.playlist != null) && (_plIndex + 1 < widget.request.playlist!.length);
   Duration? get _effDuration => _knownDurSec == null ? null : Duration(seconds: _knownDurSec!);
 
   @override
@@ -108,11 +113,42 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
           _curAudioId = t.audio.id;
           _curSubId = t.subtitle.id;
         })));
+    _subs.add(_player.stream.completed.listen((done) {
+      if (done) _onCompleted();
+    }));
+  }
+
+  // Fin de lecture : autoplay de l'épisode suivant si activé.
+  void _onCompleted() {
+    if (_hasNext && _prefs.settingBool('autoplayNext', true)) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Épisode suivant…'), duration: Duration(seconds: 2)));
+      _playNext();
+    }
+  }
+
+  void _playNext() {
+    final pl = widget.request.playlist;
+    if (pl == null || _plIndex + 1 >= pl.length) return;
+    _plIndex++;
+    final it = pl[_plIndex];
+    setState(() {
+      _title = it.title;
+      _subLine = it.subtitle;
+      _resumeKey = it.resumeKey;
+      _reqKnownDur = it.knownDurationSec;
+      _resumeApplied = false;
+      _watchedMarked = false;
+      _tracksRestored = false;
+      _position = Duration.zero;
+    });
+    _player.open(Media(it.url));
+    _applyTweaks();
+    _prefs.pushRecent(RecentEntry(kind: MediaKind.series, id: it.id, name: it.title, cover: it.cover, ext: it.ext, resumeKey: it.resumeKey, subtitle: it.subtitle, at: DateTime.now().millisecondsSinceEpoch));
   }
 
   void _maybeResume() {
-    if (_resumeApplied || widget.request.isLive || widget.request.resumeKey == null) return;
-    final r = _prefs.resume(widget.request.resumeKey!);
+    if (_resumeApplied || widget.request.isLive || _resumeKey == null) return;
+    final r = _prefs.resume(_resumeKey!);
     if (r == null) {
       _resumeApplied = true;
       return;
@@ -133,11 +169,11 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   }
 
   void _maybeMarkWatched() {
-    if (_watchedMarked || widget.request.resumeKey == null) return;
+    if (_watchedMarked || _resumeKey == null) return;
     final dur = _knownDurSec ?? 0;
     if (dur > 300 && _position.inSeconds / dur >= 0.9) {
       _watchedMarked = true;
-      _prefs.setWatched(widget.request.resumeKey!, true);
+      _prefs.setWatched(_resumeKey!, true);
       // Scrobble Trakt (films) si connecté ET « marquer vu auto » activé.
       if (widget.request.kind == MediaKind.movie && _trakt.connected && _prefs.settingBool('traktScrobble', true)) {
         _trakt.markMovieWatched(widget.request.title);
@@ -146,7 +182,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   }
 
   Future<void> _saveResume() async {
-    final key = widget.request.resumeKey;
+    final key = _resumeKey;
     if (key == null || widget.request.isLive) return;
     final dur = _knownDurSec ?? 0;
     if (_position.inSeconds > 15) {
@@ -311,7 +347,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   // Réapplique la piste audio/sous-titres mémorisée pour ce contenu (par resumeKey).
   void _restoreTracks() {
     if (_tracksRestored) return;
-    final key = widget.request.resumeKey;
+    final key = _resumeKey;
     if (key == null) return;
     final aId = _prefs.settingStr('atrack:$key');
     final sId = _prefs.settingStr('strack:$key');
@@ -328,13 +364,13 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
 
   void _selectAudio(AudioTrack a) {
     _player.setAudioTrack(a);
-    final key = widget.request.resumeKey;
+    final key = _resumeKey;
     if (key != null) _prefs.setSetting('atrack:$key', a.id);
   }
 
   void _selectSubtitle(SubtitleTrack s) {
     _player.setSubtitleTrack(s);
-    final key = widget.request.resumeKey;
+    final key = _resumeKey;
     if (key != null) _prefs.setSetting('strack:$key', s.id);
   }
 
@@ -563,12 +599,14 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                           children: [
                             Text(_title,
                                 maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
-                            if (widget.request.subtitle != null)
-                              Text(widget.request.subtitle!, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                            if (_subLine != null)
+                              Text(_subLine!, style: const TextStyle(color: Colors.white70, fontSize: 12)),
                           ],
                         ),
                       ),
                       if (isRec) const _RecBadge(),
+                      if (_hasNext)
+                        IconButton(tooltip: 'Épisode suivant', onPressed: _playNext, icon: const Icon(Icons.skip_next, color: Colors.white)),
                       IconButton(tooltip: 'Réglages de lecture (vitesse, audio, sous-titres)', onPressed: _openPlaybackSheet, icon: const Icon(Icons.tune, color: Colors.white)),
                       if (widget.request.isLive) ...[
                         IconButton(

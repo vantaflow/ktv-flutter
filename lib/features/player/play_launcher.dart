@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/models.dart';
 import '../../core/models/playback.dart';
+import '../../core/logic/duration_parse.dart';
 import '../../core/providers.dart';
 import '../auth/auth_controller.dart';
 import 'player_screen.dart';
@@ -24,13 +25,35 @@ class PlayLauncher {
     _open(context, ref, PlaybackRequest(url: urls.movie(m.streamId, m.ext), title: m.name, kind: MediaKind.movie, resumeKey: key));
   }
 
-  static void episode(BuildContext context, WidgetRef ref, SeriesItem s, Episode ep, {int? durationSec}) {
+  static void episode(BuildContext context, WidgetRef ref, SeriesItem s, Episode ep, {int? durationSec, List<Episode>? seasonEps}) {
     final urls = ref.read(xtreamUrlsProvider);
     if (urls == null) return;
     final key = 'series:${ep.id}';
     final sub = 'Saison ${ep.season} · Épisode ${ep.episodeNum}';
     ref.read(prefsProvider).pushRecent(RecentEntry(kind: MediaKind.series, id: ep.id, name: s.name, cover: s.cover, ext: ep.ext, resumeKey: key, subtitle: sub, at: _now));
-    _open(context, ref, PlaybackRequest(url: urls.series(ep.id, ep.ext), title: s.name, subtitle: sub, kind: MediaKind.series, resumeKey: key, knownDurationSec: durationSec));
+
+    // Playlist de la saison pour l'enchaînement automatique.
+    List<PlaybackItem>? playlist;
+    var index = 0;
+    if (seasonEps != null && seasonEps.isNotEmpty) {
+      playlist = [
+        for (final e in seasonEps)
+          PlaybackItem(
+            url: urls.series(e.id, e.ext),
+            title: s.name,
+            subtitle: 'Saison ${e.season} · Épisode ${e.episodeNum}',
+            resumeKey: 'series:${e.id}',
+            knownDurationSec: parseXtreamDuration(e.info),
+            id: e.id,
+            cover: s.cover,
+            ext: e.ext,
+          ),
+      ];
+      index = seasonEps.indexWhere((e) => e.id == ep.id);
+      if (index < 0) index = 0;
+    }
+
+    _open(context, ref, PlaybackRequest(url: urls.series(ep.id, ep.ext), title: s.name, subtitle: sub, kind: MediaKind.series, resumeKey: key, knownDurationSec: durationSec, playlist: playlist, playlistIndex: index));
   }
 
   static void live(BuildContext context, WidgetRef ref, LiveChannel ch) {

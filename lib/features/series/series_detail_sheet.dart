@@ -151,7 +151,7 @@ class _SeriesDetailState extends ConsumerState<SeriesDetail> {
                                   const Icon(Icons.play_arrow, color: KtvColors.accent2),
                                 ],
                               ),
-                              onTap: () => _play(ep, season),
+                              onTap: () => _play(ep, season, eps),
                             );
                           },
                         ),
@@ -172,10 +172,10 @@ class _SeriesDetailState extends ConsumerState<SeriesDetail> {
     );
   }
 
-  void _play(Episode ep, String season) {
+  void _play(Episode ep, String season, List<Episode> seasonEps) {
     final dur = parseXtreamDuration(ep.info);
     Navigator.pop(context);
-    PlayLauncher.episode(context, ref, widget.series, ep, durationSec: dur);
+    PlayLauncher.episode(context, ref, widget.series, ep, durationSec: dur, seasonEps: seasonEps);
   }
 
   String _epName(Episode ep, String season) =>
