@@ -7,8 +7,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers.dart';
+import '../../core/version.dart';
 import '../../core/storage/prefs_store.dart';
 import '../../services/trakt/trakt_providers.dart';
+import '../../services/update/update_service.dart';
 import '../../services/downloads/download_service.dart';
 import '../../services/recording/recording_service.dart';
 import '../../services/epg/epg_providers.dart';
@@ -25,6 +27,10 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  bool _checkingUpdate = false;
+  UpdateInfo? _update;
+  double? _dlProgress;
+
   static const _tabs = [
     (icon: Icons.person_rounded, label: 'Compte & abonnement'),
     (icon: Icons.play_circle_outline, label: 'Lecture & tampon'),
@@ -438,21 +444,79 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   // --- ⬆️ Application ---
   List<Widget> _app() {
+    final u = _update;
     return [
       _card([
         const Text('KTV — Flutter + media_kit', style: TextStyle(fontWeight: FontWeight.w700)),
         const SizedBox(height: 4),
-        const Text('Version 0.1.12', style: TextStyle(color: KtvColors.muted, fontSize: 13)),
-        const SizedBox(height: 12),
-        FilledButton.tonalIcon(
-          onPressed: () => _openUrl('https://github.com/khalilbenaz/ktv-flutter/releases'),
-          icon: const Icon(Icons.system_update_alt),
-          label: const Text('Voir les dernières versions'),
-        ),
-        const SizedBox(height: 8),
+        Text('Version $kAppVersion', style: const TextStyle(color: KtvColors.muted, fontSize: 13)),
+        const SizedBox(height: 14),
+        Row(children: [
+          FilledButton.icon(
+            onPressed: _checkingUpdate ? null : _checkUpdate,
+            icon: _checkingUpdate
+                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                : const Icon(Icons.system_update_alt),
+            label: const Text('Vérifier les mises à jour'),
+          ),
+          const SizedBox(width: 10),
+          TextButton(onPressed: () => _openUrl('https://github.com/khalilbenaz/ktv-flutter/releases'), child: const Text('Voir les releases')),
+        ]),
+        if (u != null) ...[
+          const SizedBox(height: 14),
+          if (u.isNewer) ...[
+            Text('Nouvelle version disponible : v${u.tag}', style: const TextStyle(color: KtvColors.accent2, fontWeight: FontWeight.w700)),
+            if (u.notes.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.all(10),
+                constraints: const BoxConstraints(maxHeight: 160),
+                decoration: BoxDecoration(color: KtvColors.panel2, borderRadius: BorderRadius.circular(10)),
+                child: SingleChildScrollView(child: Text(u.notes, style: const TextStyle(fontSize: 12, color: KtvColors.muted))),
+              ),
+            const SizedBox(height: 10),
+            if (_dlProgress == null)
+              FilledButton.tonalIcon(onPressed: u.assetUrl == null ? null : _downloadUpdate, icon: const Icon(Icons.download_rounded), label: Text(u.assetUrl == null ? 'Archive indisponible' : 'Télécharger v${u.tag}'))
+            else if (_dlProgress! < 1)
+              Row(children: [Expanded(child: LinearProgressIndicator(value: _dlProgress, backgroundColor: KtvColors.panel2, valueColor: const AlwaysStoppedAnimation(KtvColors.accent))), const SizedBox(width: 10), Text('${(_dlProgress! * 100).round()}%')])
+            else
+              const Text('✓ Téléchargé — remplace KTV.app dans /Applications puis relance.', style: TextStyle(color: KtvColors.accent, fontSize: 12.5)),
+          ] else
+            const Text('✓ Vous avez la dernière version.', style: TextStyle(color: KtvColors.accent, fontWeight: FontWeight.w600)),
+        ],
+        const SizedBox(height: 10),
         const SelectableText('github.com/khalilbenaz/ktv-flutter', style: TextStyle(color: KtvColors.accent2, fontSize: 12)),
       ]),
     ];
+  }
+
+  Future<void> _checkUpdate() async {
+    setState(() { _checkingUpdate = true; _update = null; _dlProgress = null; });
+    final info = await ref.read(updateServiceProvider).check();
+    if (!mounted) return;
+    setState(() { _checkingUpdate = false; _update = info; });
+    if (info == null) _toast('Impossible de vérifier les mises à jour.');
+  }
+
+  Future<void> _downloadUpdate() async {
+    final u = _update;
+    if (u == null) return;
+    setState(() => _dlProgress = 0);
+    final path = await ref.read(updateServiceProvider).download(u, onProgress: (p) { if (mounted) setState(() => _dlProgress = p); });
+    if (!mounted) return;
+    setState(() => _dlProgress = 1);
+    if (path != null) {
+      try {
+        if (Platform.isMacOS) {
+          await Process.run('open', ['-R', path]); // révèle dans le Finder
+        } else if (Platform.isWindows) {
+          await Process.run('explorer', ['/select,', path]);
+        }
+      } catch (_) {}
+      _toast('Téléchargé : $path');
+    } else {
+      _toast('Échec du téléchargement.');
+    }
   }
 
   // ---------- helpers ----------
