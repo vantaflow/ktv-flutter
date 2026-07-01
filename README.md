@@ -25,10 +25,12 @@ Le moteur `<video>` de Chromium (Electron) ne lit pas les MKV/HEVC/multi-pistes 
 - **Restream** : partage du flux en HLS sur le **réseau local** + **tunnel Cloudflare** (regarder sur un autre appareil)
 - **Picture-in-Picture** : fenêtre flottante toujours au premier plan
 - **Système** : **mise à jour in-app** (GitHub), **rafraîchissement automatique** catalogue/EPG, **diagnostic réseau**, **historique complet**, **accent personnalisable** (7 couleurs)
-- Démarrage agrandi · fenêtre centrée · thème sombre « premium »
+- **Thèmes** : clair/sombre + **accent personnalisable** (7 couleurs)
+- Catalogue : catégorie **« Toutes »** (agrège tout), **filtres masquables**
+- Démarrage agrandi · fenêtre centrée
 
 ### Feuille de route (à venir)
-Multi-sources M3U/Xtream fusionnées · thème clair complet · reprise inter-appareils.
+Multi-sources M3U/Xtream fusionnées · reprise inter-appareils.
 
 ## Développement
 
