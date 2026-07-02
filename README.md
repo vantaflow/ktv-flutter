@@ -1,6 +1,6 @@
 # KTV — lecteur Xtream (Flutter + media_kit)
 
-Lecteur IPTV **KTV** pour **macOS · Windows · Android**, propulsé par **media_kit / libmpv**. Interface **FR / EN / AR** (avec RTL).
+Lecteur IPTV **KTV** pour **macOS · Windows · Android · Android TV / Google TV**, propulsé par **media_kit / libmpv**. Interface **FR / EN / AR** (avec RTL), navigable à la **télécommande**.
 
 **▶︎ [Télécharger la dernière version](https://github.com/khalilbenaz/ktv-flutter/releases/latest)** · **[Site](https://khalilbenaz.github.io/ktv-flutter/)**
 
@@ -29,7 +29,8 @@ Le moteur `<video>` de Chromium (Electron) ne lit pas les MKV/HEVC/multi-pistes 
 - **Picture-in-Picture** : fenêtre flottante toujours au premier plan
 - **Thèmes** : **clair / sombre** + **accent personnalisable** (7 couleurs)
 - **Catalogue** : catégorie **« Toutes »** (agrège toutes les catégories), **filtres masquables**
-- **Multi-plateforme** : **macOS · Windows · Android** (mêmes données grâce à la synchro). Sur Android, les fonctions reposant sur des binaires (enregistrement, restream, PiP) sont masquées.
+- **Multi-plateforme** : **macOS · Windows · Android · Android TV / Google TV** (mêmes données grâce à la synchro). Sur Android/TV, les fonctions reposant sur des binaires (enregistrement, restream, PiP) sont masquées.
+- **Android TV / Google TV** : app leanback (tuile sur l'écran d'accueil), **navigation à la télécommande** (focus D-pad, lecteur pilotable), connexion **Trakt sans rien taper** (code device)
 - **Multilingue** : **Français · English · العربية** (avec mise en page **RTL** en arabe), bascule à chaud
 - **Système** : **mise à jour in-app** (GitHub), **rafraîchissement automatique** catalogue/EPG, **diagnostic réseau**, **historique complet**, dossiers configurables
 - Démarrage agrandi · fenêtre centrée
@@ -37,10 +38,10 @@ Le moteur `<video>` de Chromium (Electron) ne lit pas les MKV/HEVC/multi-pistes 
 ### Feuille de route (à venir)
 - **Multi-sources M3U/Xtream fusionnées** (plusieurs abonnements + playlists `.m3u` dans un catalogue unifié)
 - **Contrôle parental** (verrou PIN sur les catégories)
-- **Enregistrement de série entière** (enregistrer automatiquement les nouveaux épisodes)
+- **Finition Android TV** (auto-défilement vers le focus, UI 10 pieds, dialogues télécommande)
 - **Version iOS**
 
-_Livré récemment : Android · synchro inter-appareils chiffrée · favoris Films & Séries · interface multilingue FR/EN/AR (RTL) · gestion & réorganisation des catégories · catch-up dédié._
+_Livré récemment : Android & Android TV / Google TV (télécommande) · synchro inter-appareils chiffrée · favoris Films & Séries · interface multilingue FR/EN/AR (RTL) · gestion & réorganisation des catégories · catch-up dédié._
 
 ## Développement
 
