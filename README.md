@@ -13,9 +13,11 @@ Le moteur `<video>` de Chromium (Electron) ne lit pas les MKV/HEVC/multi-pistes 
 ## Fonctionnalités
 
 - **Connexion Xtream** multi-profils (bascule + infos abonnement)
-- **Accueil personnalisable** : affichage **rangées ou grille**, choix des sections affichées · Reprendre · Vu récemment · Favoris · **Recommandé pour vous** (TMDB fondé sur ton catalogue) · **Ma liste (Trakt)** · Derniers ajouts
+- **Accueil personnalisable** : affichage **rangées ou grille**, choix des sections affichées · Reprendre (avec **temps restant** ⏳) · Vu récemment · Favoris · **Recommandé pour vous** (TMDB fondé sur ton catalogue) · **Ma liste (Trakt)** · Derniers ajouts. Les **cartes de chaînes live** montrent le **logo tel quel** + le **programme EPG en cours**.
 - **Live TV** : EPG en cours (description + horaires), favoris, enregistrement, **recherche par programme en cours**
 - **Films / Séries** : fiches TMDB (affiche, backdrop, synopsis, note, casting), **filtres & tri** (note, 4K/HDR), **téléchargement par épisode/saison**, **marquer vu** (Trakt)
+- **Rediffusion (catch-up dédié)** : onglet dédié — par catégorie → chaîne (celles qui proposent l'archive) → programmes des derniers jours **groupés par jour**, à **revoir** ou **télécharger**
+- **Gestion des catégories** : afficher/masquer les catégories du fournisseur, **séparément pour Live · Films · Séries** (Réglages → Catégories)
 - **Guide TV → action** : **catch-up** (revoir un programme passé), regarder en direct, **programmer l'enregistrement** sur la plage du programme
 - **Recherche globale** (chaînes + films + séries + programmes EPG)
 - **Lecteur avancé** : MKV/HEVC natif, seek instantané, pistes audio & sous-titres **mémorisées par contenu**, **vitesse**, **boost audio**, **délai sous-titres**, **autoplay épisode suivant**, zapping, plein écran, raccourcis, reprise, tampon réglable
@@ -30,8 +32,6 @@ Le moteur `<video>` de Chromium (Electron) ne lit pas les MKV/HEVC/multi-pistes 
 - Démarrage agrandi · fenêtre centrée
 
 ### Feuille de route (à venir)
-- **Gestion des catégories** : afficher **toutes** les catégories du fournisseur et choisir lesquelles garder/masquer, **séparément pour Live · Films · Séries** (aujourd'hui filtré aux catégories FR par défaut)
-- **Catch-up / rediffusion mieux exposé** : une entrée dédiée (actuellement accessible uniquement via un programme du Guide)
 - Multi-sources M3U/Xtream fusionnées
 - Reprise inter-appareils
 
@@ -67,7 +67,7 @@ Feature-first, sans code monolithique :
 
 ```
 lib/core/      modèles · client Xtream · stockage · logique pure (+tests) · thème · widgets · process (ffmpeg/cloudflared)
-lib/features/  auth · home · live · vod · series · guide · search · player · settings
+lib/features/  auth · home · live · vod · series · guide · catchup · categories · search · player · settings
 lib/services/  tmdb · trakt · epg (xmltv) · downloads · recording · restream · update
 ```
 
