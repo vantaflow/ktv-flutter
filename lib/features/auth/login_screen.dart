@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/models/models.dart';
 import 'auth_controller.dart';
 import '../../services/log/remote_log.dart';
+import '../../services/update/update_prompt.dart';
 import '../../services/trakt/trakt_providers.dart';
 import '../../services/sync/sync_providers.dart';
 import '../../l10n/app_localizations.dart';
@@ -28,6 +29,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void initState() {
     super.initState();
     RemoteLog.log('LoginScreen init');
+    // Vérif MAJ aussi depuis le login (appareil pas encore connecté, ex. TV neuve).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) checkAndPromptUpdate(context, ref);
+    });
   }
 
   @override
