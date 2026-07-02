@@ -198,13 +198,13 @@ abstract class L {
   /// No description provided for @railLatestMovies.
   ///
   /// In fr, this message translates to:
-  /// **'Derniers films'**
+  /// **'Derniers films ajoutés'**
   String get railLatestMovies;
 
   /// No description provided for @railLatestSeries.
   ///
   /// In fr, this message translates to:
-  /// **'Dernières séries'**
+  /// **'Dernières séries ajoutées'**
   String get railLatestSeries;
 
   /// No description provided for @actionPlay.
@@ -249,6 +249,18 @@ abstract class L {
   /// **'Rafraîchir'**
   String get actionRefresh;
 
+  /// No description provided for @actionMarkWatched.
+  ///
+  /// In fr, this message translates to:
+  /// **'Marquer comme vu'**
+  String get actionMarkWatched;
+
+  /// No description provided for @actionWatched.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vu'**
+  String get actionWatched;
+
   /// No description provided for @language.
   ///
   /// In fr, this message translates to:
@@ -290,6 +302,318 @@ abstract class L {
   /// In fr, this message translates to:
   /// **'Aucun résultat'**
   String get emptyNoResult;
+
+  /// No description provided for @emptyNoEpisode.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun épisode'**
+  String get emptyNoEpisode;
+
+  /// No description provided for @noDescription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune description disponible.'**
+  String get noDescription;
+
+  /// No description provided for @loginServer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Serveur (http://…)'**
+  String get loginServer;
+
+  /// No description provided for @loginUser.
+  ///
+  /// In fr, this message translates to:
+  /// **'Utilisateur'**
+  String get loginUser;
+
+  /// No description provided for @loginPassword.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mot de passe'**
+  String get loginPassword;
+
+  /// No description provided for @loginConnect.
+  ///
+  /// In fr, this message translates to:
+  /// **'Se connecter'**
+  String get loginConnect;
+
+  /// No description provided for @loginSavedProfiles.
+  ///
+  /// In fr, this message translates to:
+  /// **'Profils enregistrés'**
+  String get loginSavedProfiles;
+
+  /// No description provided for @loginNeedServer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renseigne au moins le serveur et l\'utilisateur.'**
+  String get loginNeedServer;
+
+  /// No description provided for @guideTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Guide TV'**
+  String get guideTitle;
+
+  /// No description provided for @catchupTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rediffusion'**
+  String get catchupTitle;
+
+  /// No description provided for @catchupSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rejouez les programmes des derniers jours sur les chaînes qui proposent le catch-up.'**
+  String get catchupSubtitle;
+
+  /// No description provided for @catchupSelectChannel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sélectionnez une chaîne'**
+  String get catchupSelectChannel;
+
+  /// No description provided for @catchupNone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune rediffusion disponible pour « {channel} ».\nGuide EPG absent ou catch-up non proposé.'**
+  String catchupNone(Object channel);
+
+  /// No description provided for @catchupDownload.
+  ///
+  /// In fr, this message translates to:
+  /// **'Télécharger la rediffusion'**
+  String get catchupDownload;
+
+  /// No description provided for @dayToday.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aujourd\'hui'**
+  String get dayToday;
+
+  /// No description provided for @dayYesterday.
+  ///
+  /// In fr, this message translates to:
+  /// **'Hier'**
+  String get dayYesterday;
+
+  /// No description provided for @downloadsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléchargements'**
+  String get downloadsTitle;
+
+  /// No description provided for @downloadsFolder.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dossier'**
+  String get downloadsFolder;
+
+  /// No description provided for @downloadsClearDone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vider terminés'**
+  String get downloadsClearDone;
+
+  /// No description provided for @downloadsInProgress.
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours ({n})'**
+  String downloadsInProgress(Object n);
+
+  /// No description provided for @downloadsDone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Terminés ({n})'**
+  String downloadsDone(Object n);
+
+  /// No description provided for @downloadsEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun téléchargement.\nBouton ⬇ sur un film, un épisode ou une rediffusion.'**
+  String get downloadsEmpty;
+
+  /// No description provided for @downloadsQueued.
+  ///
+  /// In fr, this message translates to:
+  /// **'en file'**
+  String get downloadsQueued;
+
+  /// No description provided for @downloadsFailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'échec'**
+  String get downloadsFailed;
+
+  /// No description provided for @downloadsCanceled.
+  ///
+  /// In fr, this message translates to:
+  /// **'annulé'**
+  String get downloadsCanceled;
+
+  /// No description provided for @downloadsPlayHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléchargé · appuyez pour lire'**
+  String get downloadsPlayHint;
+
+  /// No description provided for @downloadsReveal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Révéler dans le dossier'**
+  String get downloadsReveal;
+
+  /// No description provided for @downloadsRemove.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer de la liste'**
+  String get downloadsRemove;
+
+  /// No description provided for @downloadsCancel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler'**
+  String get downloadsCancel;
+
+  /// No description provided for @settingsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réglages'**
+  String get settingsTitle;
+
+  /// No description provided for @tabAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Compte & abonnement'**
+  String get tabAccount;
+
+  /// No description provided for @tabPlayback.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecture & tampon'**
+  String get tabPlayback;
+
+  /// No description provided for @tabTheme.
+  ///
+  /// In fr, this message translates to:
+  /// **'Thème'**
+  String get tabTheme;
+
+  /// No description provided for @tabHome.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accueil'**
+  String get tabHome;
+
+  /// No description provided for @tabEpg.
+  ///
+  /// In fr, this message translates to:
+  /// **'EPG externe'**
+  String get tabEpg;
+
+  /// No description provided for @tabCatalog.
+  ///
+  /// In fr, this message translates to:
+  /// **'Catalogue'**
+  String get tabCatalog;
+
+  /// No description provided for @tabCategories.
+  ///
+  /// In fr, this message translates to:
+  /// **'Catégories'**
+  String get tabCategories;
+
+  /// No description provided for @tabTmdb.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enrichissement TMDB'**
+  String get tabTmdb;
+
+  /// No description provided for @tabTrakt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Synchronisation Trakt'**
+  String get tabTrakt;
+
+  /// No description provided for @tabSync.
+  ///
+  /// In fr, this message translates to:
+  /// **'Synchro appareils'**
+  String get tabSync;
+
+  /// No description provided for @tabAutoUpdate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mise à jour auto'**
+  String get tabAutoUpdate;
+
+  /// No description provided for @tabRecordings.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrements'**
+  String get tabRecordings;
+
+  /// No description provided for @tabDownloads.
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléchargements'**
+  String get tabDownloads;
+
+  /// No description provided for @tabHistory.
+  ///
+  /// In fr, this message translates to:
+  /// **'Historique'**
+  String get tabHistory;
+
+  /// No description provided for @tabDiagnostic.
+  ///
+  /// In fr, this message translates to:
+  /// **'Diagnostic'**
+  String get tabDiagnostic;
+
+  /// No description provided for @tabProfiles.
+  ///
+  /// In fr, this message translates to:
+  /// **'Profils'**
+  String get tabProfiles;
+
+  /// No description provided for @tabApp.
+  ///
+  /// In fr, this message translates to:
+  /// **'Application'**
+  String get tabApp;
+
+  /// No description provided for @themeAppearance.
+  ///
+  /// In fr, this message translates to:
+  /// **'Apparence'**
+  String get themeAppearance;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sombre'**
+  String get themeDark;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In fr, this message translates to:
+  /// **'Clair'**
+  String get themeLight;
+
+  /// No description provided for @themeAccent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Couleur d\'accent'**
+  String get themeAccent;
+
+  /// No description provided for @themeAccentHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'S\'applique immédiatement à toute l\'interface.'**
+  String get themeAccentHint;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

@@ -56,30 +56,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     super.dispose();
   }
 
-  static const _tabs = [
-    (icon: Icons.person_rounded, label: 'Compte & abonnement'),
-    (icon: Icons.play_circle_outline, label: 'Lecture & tampon'),
-    (icon: Icons.palette_rounded, label: 'Thème'),
-    (icon: Icons.home_rounded, label: 'Accueil'),
-    (icon: Icons.event_note_rounded, label: 'EPG externe'),
-    (icon: Icons.movie_filter_rounded, label: 'Catalogue'),
-    (icon: Icons.category_rounded, label: 'Catégories'),
-    (icon: Icons.theaters_rounded, label: 'Enrichissement TMDB'),
-    (icon: Icons.sync_rounded, label: 'Synchronisation Trakt'),
-    (icon: Icons.cloud_sync_rounded, label: 'Synchro appareils'),
-    (icon: Icons.autorenew_rounded, label: 'Mise à jour auto'),
-    (icon: Icons.fiber_manual_record, label: 'Enregistrements'),
-    (icon: Icons.download_rounded, label: 'Téléchargements'),
-    (icon: Icons.history_rounded, label: 'Historique'),
-    (icon: Icons.speed_rounded, label: 'Diagnostic'),
-    (icon: Icons.switch_account_rounded, label: 'Profils'),
-    (icon: Icons.info_outline_rounded, label: 'Application'),
+  static const _tabIcons = <IconData>[
+    Icons.person_rounded, Icons.play_circle_outline, Icons.palette_rounded, Icons.home_rounded,
+    Icons.event_note_rounded, Icons.movie_filter_rounded, Icons.category_rounded, Icons.theaters_rounded,
+    Icons.sync_rounded, Icons.cloud_sync_rounded, Icons.autorenew_rounded, Icons.fiber_manual_record,
+    Icons.download_rounded, Icons.history_rounded, Icons.speed_rounded, Icons.switch_account_rounded,
+    Icons.info_outline_rounded,
   ];
+
+  static String _tabName(L l, int i) => [
+        l.tabAccount, l.tabPlayback, l.tabTheme, l.tabHome, l.tabEpg, l.tabCatalog, l.tabCategories,
+        l.tabTmdb, l.tabTrakt, l.tabSync, l.tabAutoUpdate, l.tabRecordings, l.tabDownloads, l.tabHistory,
+        l.tabDiagnostic, l.tabProfiles, l.tabApp,
+      ][i];
 
   @override
   Widget build(BuildContext context) {
     final tab = ref.watch(_settingsTabProvider);
     final prefs = ref.read(prefsProvider);
+    final l = L.of(context)!;
     return SafeArea(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -92,12 +87,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(18, 4, 18, 14),
-                    child: Text('Réglages', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 4, 18, 14),
+                    child: Text(l.settingsTitle, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
                   ),
-                  for (var i = 0; i < _tabs.length; i++)
-                    _NavTab(icon: _tabs[i].icon, label: _tabs[i].label, active: i == tab, onTap: () => ref.read(_settingsTabProvider.notifier).state = i),
+                  for (var i = 0; i < _tabIcons.length; i++)
+                    _NavTab(icon: _tabIcons[i], label: _tabName(l, i), active: i == tab, onTap: () => ref.read(_settingsTabProvider.notifier).state = i),
                 ],
               ),
             ),
@@ -108,25 +103,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: ListView(
               padding: const EdgeInsets.all(24),
               children: [
-                Text(_tabs[tab].label, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
+                Text(_tabName(l, tab), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 18),
-                ...switch (_tabs[tab].label) {
-                  'Compte & abonnement' => _account(),
-                  'Lecture & tampon' => _playback(prefs),
-                  'Thème' => _theme(prefs),
-                  'Accueil' => _homeCategories(prefs),
-                  'EPG externe' => _epg(),
-                  'Catalogue' => _catalog(),
-                  'Catégories' => _categories(),
-                  'Enrichissement TMDB' => _tmdb(prefs),
-                  'Synchronisation Trakt' => _trakt(prefs),
-                  'Synchro appareils' => _syncDevices(prefs),
-                  'Mise à jour auto' => _autoRefresh(prefs),
-                  'Enregistrements' => _recordings(),
-                  'Téléchargements' => _downloads(),
-                  'Historique' => _history(),
-                  'Diagnostic' => _diagnostic(),
-                  'Profils' => _profiles(),
+                ...switch (tab) {
+                  0 => _account(),
+                  1 => _playback(prefs),
+                  2 => _theme(prefs),
+                  3 => _homeCategories(prefs),
+                  4 => _epg(),
+                  5 => _catalog(),
+                  6 => _categories(),
+                  7 => _tmdb(prefs),
+                  8 => _trakt(prefs),
+                  9 => _syncDevices(prefs),
+                  10 => _autoRefresh(prefs),
+                  11 => _recordings(),
+                  12 => _downloads(),
+                  13 => _history(),
+                  14 => _diagnostic(),
+                  15 => _profiles(),
                   _ => _app(),
                 },
               ],
@@ -637,13 +632,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           },
         ),
         const SizedBox(height: 18),
-        const Text('Apparence', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+        Text(L.of(context)!.themeAppearance, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
         const SizedBox(height: 8),
         SegmentedButton<bool>(
           showSelectedIcon: false,
-          segments: const [
-            ButtonSegment(value: false, icon: Icon(Icons.dark_mode, size: 16), label: Text('Sombre')),
-            ButtonSegment(value: true, icon: Icon(Icons.light_mode, size: 16), label: Text('Clair')),
+          segments: [
+            ButtonSegment(value: false, icon: const Icon(Icons.dark_mode, size: 16), label: Text(L.of(context)!.themeDark)),
+            ButtonSegment(value: true, icon: const Icon(Icons.light_mode, size: 16), label: Text(L.of(context)!.themeLight)),
           ],
           selected: {light},
           onSelectionChanged: (s) async {
@@ -654,9 +649,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           },
         ),
         const SizedBox(height: 18),
-        const Text('Couleur d\'accent', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+        Text(L.of(context)!.themeAccent, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
         const SizedBox(height: 4),
-        Text('S\'applique immédiatement à toute l\'interface.', style: TextStyle(color: KtvColors.muted, fontSize: 12)),
+        Text(L.of(context)!.themeAccentHint, style: TextStyle(color: KtvColors.muted, fontSize: 12)),
         const SizedBox(height: 12),
         Wrap(
           spacing: 12,

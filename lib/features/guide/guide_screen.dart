@@ -9,6 +9,7 @@ import '../../services/epg/epg_providers.dart';
 import '../live/live_providers.dart';
 import '../player/play_launcher.dart';
 import 'epg_dialog.dart';
+import '../../l10n/app_localizations.dart';
 
 final _selectedGuideCatProvider = StateProvider<String?>((ref) => null);
 
@@ -31,9 +32,9 @@ class GuideScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
-            child: Text('Guide TV', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            child: Text(L.of(context)!.guideTitle, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
           ),
           cats.when(
             loading: () => const SizedBox(height: 44),
@@ -50,7 +51,7 @@ class GuideScreen extends ConsumerWidget {
                 ? const SizedBox()
                 : AsyncView<List<LiveChannel>>(
                     value: ref.watch(channelsByCategoryProvider(selected)),
-                    emptyBuilder: () => Center(child: Text('Aucune chaîne', style: TextStyle(color: KtvColors.muted))),
+                    emptyBuilder: () => Center(child: Text(L.of(context)!.emptyNoChannel, style: TextStyle(color: KtvColors.muted))),
                     data: (channels) => ListView.separated(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       itemCount: channels.length,

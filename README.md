@@ -1,6 +1,6 @@
 # KTV — lecteur Xtream (Flutter + media_kit)
 
-Réécriture **Flutter desktop** (macOS + Windows) du lecteur IPTV **KTV**, propulsée par **media_kit / libmpv**.
+Lecteur IPTV **KTV** pour **macOS · Windows · Android**, propulsé par **media_kit / libmpv**. Interface **FR / EN / AR** (avec RTL).
 
 **▶︎ [Télécharger la dernière version](https://github.com/khalilbenaz/ktv-flutter/releases/latest)** · **[Site](https://khalilbenaz.github.io/ktv-flutter/)**
 
@@ -29,13 +29,16 @@ Le moteur `<video>` de Chromium (Electron) ne lit pas les MKV/HEVC/multi-pistes 
 - **Picture-in-Picture** : fenêtre flottante toujours au premier plan
 - **Thèmes** : **clair / sombre** + **accent personnalisable** (7 couleurs)
 - **Catalogue** : catégorie **« Toutes »** (agrège toutes les catégories), **filtres masquables**
+- **Multi-plateforme** : **macOS · Windows · Android** (mêmes données grâce à la synchro). Sur Android, les fonctions reposant sur des binaires (enregistrement, restream, PiP) sont masquées.
+- **Multilingue** : **Français · English · العربية** (avec mise en page **RTL** en arabe), bascule à chaud
 - **Système** : **mise à jour in-app** (GitHub), **rafraîchissement automatique** catalogue/EPG, **diagnostic réseau**, **historique complet**, dossiers configurables
 - Démarrage agrandi · fenêtre centrée
 
 ### Feuille de route (à venir)
 - Multi-sources M3U/Xtream fusionnées
 - Contrôle parental (verrou PIN sur catégories)
-- Version mobile (Android / iOS)
+- Traduction FR/EN/AR des écrans restants (la base + les écrans principaux sont déjà traduits)
+- Version iOS
 
 ## Développement
 
@@ -50,9 +53,10 @@ Prérequis : Flutter 3.41+, et sur macOS **CocoaPods** (`brew install cocoapods`
 ## Build
 
 ```bash
-bash tool/fetch_ffmpeg.sh
+bash tool/fetch_ffmpeg.sh          # desktop uniquement (ffmpeg + cloudflared)
 flutter build macos --release      # → build/macos/Build/Products/Release/KTV.app
 flutter build windows --release    # (sur Windows)
+flutter build apk --release --split-per-abi   # Android (sans fetch_ffmpeg)
 ```
 
 ## Tests

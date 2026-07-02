@@ -10,6 +10,7 @@ import '../live/live_providers.dart';
 import '../player/play_launcher.dart';
 import '../guide/epg_dialog.dart';
 import '../../services/downloads/download_service.dart';
+import '../../l10n/app_localizations.dart';
 
 final _selectedCatchupCatProvider = StateProvider<String?>((ref) => null);
 final _selectedCatchupChannelProvider = StateProvider<LiveChannel?>((ref) => null);
@@ -42,13 +43,13 @@ class CatchupScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(20, 16, 20, 4),
-            child: Text('Rediffusion', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+            child: Text(L.of(context)!.catchupTitle, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-            child: Text('Rejouez les programmes des derniers jours sur les chaînes qui proposent le catch-up.',
+            child: Text(L.of(context)!.catchupSubtitle,
                 style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
           ),
           cats.when(
@@ -69,7 +70,7 @@ class CatchupScreen extends ConsumerWidget {
                 ? const SizedBox()
                 : AsyncView<List<LiveChannel>>(
                     value: ref.watch(channelsByCategoryProvider(selectedCat)),
-                    emptyBuilder: () => Center(child: Text('Aucune chaîne', style: TextStyle(color: KtvColors.muted))),
+                    emptyBuilder: () => Center(child: Text(L.of(context)!.emptyNoChannel, style: TextStyle(color: KtvColors.muted))),
                     data: (channels) {
                       // Chaînes avec archive déclarée ; sinon repli sur toutes (flag non fiable chez certains fournisseurs).
                       final withArchive = channels.where((c) => c.tvArchive).toList();
@@ -132,7 +133,7 @@ class _CatchupPrograms extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ch = ref.watch(_selectedCatchupChannelProvider);
     if (ch == null) {
-      return Center(child: Text('Sélectionnez une chaîne', style: TextStyle(color: KtvColors.muted)));
+      return Center(child: Text(L.of(context)!.catchupSelectChannel, style: TextStyle(color: KtvColors.muted)));
     }
     final index = ref.watch(epgIndexProvider).asData?.value;
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
@@ -146,7 +147,7 @@ class _CatchupPrograms extends ConsumerWidget {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text('Aucune rediffusion disponible pour « ${ch.name} ».\nGuide EPG absent ou catch-up non proposé.',
+          child: Text(L.of(context)!.catchupNone(ch.name),
               textAlign: TextAlign.center, style: TextStyle(color: KtvColors.muted)),
         ),
       );

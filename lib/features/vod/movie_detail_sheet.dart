@@ -11,6 +11,7 @@ import '../../services/downloads/download_service.dart';
 import '../../services/trakt/trakt_providers.dart';
 import '../auth/auth_controller.dart';
 import '../player/play_launcher.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Ouvre la fiche film en dialogue centré (2 colonnes).
 void showMovieDetail(BuildContext context, VodItem movie) {
@@ -101,7 +102,7 @@ class _MovieDetailState extends ConsumerState<MovieDetail> {
                     PlayLauncher.movie(context, ref, movie);
                   },
                   icon: const Icon(Icons.play_arrow),
-                  label: const Text('Lire'),
+                  label: Text(L.of(context)!.actionPlay),
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
@@ -112,13 +113,13 @@ class _MovieDetailState extends ConsumerState<MovieDetail> {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Téléchargement ajouté (Réglages → Téléchargements)')));
                   },
                   icon: const Icon(Icons.download_rounded),
-                  label: const Text('Télécharger'),
+                  label: Text(L.of(context)!.actionDownload),
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: _toggleWatched,
                   icon: Icon(watched ? Icons.check_circle : Icons.check_circle_outline, color: watched ? KtvColors.accent : null),
-                  label: Text(watched ? 'Vu' : 'Marquer comme vu'),
+                  label: Text(watched ? L.of(context)!.actionWatched : L.of(context)!.actionMarkWatched),
                   style: watched ? OutlinedButton.styleFrom(foregroundColor: KtvColors.accent) : null,
                 ),
                 const SizedBox(height: 8),
@@ -129,7 +130,7 @@ class _MovieDetailState extends ConsumerState<MovieDetail> {
                     if (mounted) setState(() {});
                   },
                   icon: Icon(fav ? Icons.favorite : Icons.favorite_border, color: fav ? KtvColors.accent : null),
-                  label: Text(fav ? 'Favori' : 'Ajouter aux favoris'),
+                  label: Text(fav ? L.of(context)!.actionFav : L.of(context)!.actionAddFav),
                   style: fav ? OutlinedButton.styleFrom(foregroundColor: KtvColors.accent) : null,
                 ),
               ],
@@ -170,7 +171,7 @@ class _MovieDetailState extends ConsumerState<MovieDetail> {
                         if (overview.isNotEmpty)
                           Text(overview, style: TextStyle(color: KtvColors.txt, height: 1.45))
                         else if (!tmdb.isLoading)
-                          Text('Aucune description disponible.', style: TextStyle(color: KtvColors.muted)),
+                          Text(L.of(context)!.noDescription, style: TextStyle(color: KtvColors.muted)),
                         if (d?['id'] is int) _CastRow(id: d!['id'] as int),
                       ],
                     ),

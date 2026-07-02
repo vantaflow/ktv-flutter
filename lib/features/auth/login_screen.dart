@@ -4,6 +4,7 @@ import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/models/models.dart';
 import 'auth_controller.dart';
+import '../../l10n/app_localizations.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -81,7 +82,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       _logo(),
                       const SizedBox(height: 24),
                       if (profiles.isNotEmpty) ...[
-                        Text('Profils enregistrés', style: TextStyle(color: KtvColors.muted, fontSize: 12)),
+                        Text(L.of(context)!.loginSavedProfiles, style: TextStyle(color: KtvColors.muted, fontSize: 12)),
                         const SizedBox(height: 8),
                         Wrap(
                           spacing: 8,
@@ -100,16 +101,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: Divider(color: KtvColors.line),
                         ),
                       ],
-                      TextField(controller: srv, decoration: const InputDecoration(hintText: 'Serveur (http://…)')),
+                      TextField(controller: srv, decoration: InputDecoration(hintText: L.of(context)!.loginServer)),
                       const SizedBox(height: 12),
-                      TextField(controller: usr, decoration: const InputDecoration(hintText: 'Utilisateur')),
+                      TextField(controller: usr, decoration: InputDecoration(hintText: L.of(context)!.loginUser)),
                       const SizedBox(height: 12),
                       TextField(
                         controller: pwd,
                         obscureText: _obscure,
                         onSubmitted: (_) => _connect(),
                         decoration: InputDecoration(
-                          hintText: 'Mot de passe',
+                          hintText: L.of(context)!.loginPassword,
                           suffixIcon: IconButton(
                             icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility, size: 18),
                             onPressed: () => setState(() => _obscure = !_obscure),
@@ -125,7 +126,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         onPressed: _loading ? null : _connect,
                         child: _loading
                             ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                            : const Text('Se connecter'),
+                            : Text(L.of(context)!.loginConnect),
                       ),
                     ],
                   ),

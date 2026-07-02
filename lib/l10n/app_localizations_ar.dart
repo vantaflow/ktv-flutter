@@ -84,6 +84,12 @@ class LAr extends L {
   String get actionRefresh => 'تحديث';
 
   @override
+  String get actionMarkWatched => 'تحديد كمشاهد';
+
+  @override
+  String get actionWatched => 'شوهد';
+
+  @override
   String get language => 'اللغة';
 
   @override
@@ -103,4 +109,168 @@ class LAr extends L {
 
   @override
   String get emptyNoResult => 'لا توجد نتيجة';
+
+  @override
+  String get emptyNoEpisode => 'لا توجد حلقات';
+
+  @override
+  String get noDescription => 'لا يوجد وصف متاح.';
+
+  @override
+  String get loginServer => 'الخادم (http://…)';
+
+  @override
+  String get loginUser => 'اسم المستخدم';
+
+  @override
+  String get loginPassword => 'كلمة المرور';
+
+  @override
+  String get loginConnect => 'تسجيل الدخول';
+
+  @override
+  String get loginSavedProfiles => 'الملفات المحفوظة';
+
+  @override
+  String get loginNeedServer => 'أدخل الخادم واسم المستخدم على الأقل.';
+
+  @override
+  String get guideTitle => 'دليل القنوات';
+
+  @override
+  String get catchupTitle => 'الإعادة';
+
+  @override
+  String get catchupSubtitle =>
+      'أعد تشغيل برامج الأيام الأخيرة على القنوات التي تدعم الإعادة.';
+
+  @override
+  String get catchupSelectChannel => 'اختر قناة';
+
+  @override
+  String catchupNone(Object channel) {
+    return 'لا توجد إعادة متاحة لـ «$channel».\nلا يوجد دليل EPG أو الإعادة غير متوفرة.';
+  }
+
+  @override
+  String get catchupDownload => 'تنزيل الإعادة';
+
+  @override
+  String get dayToday => 'اليوم';
+
+  @override
+  String get dayYesterday => 'أمس';
+
+  @override
+  String get downloadsTitle => 'التنزيلات';
+
+  @override
+  String get downloadsFolder => 'المجلد';
+
+  @override
+  String get downloadsClearDone => 'مسح المكتملة';
+
+  @override
+  String downloadsInProgress(Object n) {
+    return 'قيد التنفيذ ($n)';
+  }
+
+  @override
+  String downloadsDone(Object n) {
+    return 'مكتملة ($n)';
+  }
+
+  @override
+  String get downloadsEmpty =>
+      'لا توجد تنزيلات.\nزر ⬇ على فيلم أو حلقة أو إعادة.';
+
+  @override
+  String get downloadsQueued => 'في الانتظار';
+
+  @override
+  String get downloadsFailed => 'فشل';
+
+  @override
+  String get downloadsCanceled => 'أُلغي';
+
+  @override
+  String get downloadsPlayHint => 'تم التنزيل · اضغط للتشغيل';
+
+  @override
+  String get downloadsReveal => 'إظهار في المجلد';
+
+  @override
+  String get downloadsRemove => 'إزالة من القائمة';
+
+  @override
+  String get downloadsCancel => 'إلغاء';
+
+  @override
+  String get settingsTitle => 'الإعدادات';
+
+  @override
+  String get tabAccount => 'الحساب والاشتراك';
+
+  @override
+  String get tabPlayback => 'التشغيل والتخزين المؤقت';
+
+  @override
+  String get tabTheme => 'المظهر';
+
+  @override
+  String get tabHome => 'الرئيسية';
+
+  @override
+  String get tabEpg => 'دليل EPG خارجي';
+
+  @override
+  String get tabCatalog => 'الكتالوج';
+
+  @override
+  String get tabCategories => 'الفئات';
+
+  @override
+  String get tabTmdb => 'إثراء TMDB';
+
+  @override
+  String get tabTrakt => 'مزامنة Trakt';
+
+  @override
+  String get tabSync => 'مزامنة الأجهزة';
+
+  @override
+  String get tabAutoUpdate => 'التحديث التلقائي';
+
+  @override
+  String get tabRecordings => 'التسجيلات';
+
+  @override
+  String get tabDownloads => 'التنزيلات';
+
+  @override
+  String get tabHistory => 'السجل';
+
+  @override
+  String get tabDiagnostic => 'التشخيص';
+
+  @override
+  String get tabProfiles => 'الملفات الشخصية';
+
+  @override
+  String get tabApp => 'التطبيق';
+
+  @override
+  String get themeAppearance => 'المظهر';
+
+  @override
+  String get themeDark => 'داكن';
+
+  @override
+  String get themeLight => 'فاتح';
+
+  @override
+  String get themeAccent => 'لون التمييز';
+
+  @override
+  String get themeAccentHint => 'يُطبَّق فورًا على كامل الواجهة.';
 }

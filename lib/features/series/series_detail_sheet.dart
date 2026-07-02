@@ -14,6 +14,7 @@ import '../../services/trakt/trakt_providers.dart';
 import '../auth/auth_controller.dart';
 import '../player/play_launcher.dart';
 import 'series_providers.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Ouvre la fiche série en dialogue centré (2 colonnes).
 void showSeriesDetail(BuildContext context, SeriesItem series) {
@@ -95,7 +96,7 @@ class _SeriesDetailState extends ConsumerState<SeriesDetail> {
                       if (mounted) setState(() {});
                     },
                     icon: Icon(fav ? Icons.favorite : Icons.favorite_border, color: fav ? KtvColors.accent : null, size: 18),
-                    label: Text(fav ? 'Favori' : 'Ajouter aux favoris'),
+                    label: Text(fav ? L.of(context)!.actionFav : L.of(context)!.actionAddFav),
                     style: fav ? OutlinedButton.styleFrom(foregroundColor: KtvColors.accent) : null,
                   );
                 }),
@@ -110,7 +111,7 @@ class _SeriesDetailState extends ConsumerState<SeriesDetail> {
               AsyncView<Map<String, List<Episode>>>(
                 value: info,
                 isEmpty: (m) => m.isEmpty,
-                emptyBuilder: () => Center(child: Text('Aucun épisode', style: TextStyle(color: KtvColors.muted))),
+                emptyBuilder: () => Center(child: Text(L.of(context)!.emptyNoEpisode, style: TextStyle(color: KtvColors.muted))),
                 data: (seasons) {
                   final keys = seasons.keys.toList()..sort((a, b) => (int.tryParse(a) ?? 0).compareTo(int.tryParse(b) ?? 0));
                   final season = _season ?? keys.first;

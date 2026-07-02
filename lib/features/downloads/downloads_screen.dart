@@ -7,6 +7,7 @@ import '../../core/providers.dart';
 import '../../core/platform.dart';
 import '../../services/downloads/download_service.dart';
 import '../player/play_launcher.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Écran dédié Téléchargements : état des téléchargements en cours (progression,
 /// annulation) et liste des éléments terminés (lecture locale, révéler, retirer).
@@ -55,11 +56,11 @@ class DownloadsScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
             child: Row(
               children: [
-                const Text('Téléchargements', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+                Text(L.of(context)!.downloadsTitle, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
                 const Spacer(),
-                if (kDesktop) TextButton.icon(onPressed: () => _openFolder(ref), icon: const Icon(Icons.folder_open, size: 18), label: const Text('Dossier')),
+                if (kDesktop) TextButton.icon(onPressed: () => _openFolder(ref), icon: const Icon(Icons.folder_open, size: 18), label: Text(L.of(context)!.downloadsFolder)),
                 if (finished.isNotEmpty)
-                  TextButton.icon(onPressed: ctrl.clearFinished, icon: const Icon(Icons.clear_all, size: 18), label: const Text('Vider terminés')),
+                  TextButton.icon(onPressed: ctrl.clearFinished, icon: const Icon(Icons.clear_all, size: 18), label: Text(L.of(context)!.downloadsClearDone)),
               ],
             ),
           ),
@@ -69,7 +70,7 @@ class DownloadsScreen extends ConsumerWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Text(
-                        'Aucun téléchargement.\nBouton ⬇ sur un film, un épisode ou une rediffusion.',
+                        L.of(context)!.downloadsEmpty,
                         textAlign: TextAlign.center,
                         style: TextStyle(color: KtvColors.muted),
                       ),
@@ -79,12 +80,12 @@ class DownloadsScreen extends ConsumerWidget {
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                     children: [
                       if (active.isNotEmpty) ...[
-                        _sectionTitle('En cours (${active.length})'),
+                        _sectionTitle(L.of(context)!.downloadsInProgress(active.length)),
                         for (final j in active) _ActiveTile(job: j, onCancel: () => ctrl.remove(j.id)),
                         const SizedBox(height: 12),
                       ],
                       if (finished.isNotEmpty) ...[
-                        _sectionTitle('Terminés (${finished.length})'),
+                        _sectionTitle(L.of(context)!.downloadsDone(finished.length)),
                         for (final j in finished)
                           _FinishedTile(
                             job: j,
@@ -114,7 +115,7 @@ class _ActiveTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pct = job.status == DownloadStatus.downloading && job.progress > 0 ? '${(job.progress * 100).round()}%' : 'en file';
+    final pct = job.status == DownloadStatus.downloading && job.progress > 0 ? '${(job.progress * 100).round()}%' : L.of(context)!.downloadsQueued;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -134,7 +135,7 @@ class _ActiveTile extends StatelessWidget {
         ),
         const SizedBox(width: 10),
         Text(pct, style: TextStyle(color: KtvColors.muted, fontSize: 12)),
-        IconButton(tooltip: 'Annuler', icon: Icon(Icons.close, size: 18, color: KtvColors.muted), onPressed: onCancel),
+        IconButton(tooltip: L.of(context)!.downloadsCancel, icon: Icon(Icons.close, size: 18, color: KtvColors.muted), onPressed: onCancel),
       ]),
     );
   }
@@ -152,8 +153,8 @@ class _FinishedTile extends StatelessWidget {
     final ok = job.status == DownloadStatus.done;
     final (icon, color, label) = switch (job.status) {
       DownloadStatus.done => (Icons.play_circle_fill, KtvColors.accent, null),
-      DownloadStatus.error => (Icons.error_outline, KtvColors.rec, 'échec'),
-      DownloadStatus.canceled => (Icons.cancel_outlined, KtvColors.muted, 'annulé'),
+      DownloadStatus.error => (Icons.error_outline, KtvColors.rec, L.of(context)!.downloadsFailed),
+      DownloadStatus.canceled => (Icons.cancel_outlined, KtvColors.muted, L.of(context)!.downloadsCanceled),
       _ => (Icons.help_outline, KtvColors.muted, null),
     };
     return InkWell(
@@ -170,12 +171,12 @@ class _FinishedTile extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(job.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
               const SizedBox(height: 2),
-              Text(label ?? (ok ? 'Téléchargé · appuyez pour lire' : ''), style: TextStyle(color: KtvColors.muted, fontSize: 11.5)),
+              Text(label ?? (ok ? L.of(context)!.downloadsPlayHint : ''), style: TextStyle(color: KtvColors.muted, fontSize: 11.5)),
             ]),
           ),
           if (onReveal != null)
-            IconButton(tooltip: 'Révéler dans le dossier', icon: Icon(Icons.folder_open, size: 18, color: KtvColors.muted), onPressed: onReveal),
-          IconButton(tooltip: 'Retirer de la liste', icon: Icon(Icons.delete_outline, size: 18, color: KtvColors.muted), onPressed: onRemove),
+            IconButton(tooltip: L.of(context)!.downloadsReveal, icon: Icon(Icons.folder_open, size: 18, color: KtvColors.muted), onPressed: onReveal),
+          IconButton(tooltip: L.of(context)!.downloadsRemove, icon: Icon(Icons.delete_outline, size: 18, color: KtvColors.muted), onPressed: onRemove),
         ]),
       ),
     );
