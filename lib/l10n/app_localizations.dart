@@ -996,7 +996,7 @@ abstract class L {
   /// No description provided for @sTraktHint.
   ///
   /// In fr, this message translates to:
-  /// **'Crée une appli sur trakt.tv/oauth/applications, colle Client ID + Secret.'**
+  /// **'Laisse vide pour utiliser KTV (recommandé) : connecte-toi juste avec le code device. Sinon, colle tes propres Client ID + Secret Trakt.'**
   String get sTraktHint;
 
   /// No description provided for @sClientId.

@@ -164,7 +164,7 @@
   "sTmdbLang": "لغة البيانات الوصفية",
   "sTmdbKeyHint": "مفتاح v4 خاص (اختياري — وإلا وسيط KTV):",
   "sTmdbKey": "مفتاح TMDB v4 (اختياري)",
-  "sTraktHint": "أنشئ تطبيقًا على trakt.tv/oauth/applications وألصق Client ID + Secret.",
+  "sTraktHint": "اتركه فارغًا لاستخدام KTV (مستحسن): اتصل فقط برمز الجهاز. أو ألصق Client ID + Secret الخاصين بك من Trakt.",
   "sClientId": "معرّف العميل",
   "sClientSecret": "سر العميل",
   "sTraktScrobble": "تحديد كمشاهد تلقائيًا عند الانتهاء",

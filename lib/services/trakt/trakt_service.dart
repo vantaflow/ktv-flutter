@@ -5,6 +5,13 @@ import '../../core/storage/prefs_store.dart';
 const _api = 'https://api.trakt.tv';
 const _oob = 'urn:ietf:wg:oauth:2.0:oob';
 
+/// Identifiants de l'app Trakt KTV, embarqués par défaut : l'utilisateur n'a
+/// donc RIEN à saisir (impossible de coller une clé de 64 caractères à la
+/// télécommande sur Android TV). La connexion se fait au simple code device.
+/// Un utilisateur avancé peut fournir ses propres clés dans les Réglages.
+const kDefaultTraktClientId = '10b8f9c0564853e355a641c181f7db06452c40195a4fc16bd93b80aac22d5b0c';
+const kDefaultTraktSecret = '9c3254c8d00817879a85050678a0b24235cfbf43d094f06c20af486ea297f7c5';
+
 /// Client Trakt : OAuth device flow, refresh, scrobble (marquer vu), pull watched.
 /// Réplique la logique de l'app Electron (lib/trakt-client.js).
 class TraktService {
@@ -12,8 +19,15 @@ class TraktService {
   final Dio _dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 15), receiveTimeout: const Duration(seconds: 15)));
   TraktService(this._prefs);
 
-  String get _clientId => _prefs.settingStr('traktClientId');
-  String get _secret => _prefs.settingStr('traktSecret');
+  String get _clientId {
+    final v = _prefs.settingStr('traktClientId');
+    return v.isNotEmpty ? v : kDefaultTraktClientId;
+  }
+
+  String get _secret {
+    final v = _prefs.settingStr('traktSecret');
+    return v.isNotEmpty ? v : kDefaultTraktSecret;
+  }
   bool get connected => _prefs.traktConnected;
 
   Map<String, dynamic> _headers() {

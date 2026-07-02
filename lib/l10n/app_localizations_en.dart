@@ -471,7 +471,7 @@ class LEn extends L {
 
   @override
   String get sTraktHint =>
-      'Create an app at trakt.tv/oauth/applications, paste Client ID + Secret.';
+      'Leave empty to use KTV (recommended): just connect with the device code. Otherwise paste your own Trakt Client ID + Secret.';
 
   @override
   String get sClientId => 'Client ID';

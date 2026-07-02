@@ -377,7 +377,19 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     switch (e.logicalKey) {
       case LogicalKeyboardKey.space:
       case LogicalKeyboardKey.keyK:
+      case LogicalKeyboardKey.enter:
+      case LogicalKeyboardKey.select: // OK/centre de la télécommande Android TV
+      case LogicalKeyboardKey.gameButtonA:
+      case LogicalKeyboardKey.mediaPlayPause:
+      case LogicalKeyboardKey.mediaPlay:
+      case LogicalKeyboardKey.mediaPause:
         _player.playOrPause();
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.mediaTrackNext:
+        if (_hasNext) _playNext();
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.goBack: // touche Retour TV
+        if (_fullscreen) { _toggleFullscreen(); } else { _close(); }
         return KeyEventResult.handled;
       case LogicalKeyboardKey.arrowRight:
         if (!widget.request.isLive) _seekBy(10);

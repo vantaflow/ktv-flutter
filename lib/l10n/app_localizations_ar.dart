@@ -469,7 +469,7 @@ class LAr extends L {
 
   @override
   String get sTraktHint =>
-      'أنشئ تطبيقًا على trakt.tv/oauth/applications وألصق Client ID + Secret.';
+      'اتركه فارغًا لاستخدام KTV (مستحسن): اتصل فقط برمز الجهاز. أو ألصق Client ID + Secret الخاصين بك من Trakt.';
 
   @override
   String get sClientId => 'معرّف العميل';

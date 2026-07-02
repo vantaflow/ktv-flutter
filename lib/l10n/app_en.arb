@@ -164,7 +164,7 @@
   "sTmdbLang": "Metadata language",
   "sTmdbKeyHint": "Personal v4 key (optional — otherwise KTV proxy):",
   "sTmdbKey": "TMDB v4 key (optional)",
-  "sTraktHint": "Create an app at trakt.tv/oauth/applications, paste Client ID + Secret.",
+  "sTraktHint": "Leave empty to use KTV (recommended): just connect with the device code. Otherwise paste your own Trakt Client ID + Secret.",
   "sClientId": "Client ID",
   "sClientSecret": "Client Secret",
   "sTraktScrobble": "Mark watched automatically at the end",

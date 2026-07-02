@@ -5,6 +5,7 @@ import '../../core/models/models.dart';
 import '../../core/providers.dart';
 import '../../core/platform.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/tv_focusable.dart';
 import '../auth/auth_controller.dart';
 import '../../services/recording/recording_service.dart';
 import '../../services/epg/epg_providers.dart';
@@ -23,9 +24,8 @@ class LiveChannelCard extends ConsumerWidget {
     final (now, next) = index?.nowNext(channel) ?? (null, null);
     final recording = ref.watch(recordingControllerProvider).any((r) => r.status == RecStatus.recording);
 
-    return InkWell(
+    return TvFocusable(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
