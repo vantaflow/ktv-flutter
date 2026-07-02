@@ -39,6 +39,8 @@ async function slugFromTrakt(env, token) {
       'trakt-api-version': '2',
       'trakt-api-key': env.TRAKT_CLIENT_ID,
       Authorization: `Bearer ${token}`,
+      // Trakt renvoie 403 aux requêtes sans User-Agent (fetch Workers n'en met pas).
+      'User-Agent': 'KTV-Sync/1.0 (+https://github.com/khalilbenaz/ktv-flutter)',
     },
   });
   if (!r.ok) return null;
