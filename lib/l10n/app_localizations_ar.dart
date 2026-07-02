@@ -655,4 +655,29 @@ class LAr extends L {
 
   @override
   String get sFreqOff => 'معطّلة';
+
+  @override
+  String dlSeasonBtn(Object n) {
+    return 'الموسم ($n)';
+  }
+
+  @override
+  String dlWholeSeries(Object n) {
+    return 'المسلسل كامل ($n)';
+  }
+
+  @override
+  String dlEnqueued(Object n) {
+    return 'تمت إضافة $n حلقة إلى التنزيلات';
+  }
+
+  @override
+  String seasonN(Object n) {
+    return 'الموسم $n';
+  }
+
+  @override
+  String episodeN(Object n) {
+    return 'الحلقة $n';
+  }
 }

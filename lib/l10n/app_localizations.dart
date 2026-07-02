@@ -1358,6 +1358,36 @@ abstract class L {
   /// In fr, this message translates to:
   /// **'Désactivée'**
   String get sFreqOff;
+
+  /// No description provided for @dlSeasonBtn.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saison ({n})'**
+  String dlSeasonBtn(Object n);
+
+  /// No description provided for @dlWholeSeries.
+  ///
+  /// In fr, this message translates to:
+  /// **'Série complète ({n})'**
+  String dlWholeSeries(Object n);
+
+  /// No description provided for @dlEnqueued.
+  ///
+  /// In fr, this message translates to:
+  /// **'{n} épisodes ajoutés aux téléchargements'**
+  String dlEnqueued(Object n);
+
+  /// No description provided for @seasonN.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saison {n}'**
+  String seasonN(Object n);
+
+  /// No description provided for @episodeN.
+  ///
+  /// In fr, this message translates to:
+  /// **'Épisode {n}'**
+  String episodeN(Object n);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

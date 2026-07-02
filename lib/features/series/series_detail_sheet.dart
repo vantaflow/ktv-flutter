@@ -127,14 +127,19 @@ class _SeriesDetailState extends ConsumerState<SeriesDetail> {
                               value: season,
                               dropdownColor: KtvColors.panel2,
                               underline: const SizedBox(),
-                              items: keys.map((k) => DropdownMenuItem(value: k, child: Text('Saison $k'))).toList(),
+                              items: keys.map((k) => DropdownMenuItem(value: k, child: Text(L.of(context)!.seasonN(k)))).toList(),
                               onChanged: (v) => setState(() => _season = v),
                             ),
                             const Spacer(),
                             TextButton.icon(
                               onPressed: () => _downloadSeason(season, eps),
                               icon: const Icon(Icons.download_rounded, size: 18),
-                              label: Text('Saison (${eps.length})'),
+                              label: Text(L.of(context)!.dlSeasonBtn(eps.length)),
+                            ),
+                            TextButton.icon(
+                              onPressed: () => _downloadAll(seasons),
+                              icon: const Icon(Icons.download_for_offline_rounded, size: 18),
+                              label: Text(L.of(context)!.dlWholeSeries(seasons.values.fold<int>(0, (a, b) => a + b.length))),
                             ),
                           ],
                         ),
@@ -211,7 +216,22 @@ class _SeriesDetailState extends ConsumerState<SeriesDetail> {
     for (final ep in eps) {
       dl.enqueue(name: _epName(ep, season), url: urls.series(ep.id, ep.ext), ext: ep.ext);
     }
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saison $season (${eps.length} épisodes) ajoutée aux téléchargements')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(L.of(context)!.dlEnqueued(eps.length))));
+  }
+
+  /// Télécharge toute la série d'un coup (tous les épisodes de toutes les saisons).
+  void _downloadAll(Map<String, List<Episode>> seasons) {
+    final urls = ref.read(xtreamUrlsProvider);
+    if (urls == null) return;
+    final dl = ref.read(downloadControllerProvider.notifier);
+    var n = 0;
+    for (final entry in seasons.entries) {
+      for (final ep in entry.value) {
+        dl.enqueue(name: _epName(ep, entry.key), url: urls.series(ep.id, ep.ext), ext: ep.ext);
+        n++;
+      }
+    }
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(L.of(context)!.dlEnqueued(n))));
   }
 
   Future<void> _toggleEpisodeWatched(Episode ep, String season) async {

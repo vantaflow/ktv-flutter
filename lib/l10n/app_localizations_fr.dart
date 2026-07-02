@@ -662,4 +662,29 @@ class LFr extends L {
 
   @override
   String get sFreqOff => 'Désactivée';
+
+  @override
+  String dlSeasonBtn(Object n) {
+    return 'Saison ($n)';
+  }
+
+  @override
+  String dlWholeSeries(Object n) {
+    return 'Série complète ($n)';
+  }
+
+  @override
+  String dlEnqueued(Object n) {
+    return '$n épisodes ajoutés aux téléchargements';
+  }
+
+  @override
+  String seasonN(Object n) {
+    return 'Saison $n';
+  }
+
+  @override
+  String episodeN(Object n) {
+    return 'Épisode $n';
+  }
 }

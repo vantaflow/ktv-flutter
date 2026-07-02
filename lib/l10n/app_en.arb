@@ -224,5 +224,35 @@
   "sQueued2": "queued",
   "sFailed2": "failed",
   "sCanceled2": "canceled",
-  "sFreqOff": "Off"
+  "sFreqOff": "Off",
+  "dlSeasonBtn": "Season ({n})",
+  "@dlSeasonBtn": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "dlWholeSeries": "Whole series ({n})",
+  "@dlWholeSeries": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "dlEnqueued": "{n} episodes added to downloads",
+  "@dlEnqueued": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "seasonN": "Season {n}",
+  "@seasonN": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "episodeN": "Episode {n}",
+  "@episodeN": {
+    "placeholders": {
+      "n": {}
+    }
+  }
 }

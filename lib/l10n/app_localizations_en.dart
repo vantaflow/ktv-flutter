@@ -658,4 +658,29 @@ class LEn extends L {
 
   @override
   String get sFreqOff => 'Off';
+
+  @override
+  String dlSeasonBtn(Object n) {
+    return 'Season ($n)';
+  }
+
+  @override
+  String dlWholeSeries(Object n) {
+    return 'Whole series ($n)';
+  }
+
+  @override
+  String dlEnqueued(Object n) {
+    return '$n episodes added to downloads';
+  }
+
+  @override
+  String seasonN(Object n) {
+    return 'Season $n';
+  }
+
+  @override
+  String episodeN(Object n) {
+    return 'Episode $n';
+  }
 }

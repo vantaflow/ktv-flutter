@@ -224,5 +224,35 @@
   "sQueued2": "في الانتظار",
   "sFailed2": "فشل",
   "sCanceled2": "أُلغي",
-  "sFreqOff": "معطّلة"
+  "sFreqOff": "معطّلة",
+  "dlSeasonBtn": "الموسم ({n})",
+  "@dlSeasonBtn": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "dlWholeSeries": "المسلسل كامل ({n})",
+  "@dlWholeSeries": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "dlEnqueued": "تمت إضافة {n} حلقة إلى التنزيلات",
+  "@dlEnqueued": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "seasonN": "الموسم {n}",
+  "@seasonN": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "episodeN": "الحلقة {n}",
+  "@episodeN": {
+    "placeholders": {
+      "n": {}
+    }
+  }
 }
