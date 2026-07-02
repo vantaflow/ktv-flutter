@@ -354,4 +354,305 @@ class LAr extends L {
 
   @override
   String get nextEpisode => 'الحلقة التالية';
+
+  @override
+  String get sAccErr => 'تعذّر جلب معلومات الاشتراك.';
+
+  @override
+  String get sNotConnected => 'غير متصل.';
+
+  @override
+  String get sStatus => 'الحالة';
+
+  @override
+  String get sExpiration => 'انتهاء الصلاحية';
+
+  @override
+  String get sConnections => 'الاتصالات';
+
+  @override
+  String get sTrial => 'تجريبي';
+
+  @override
+  String get sUser => 'المستخدم';
+
+  @override
+  String get sServer => 'الخادم';
+
+  @override
+  String get sCreatedOn => 'أُنشئ في';
+
+  @override
+  String get sTimezone => 'المنطقة الزمنية';
+
+  @override
+  String get sFormats => 'الصيغ';
+
+  @override
+  String get sUnlimited => 'غير محدود';
+
+  @override
+  String get sYes => 'نعم';
+
+  @override
+  String get sNo => 'لا';
+
+  @override
+  String get sBufferHint =>
+      '«زمن انتقال منخفض» = أقرب للبث المباشر. «مستقر» = تخزين مؤقت أكبر وانقطاعات أقل.';
+
+  @override
+  String get sBufLow => 'زمن انتقال منخفض';
+
+  @override
+  String get sBufBalanced => 'متوازن (افتراضي)';
+
+  @override
+  String get sBufStable => 'مستقر (تخزين مؤقت كبير)';
+
+  @override
+  String get sBufApplied =>
+      'يُطبَّق عند التشغيل التالي (خاصية mpv cache-secs).';
+
+  @override
+  String get sAutoplay => 'تشغيل الحلقة التالية تلقائيًا';
+
+  @override
+  String get sAutoplayHint => 'يتابع المسلسل عند انتهاء الحلقة';
+
+  @override
+  String get sEpgHint =>
+      'دليل XMLTV من المزود (get_short_epg محجوب 403). تخزين مؤقت 6 س.';
+
+  @override
+  String get sRefreshEpg => 'تحديث الدليل';
+
+  @override
+  String get sEpgReloading => 'جارٍ إعادة تحميل الدليل…';
+
+  @override
+  String get sCatalogHint =>
+      'أعد تحميل الأفلام والمسلسلات من المزود (بعد إضافة محتوى جديد).';
+
+  @override
+  String get sRefreshMovies => 'تحديث الأفلام';
+
+  @override
+  String get sRefreshSeries => 'تحديث المسلسلات';
+
+  @override
+  String get sRefreshAll => 'تحديث الكل';
+
+  @override
+  String get sMoviesRefreshed => 'تم تحديث الأفلام';
+
+  @override
+  String get sSeriesRefreshed => 'تم تحديث المسلسلات';
+
+  @override
+  String get sCatalogRefreshed => 'تم تحديث الكتالوج والدليل';
+
+  @override
+  String get sTmdbHint => 'ملصقات وتقييمات وملخصات وطاقم للأفلام والمسلسلات.';
+
+  @override
+  String get sTmdbEnable => 'تفعيل TMDB';
+
+  @override
+  String get sTmdbLang => 'لغة البيانات الوصفية';
+
+  @override
+  String get sTmdbKeyHint => 'مفتاح v4 خاص (اختياري — وإلا وسيط KTV):';
+
+  @override
+  String get sTmdbKey => 'مفتاح TMDB v4 (اختياري)';
+
+  @override
+  String get sTraktHint =>
+      'أنشئ تطبيقًا على trakt.tv/oauth/applications وألصق Client ID + Secret.';
+
+  @override
+  String get sClientId => 'معرّف العميل';
+
+  @override
+  String get sClientSecret => 'سر العميل';
+
+  @override
+  String get sTraktScrobble => 'تحديد كمشاهد تلقائيًا عند الانتهاء';
+
+  @override
+  String get sTraktReco => 'اقتراحات «موصى به لك»';
+
+  @override
+  String get sTraktConnect => 'اتصال (رمز الجهاز)';
+
+  @override
+  String get sTraktConnDialog => 'اتصال Trakt';
+
+  @override
+  String get sGoTo => 'اذهب إلى:';
+
+  @override
+  String get sEnterCode => 'وأدخل الرمز:';
+
+  @override
+  String get sTraktCodeErr => 'فشل طلب رمز Trakt.';
+
+  @override
+  String get sNeedClientId => 'أدخل معرّف العميل أولًا.';
+
+  @override
+  String get sSyncHint1 =>
+      'يزامن المتابعة والمفضلة والسجل والفئات والملفات بين أجهزتك. ';
+
+  @override
+  String get sSyncHint2 =>
+      'الهوية = حساب Trakt. كل شيء مشفّر بعبارتك السرية: لا يمكن للخادم قراءة أي شيء.';
+
+  @override
+  String get sSyncNeedTrakt => 'اتصل بـ Trakt أولًا (قسم «مزامنة Trakt»).';
+
+  @override
+  String get sPassphraseLabel => 'العبارة السرية (نفسها على كل أجهزتك)';
+
+  @override
+  String get sPassphraseChoose => 'اختر عبارة سرية';
+
+  @override
+  String get sPassphraseSet => 'محدّدة مسبقًا — اكتب للتغيير';
+
+  @override
+  String get sSyncEnable => 'تفعيل المزامنة';
+
+  @override
+  String get sSyncNow => 'زامن الآن';
+
+  @override
+  String get sDisable => 'تعطيل';
+
+  @override
+  String get sPassphraseShort => 'العبارة قصيرة جدًا (4 أحرف على الأقل).';
+
+  @override
+  String get sSyncEnabledNoSync => 'مُفعّلة — لم تتم المزامنة بعد.';
+
+  @override
+  String get sSyncDisabled => 'معطّلة.';
+
+  @override
+  String get sSyncServer => 'خادم المزامنة (متقدّم)';
+
+  @override
+  String get sAutoRefreshHint =>
+      'يعيد تحميل القنوات والأفلام والمسلسلات والدليل دوريًا في الخلفية.';
+
+  @override
+  String get sFrequency => 'التكرار';
+
+  @override
+  String get sEvery30 => 'كل 30 دقيقة';
+
+  @override
+  String get sEvery1h => 'كل ساعة';
+
+  @override
+  String get sEvery3h => 'كل 3 ساعات';
+
+  @override
+  String get sEvery6h => 'كل 6 ساعات';
+
+  @override
+  String get sRefreshNow => 'حدّث الآن';
+
+  @override
+  String get sRefreshed => 'تم التحديث';
+
+  @override
+  String get sNoRecording => 'لا توجد تسجيلات.';
+
+  @override
+  String get sStop => 'إيقاف';
+
+  @override
+  String get sInProgress => 'قيد التنفيذ…';
+
+  @override
+  String get sCancel => 'إلغاء';
+
+  @override
+  String get sNoDownload => 'لا توجد تنزيلات. زر ⬇ على فيلم أو حلقة.';
+
+  @override
+  String get sNoHistory => 'لا يوجد سجل.';
+
+  @override
+  String get sHistoryCleared => 'تم مسح السجل';
+
+  @override
+  String get sClear => 'مسح';
+
+  @override
+  String get sDiagHint => 'يختبر زمن استجابة API والاتصالات وسرعة التدفق.';
+
+  @override
+  String get sRunTest => 'بدء الاختبار';
+
+  @override
+  String get sLogout => 'تسجيل الخروج';
+
+  @override
+  String get sActivate => 'تفعيل';
+
+  @override
+  String get sManage => 'إدارة';
+
+  @override
+  String get sCatManageHint =>
+      'اختر فئات المزود التي تريد إظهارها أو إخفاءها لكل قسم. ';
+
+  @override
+  String get sCatDefault =>
+      'بدون ضبط، يطبّق KTV مرشحه الافتراضي (FR / المغرب / beIN Sports).';
+
+  @override
+  String get sHomeRowsHint => 'حدّد الصفوف المراد عرضها في الشاشة الرئيسية.';
+
+  @override
+  String get sCheckUpdates => 'التحقق من التحديثات';
+
+  @override
+  String get sSeeReleases => 'عرض الإصدارات';
+
+  @override
+  String get sUpdateErr => 'تعذّر التحقق من التحديثات.';
+
+  @override
+  String get sUpToDate => '✓ لديك أحدث إصدار.';
+
+  @override
+  String get sDownloadErr => 'فشل التنزيل.';
+
+  @override
+  String get sChangeFolder => 'تغيير المجلد…';
+
+  @override
+  String get sChooseFolder => 'اختيار المجلد';
+
+  @override
+  String get sOpen => 'فتح';
+
+  @override
+  String get sNoData => 'لا توجد بيانات';
+
+  @override
+  String get sQueued2 => 'في الانتظار';
+
+  @override
+  String get sFailed2 => 'فشل';
+
+  @override
+  String get sCanceled2 => 'أُلغي';
+
+  @override
+  String get sFreqOff => 'معطّلة';
 }

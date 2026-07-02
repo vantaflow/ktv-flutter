@@ -356,4 +356,310 @@ class LFr extends L {
 
   @override
   String get nextEpisode => 'Épisode suivant';
+
+  @override
+  String get sAccErr => 'Impossible de récupérer les infos d\'abonnement.';
+
+  @override
+  String get sNotConnected => 'Non connecté.';
+
+  @override
+  String get sStatus => 'Statut';
+
+  @override
+  String get sExpiration => 'Expiration';
+
+  @override
+  String get sConnections => 'Connexions';
+
+  @override
+  String get sTrial => 'Essai';
+
+  @override
+  String get sUser => 'Utilisateur';
+
+  @override
+  String get sServer => 'Serveur';
+
+  @override
+  String get sCreatedOn => 'Créé le';
+
+  @override
+  String get sTimezone => 'Fuseau';
+
+  @override
+  String get sFormats => 'Formats';
+
+  @override
+  String get sUnlimited => 'Illimité';
+
+  @override
+  String get sYes => 'Oui';
+
+  @override
+  String get sNo => 'Non';
+
+  @override
+  String get sBufferHint =>
+      '« Faible latence » = plus proche du direct. « Stable » = gros tampon, moins de coupures.';
+
+  @override
+  String get sBufLow => 'Faible latence';
+
+  @override
+  String get sBufBalanced => 'Équilibré (défaut)';
+
+  @override
+  String get sBufStable => 'Stable (gros tampon)';
+
+  @override
+  String get sBufApplied =>
+      'Appliqué au prochain lancement de lecture (propriété mpv cache-secs).';
+
+  @override
+  String get sAutoplay => 'Lecture auto de l\'épisode suivant';
+
+  @override
+  String get sAutoplayHint => 'Enchaîne la série à la fin d\'un épisode';
+
+  @override
+  String get sEpgHint =>
+      'Guide (XMLTV) du fournisseur, utilisé car get_short_epg est bloqué (403). Cache 6 h.';
+
+  @override
+  String get sRefreshEpg => 'Rafraîchir l\'EPG';
+
+  @override
+  String get sEpgReloading => 'EPG en cours de rechargement…';
+
+  @override
+  String get sCatalogHint =>
+      'Recharge films & séries depuis le fournisseur (après ajout de nouveaux contenus).';
+
+  @override
+  String get sRefreshMovies => 'Rafraîchir les films';
+
+  @override
+  String get sRefreshSeries => 'Rafraîchir les séries';
+
+  @override
+  String get sRefreshAll => 'Tout rafraîchir';
+
+  @override
+  String get sMoviesRefreshed => 'Films rafraîchis';
+
+  @override
+  String get sSeriesRefreshed => 'Séries rafraîchies';
+
+  @override
+  String get sCatalogRefreshed => 'Catalogue et EPG rafraîchis';
+
+  @override
+  String get sTmdbHint =>
+      'Affiches, notes, synopsis et casting pour les films & séries.';
+
+  @override
+  String get sTmdbEnable => 'Activer TMDB';
+
+  @override
+  String get sTmdbLang => 'Langue des métadonnées';
+
+  @override
+  String get sTmdbKeyHint => 'Clé v4 perso (optionnel — sinon proxy KTV) :';
+
+  @override
+  String get sTmdbKey => 'Clé TMDB v4 (optionnel)';
+
+  @override
+  String get sTraktHint =>
+      'Crée une appli sur trakt.tv/oauth/applications, colle Client ID + Secret.';
+
+  @override
+  String get sClientId => 'Client ID';
+
+  @override
+  String get sClientSecret => 'Client Secret';
+
+  @override
+  String get sTraktScrobble => 'Marquer vu automatiquement à la fin';
+
+  @override
+  String get sTraktReco => 'Recommandations « Recommandé pour vous »';
+
+  @override
+  String get sTraktConnect => 'Connecter (code device)';
+
+  @override
+  String get sTraktConnDialog => 'Connexion Trakt';
+
+  @override
+  String get sGoTo => 'Va sur :';
+
+  @override
+  String get sEnterCode => 'et saisis le code :';
+
+  @override
+  String get sTraktCodeErr => 'Échec de la demande de code Trakt.';
+
+  @override
+  String get sNeedClientId => 'Renseigne d\'abord le Client ID.';
+
+  @override
+  String get sSyncHint1 =>
+      'Synchronise reprise, favoris, historique, catégories et profils entre tes appareils. ';
+
+  @override
+  String get sSyncHint2 =>
+      'Identité = ton compte Trakt. Tout est chiffré avec ta phrase secrète : le serveur ne peut rien lire.';
+
+  @override
+  String get sSyncNeedTrakt =>
+      'Connecte d\'abord Trakt (section « Synchronisation Trakt »).';
+
+  @override
+  String get sPassphraseLabel =>
+      'Phrase secrète (identique sur tous tes appareils)';
+
+  @override
+  String get sPassphraseChoose => 'Choisis une phrase secrète';
+
+  @override
+  String get sPassphraseSet => 'Déjà définie — saisir pour changer';
+
+  @override
+  String get sSyncEnable => 'Activer la synchro';
+
+  @override
+  String get sSyncNow => 'Synchroniser maintenant';
+
+  @override
+  String get sDisable => 'Désactiver';
+
+  @override
+  String get sPassphraseShort => 'Phrase trop courte (min. 4 caractères).';
+
+  @override
+  String get sSyncEnabledNoSync => 'Activée — pas encore synchronisée.';
+
+  @override
+  String get sSyncDisabled => 'Désactivée.';
+
+  @override
+  String get sSyncServer => 'Serveur de synchro (avancé)';
+
+  @override
+  String get sAutoRefreshHint =>
+      'Recharge périodiquement chaînes, films, séries et EPG en arrière-plan.';
+
+  @override
+  String get sFrequency => 'Fréquence';
+
+  @override
+  String get sEvery30 => 'Toutes les 30 min';
+
+  @override
+  String get sEvery1h => 'Toutes les heures';
+
+  @override
+  String get sEvery3h => 'Toutes les 3 h';
+
+  @override
+  String get sEvery6h => 'Toutes les 6 h';
+
+  @override
+  String get sRefreshNow => 'Actualiser maintenant';
+
+  @override
+  String get sRefreshed => 'Actualisé';
+
+  @override
+  String get sNoRecording => 'Aucun enregistrement.';
+
+  @override
+  String get sStop => 'Arrêter';
+
+  @override
+  String get sInProgress => 'En cours…';
+
+  @override
+  String get sCancel => 'Annuler';
+
+  @override
+  String get sNoDownload =>
+      'Aucun téléchargement. Bouton ⬇ sur un film ou un épisode.';
+
+  @override
+  String get sNoHistory => 'Aucun historique.';
+
+  @override
+  String get sHistoryCleared => 'Historique effacé';
+
+  @override
+  String get sClear => 'Effacer';
+
+  @override
+  String get sDiagHint =>
+      'Teste la latence de l\'API, les connexions et le débit du flux.';
+
+  @override
+  String get sRunTest => 'Lancer le test';
+
+  @override
+  String get sLogout => 'Se déconnecter';
+
+  @override
+  String get sActivate => 'Activer';
+
+  @override
+  String get sManage => 'Gérer';
+
+  @override
+  String get sCatManageHint =>
+      'Choisis les catégories du fournisseur à afficher ou masquer, pour chaque section. ';
+
+  @override
+  String get sCatDefault =>
+      'Sans réglage, KTV applique son filtre par défaut (FR / Maroc / beIN Sports).';
+
+  @override
+  String get sHomeRowsHint => 'Coche les rangées à afficher sur l\'accueil.';
+
+  @override
+  String get sCheckUpdates => 'Vérifier les mises à jour';
+
+  @override
+  String get sSeeReleases => 'Voir les releases';
+
+  @override
+  String get sUpdateErr => 'Impossible de vérifier les mises à jour.';
+
+  @override
+  String get sUpToDate => '✓ Vous avez la dernière version.';
+
+  @override
+  String get sDownloadErr => 'Échec du téléchargement.';
+
+  @override
+  String get sChangeFolder => 'Changer le dossier…';
+
+  @override
+  String get sChooseFolder => 'Choisir le dossier';
+
+  @override
+  String get sOpen => 'Ouvrir';
+
+  @override
+  String get sNoData => 'aucune donnée';
+
+  @override
+  String get sQueued2 => 'en file';
+
+  @override
+  String get sFailed2 => 'échec';
+
+  @override
+  String get sCanceled2 => 'annulé';
+
+  @override
+  String get sFreqOff => 'Désactivée';
 }

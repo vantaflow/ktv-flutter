@@ -139,23 +139,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return [
       info.when(
         loading: () => Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator(color: KtvColors.accent))),
-        error: (_, _) => Text('Impossible de récupérer les infos d\'abonnement.', style: TextStyle(color: KtvColors.muted)),
+        error: (_, _) => Text(L.of(context)!.sAccErr, style: TextStyle(color: KtvColors.muted)),
         data: (ui) {
-          if (ui == null) return Text('Non connecté.', style: TextStyle(color: KtvColors.muted));
+          if (ui == null) return Text(L.of(context)!.sNotConnected, style: TextStyle(color: KtvColors.muted));
           return _card([
             Wrap(
               spacing: 14,
               runSpacing: 14,
               children: [
-                _cell('Statut', ui.status.isEmpty ? '—' : ui.status, ok: ui.status.toLowerCase() == 'active'),
-                _cell('Expiration', _date(ui.expDate, ifEmpty: 'Illimité')),
-                _cell('Connexions', '${ui.activeCons} / ${ui.maxCons}'),
-                _cell('Essai', ui.isTrial ? 'Oui' : 'Non'),
-                _cell('Utilisateur', prof?.usr ?? '—'),
-                _cell('Serveur', prof?.srv ?? '—'),
-                _cell('Créé le', _date(ui.createdAt, ifEmpty: '—')),
-                if (ui.timezone.isNotEmpty) _cell('Fuseau', ui.timezone),
-                if (ui.allowedFormats.isNotEmpty) _cell('Formats', ui.allowedFormats.join(', ')),
+                _cell(L.of(context)!.sStatus, ui.status.isEmpty ? '—' : ui.status, ok: ui.status.toLowerCase() == 'active'),
+                _cell(L.of(context)!.sExpiration, _date(ui.expDate, ifEmpty: L.of(context)!.sUnlimited)),
+                _cell(L.of(context)!.sConnections, '${ui.activeCons} / ${ui.maxCons}'),
+                _cell(L.of(context)!.sTrial, ui.isTrial ? L.of(context)!.sYes : L.of(context)!.sNo),
+                _cell(L.of(context)!.sUser, prof?.usr ?? '—'),
+                _cell(L.of(context)!.sServer, prof?.srv ?? '—'),
+                _cell(L.of(context)!.sCreatedOn, _date(ui.createdAt, ifEmpty: '—')),
+                if (ui.timezone.isNotEmpty) _cell(L.of(context)!.sTimezone, ui.timezone),
+                if (ui.allowedFormats.isNotEmpty) _cell(L.of(context)!.sFormats, ui.allowedFormats.join(', ')),
               ],
             ),
             if (ui.message.isNotEmpty) ...[
@@ -173,10 +173,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final buffer = prefs.settingStr('bufferProfile', 'balanced');
     return [
       _card([
-        Text('« Faible latence » = plus proche du direct. « Stable » = gros tampon, moins de coupures.', style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+        Text(L.of(context)!.sBufferHint, style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
         const SizedBox(height: 12),
         Wrap(spacing: 8, children: [
-          for (final p in const [('low', 'Faible latence'), ('balanced', 'Équilibré (défaut)'), ('stable', 'Stable (gros tampon)')])
+          for (final p in [('low', L.of(context)!.sBufLow), ('balanced', L.of(context)!.sBufBalanced), ('stable', L.of(context)!.sBufStable)])
             ChoiceChip(
               label: Text(p.$2),
               selected: buffer == p.$1,
@@ -189,13 +189,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
         ]),
         const SizedBox(height: 8),
-        Text('Appliqué au prochain lancement de lecture (propriété mpv cache-secs).', style: TextStyle(color: KtvColors.muted, fontSize: 11.5)),
+        Text(L.of(context)!.sBufApplied, style: TextStyle(color: KtvColors.muted, fontSize: 11.5)),
         Divider(height: 24, color: KtvColors.line),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           activeThumbColor: KtvColors.accent,
-          title: const Text('Lecture auto de l\'épisode suivant'),
-          subtitle: Text('Enchaîne la série à la fin d\'un épisode', style: TextStyle(color: KtvColors.muted, fontSize: 12)),
+          title: Text(L.of(context)!.sAutoplay),
+          subtitle: Text(L.of(context)!.sAutoplayHint, style: TextStyle(color: KtvColors.muted, fontSize: 12)),
           value: prefs.settingBool('autoplayNext', true),
           onChanged: (v) async { await prefs.setSetting('autoplayNext', v); setState(() {}); },
         ),
@@ -209,21 +209,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final status = epg.when(
       loading: () => 'chargement…',
       error: (_, _) => 'indisponible',
-      data: (idx) => idx.byId.isEmpty ? 'aucune donnée' : 'activé · ${idx.byId.length} chaînes',
+      data: (idx) => idx.byId.isEmpty ? L.of(context)!.sNoData : 'activé · ${idx.byId.length} chaînes',
     );
     return [
       _card([
-        Text('Guide (XMLTV) du fournisseur, utilisé car get_short_epg est bloqué (403). Cache 6 h.', style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+        Text(L.of(context)!.sEpgHint, style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
         const SizedBox(height: 12),
         _line('État', status),
         const SizedBox(height: 12),
         FilledButton.tonalIcon(
           onPressed: () {
             ref.invalidate(epgIndexProvider);
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('EPG en cours de rechargement…')));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(L.of(context)!.sEpgReloading)));
           },
           icon: const Icon(Icons.refresh),
-          label: const Text('Rafraîchir l\'EPG'),
+          label: Text(L.of(context)!.sRefreshEpg),
         ),
       ]),
     ];
@@ -233,12 +233,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   List<Widget> _catalog() {
     return [
       _card([
-        Text('Recharge films & séries depuis le fournisseur (après ajout de nouveaux contenus).', style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+        Text(L.of(context)!.sCatalogHint, style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
         const SizedBox(height: 12),
         Wrap(spacing: 10, runSpacing: 10, children: [
-          FilledButton.tonalIcon(onPressed: () { ref.invalidate(allVodProvider); ref.invalidate(latestVodProvider); _toast('Films rafraîchis'); }, icon: const Icon(Icons.movie_rounded), label: const Text('Rafraîchir les films')),
-          FilledButton.tonalIcon(onPressed: () { ref.invalidate(allSeriesProvider); ref.invalidate(latestSeriesProvider); _toast('Séries rafraîchies'); }, icon: const Icon(Icons.grid_view_rounded), label: const Text('Rafraîchir les séries')),
-          FilledButton.icon(onPressed: () { ref.read(autoRefreshControllerProvider.notifier).refreshNow(); _toast('Catalogue et EPG rafraîchis'); }, icon: const Icon(Icons.refresh), label: const Text('Tout rafraîchir')),
+          FilledButton.tonalIcon(onPressed: () { ref.invalidate(allVodProvider); ref.invalidate(latestVodProvider); _toast(L.of(context)!.sMoviesRefreshed); }, icon: Icon(Icons.movie_rounded), label: Text(L.of(context)!.sRefreshMovies)),
+          FilledButton.tonalIcon(onPressed: () { ref.invalidate(allSeriesProvider); ref.invalidate(latestSeriesProvider); _toast(L.of(context)!.sSeriesRefreshed); }, icon: Icon(Icons.grid_view_rounded), label: Text(L.of(context)!.sRefreshSeries)),
+          FilledButton.icon(onPressed: () { ref.read(autoRefreshControllerProvider.notifier).refreshNow(); _toast(L.of(context)!.sCatalogRefreshed); }, icon: Icon(Icons.refresh), label: Text(L.of(context)!.sRefreshAll)),
         ]),
       ]),
     ];
@@ -258,7 +258,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   MaterialPageRoute(builder: (_) => CategoryManagerScreen(section: section)),
                 ),
                 icon: const Icon(Icons.tune, size: 18),
-                label: const Text('Gérer'),
+                label: Text(L.of(context)!.sManage),
               ),
             ],
           ),
@@ -266,8 +266,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return [
       _card([
         Text(
-          'Choisissez les catégories du fournisseur à afficher ou masquer, pour chaque section. '
-          'Sans réglage, KTV applique son filtre par défaut (FR / Maroc / beIN Sports).',
+          L.of(context)!.sCatManageHint + L.of(context)!.sCatDefault,
           style: TextStyle(color: KtvColors.muted, fontSize: 12.5, height: 1.4),
         ),
         const SizedBox(height: 12),
@@ -286,18 +285,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final lang = prefs.settingStr('tmdbLang', 'fr-FR');
     return [
       _card([
-        Text('Affiches, notes, synopsis et casting pour les films & séries.', style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+        Text(L.of(context)!.sTmdbHint, style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
         const SizedBox(height: 6),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           activeThumbColor: KtvColors.accent,
-          title: const Text('Activer TMDB'),
+          title: Text(L.of(context)!.sTmdbEnable),
           value: enabled,
           onChanged: (v) async { await prefs.setSetting('tmdbEnabled', v); setState(() {}); },
         ),
         Row(children: [
           const SizedBox(width: 4),
-          Text('Langue des métadonnées', style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+          Text(L.of(context)!.sTmdbLang, style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
           const Spacer(),
           DropdownButton<String>(
             value: lang,
@@ -312,11 +311,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ]),
         const SizedBox(height: 10),
-        Text('Clé v4 perso (optionnel — sinon proxy KTV) :', style: TextStyle(color: KtvColors.muted, fontSize: 12)),
+        Text(L.of(context)!.sTmdbKeyHint, style: TextStyle(color: KtvColors.muted, fontSize: 12)),
         const SizedBox(height: 6),
         TextField(
           obscureText: true,
-          decoration: const InputDecoration(hintText: 'Clé TMDB v4 (optionnel)'),
+          decoration: InputDecoration(hintText: L.of(context)!.sTmdbKey),
           controller: TextEditingController(text: prefs.settingStr('tmdbKey')),
           onChanged: (v) => prefs.setSetting('tmdbKey', v.trim()),
         ),
@@ -329,22 +328,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final connected = prefs.traktConnected;
     return [
       _card([
-        Text('Crée une appli sur trakt.tv/oauth/applications, colle Client ID + Secret.', style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+        Text(L.of(context)!.sTraktHint, style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
         const SizedBox(height: 10),
-        TextField(decoration: const InputDecoration(hintText: 'Client ID'), controller: TextEditingController(text: prefs.settingStr('traktClientId')), onChanged: (v) => prefs.setSetting('traktClientId', v.trim())),
+        TextField(decoration: InputDecoration(hintText: L.of(context)!.sClientId), controller: TextEditingController(text: prefs.settingStr('traktClientId')), onChanged: (v) => prefs.setSetting('traktClientId', v.trim())),
         const SizedBox(height: 8),
-        TextField(obscureText: true, decoration: const InputDecoration(hintText: 'Client Secret'), controller: TextEditingController(text: prefs.settingStr('traktSecret')), onChanged: (v) => prefs.setSetting('traktSecret', v.trim())),
+        TextField(obscureText: true, decoration: InputDecoration(hintText: L.of(context)!.sClientSecret), controller: TextEditingController(text: prefs.settingStr('traktSecret')), onChanged: (v) => prefs.setSetting('traktSecret', v.trim())),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           activeThumbColor: KtvColors.accent,
-          title: const Text('Marquer vu automatiquement à la fin'),
+          title: Text(L.of(context)!.sTraktScrobble),
           value: prefs.settingBool('traktScrobble', true),
           onChanged: (v) async { await prefs.setSetting('traktScrobble', v); setState(() {}); },
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           activeThumbColor: KtvColors.accent,
-          title: const Text('Recommandations « Recommandé pour vous »'),
+          title: Text(L.of(context)!.sTraktReco),
           value: prefs.settingBool('traktRecommendationsEnabled', true),
           onChanged: (v) async { await prefs.setSetting('traktRecommendationsEnabled', v); setState(() {}); },
         ),
@@ -352,7 +351,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         if (connected)
           FilledButton.tonalIcon(onPressed: () async { await ref.read(traktServiceProvider).disconnect(); setState(() {}); }, icon: const Icon(Icons.link_off), label: const Text('✓ Connecté — Déconnecter'))
         else
-          FilledButton.icon(onPressed: _connectTrakt, icon: const Icon(Icons.link), label: const Text('Connecter (code device)')),
+          FilledButton.icon(onPressed: _connectTrakt, icon: Icon(Icons.link), label: Text(L.of(context)!.sTraktConnect)),
       ]),
     ];
   }
@@ -367,8 +366,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return [
       _card([
         Text(
-          'Synchronise reprise, favoris, historique, catégories et profils entre tes appareils. '
-          'Identité = ton compte Trakt. Tout est chiffré avec ta phrase secrète : le serveur ne peut rien lire.',
+          L.of(context)!.sSyncHint1 + L.of(context)!.sSyncHint2,
           style: TextStyle(color: KtvColors.muted, fontSize: 12.5, height: 1.4),
         ),
         const SizedBox(height: 14),
@@ -376,14 +374,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           Row(children: [
             Icon(Icons.info_outline, size: 18, color: KtvColors.accent2),
             const SizedBox(width: 8),
-            Expanded(child: Text('Connecte d\'abord Trakt (section « Synchronisation Trakt »).', style: TextStyle(color: KtvColors.accent2, fontSize: 12.5))),
+            Expanded(child: Text(L.of(context)!.sSyncNeedTrakt, style: TextStyle(color: KtvColors.accent2, fontSize: 12.5))),
           ])
         else ...[
-          Text('Phrase secrète (identique sur tous tes appareils)', style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+          Text(L.of(context)!.sPassphraseLabel, style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
           const SizedBox(height: 6),
           TextField(
             controller: _syncPassCtrl,
-            decoration: InputDecoration(hintText: enabled ? 'Déjà définie — saisir pour changer' : 'Choisis une phrase secrète'),
+            decoration: InputDecoration(hintText: enabled ? L.of(context)!.sPassphraseSet : L.of(context)!.sPassphraseChoose),
           ),
           const SizedBox(height: 12),
           Wrap(spacing: 10, runSpacing: 10, children: [
@@ -392,13 +390,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onPressed: st.status == SyncStatus.syncing
                     ? null
                     : () async {
-                        if (_syncPassCtrl.text.trim().length < 4) { _toast('Phrase trop courte (min. 4 caractères).'); return; }
+                        if (_syncPassCtrl.text.trim().length < 4) { _toast(L.of(context)!.sPassphraseShort); return; }
                         await ctrl.activate(_syncPassCtrl.text.trim());
                         _syncPassCtrl.clear();
                         setState(() {});
                       },
                 icon: const Icon(Icons.cloud_done_outlined),
-                label: const Text('Activer la synchro'),
+                label: Text(L.of(context)!.sSyncEnable),
               )
             else ...[
               FilledButton.icon(
@@ -414,12 +412,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 icon: st.status == SyncStatus.syncing
                     ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.sync),
-                label: const Text('Synchroniser maintenant'),
+                label: Text(L.of(context)!.sSyncNow),
               ),
               FilledButton.tonalIcon(
                 onPressed: () async { await ctrl.disable(); setState(() {}); },
                 icon: const Icon(Icons.cloud_off),
-                label: const Text('Désactiver'),
+                label: Text(L.of(context)!.sDisable),
               ),
             ],
           ]),
@@ -432,13 +430,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             const SizedBox(width: 8),
             Expanded(child: Text(
-              st.message ?? (st.lastAt > 0 ? 'Dernière synchro : ${_dateTime(st.lastAt)}' : (enabled ? 'Activée — pas encore synchronisée.' : 'Désactivée.')),
+              st.message ?? (st.lastAt > 0 ? 'Dernière synchro : ${_dateTime(st.lastAt)}' : (enabled ? L.of(context)!.sSyncEnabledNoSync : L.of(context)!.sSyncDisabled)),
               style: TextStyle(color: st.status == SyncStatus.error ? KtvColors.rec : KtvColors.muted, fontSize: 12),
             )),
           ]),
         ],
         Divider(height: 26, color: KtvColors.line),
-        Text('Serveur de synchro (avancé)', style: TextStyle(color: KtvColors.muted, fontSize: 12)),
+        Text(L.of(context)!.sSyncServer, style: TextStyle(color: KtvColors.muted, fontSize: 12)),
         const SizedBox(height: 6),
         TextField(
           controller: _syncEndpointCtrl,
@@ -455,27 +453,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final last = int.tryParse(prefs.settingStr('lastRefresh', '0')) ?? 0;
     return [
       _card([
-        Text('Recharge périodiquement chaînes, films, séries et EPG en arrière-plan.', style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+        Text(L.of(context)!.sAutoRefreshHint, style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
         const SizedBox(height: 12),
         Row(children: [
-          Text('Fréquence', style: TextStyle(color: KtvColors.muted, fontSize: 13)),
+          Text(L.of(context)!.sFrequency, style: TextStyle(color: KtvColors.muted, fontSize: 13)),
           const Spacer(),
           DropdownButton<int>(
             value: cur,
             dropdownColor: KtvColors.panel2,
             underline: const SizedBox(),
-            items: const [
-              DropdownMenuItem(value: 0, child: Text('Désactivée')),
-              DropdownMenuItem(value: 30, child: Text('Toutes les 30 min')),
-              DropdownMenuItem(value: 60, child: Text('Toutes les heures')),
-              DropdownMenuItem(value: 180, child: Text('Toutes les 3 h')),
-              DropdownMenuItem(value: 360, child: Text('Toutes les 6 h')),
+            items: [
+              DropdownMenuItem(value: 0, child: Text(L.of(context)!.sFreqOff)),
+              DropdownMenuItem(value: 30, child: Text(L.of(context)!.sEvery30)),
+              DropdownMenuItem(value: 60, child: Text(L.of(context)!.sEvery1h)),
+              DropdownMenuItem(value: 180, child: Text(L.of(context)!.sEvery3h)),
+              DropdownMenuItem(value: 360, child: Text(L.of(context)!.sEvery6h)),
             ],
             onChanged: (v) async { if (v != null) { await ref.read(autoRefreshControllerProvider.notifier).setMinutes(v); setState(() {}); } },
           ),
         ]),
         const SizedBox(height: 10),
-        FilledButton.tonalIcon(onPressed: () { ref.read(autoRefreshControllerProvider.notifier).refreshNow(); setState(() {}); _toast('Actualisé'); }, icon: const Icon(Icons.refresh), label: const Text('Actualiser maintenant')),
+        FilledButton.tonalIcon(onPressed: () { ref.read(autoRefreshControllerProvider.notifier).refreshNow(); setState(() {}); _toast(L.of(context)!.sRefreshed); }, icon: Icon(Icons.refresh), label: Text(L.of(context)!.sRefreshNow)),
         if (last > 0) Padding(padding: const EdgeInsets.only(top: 8), child: Text('Dernière actualisation : ${_dateTime(last)}', style: TextStyle(color: KtvColors.muted, fontSize: 11.5))),
       ]),
     ];
@@ -492,7 +490,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _folderRow('recordingsDir', 'Documents/KTV Enregistrements'),
         Divider(height: 24, color: KtvColors.line),
         if (recs.isEmpty)
-          Text('Aucun enregistrement.', style: TextStyle(color: KtvColors.muted, fontSize: 13))
+          Text(L.of(context)!.sNoRecording, style: TextStyle(color: KtvColors.muted, fontSize: 13))
         else
           for (final r in recs.reversed)
             Padding(
@@ -520,13 +518,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     if (r.status == RecStatus.scheduled && r.startAt != null)
                       Text('Programmé — commence à ${_hhmm(r.startAt!)}', style: TextStyle(color: KtvColors.muted, fontSize: 11))
                     else if (r.status == RecStatus.recording)
-                      const Text('En cours…', style: TextStyle(color: KtvColors.rec, fontSize: 11)),
+                      Text(L.of(context)!.sInProgress, style: TextStyle(color: KtvColors.rec, fontSize: 11)),
                   ]),
                 ),
                 if (r.status == RecStatus.recording)
-                  TextButton(onPressed: () => rec.stop(), child: const Text('Arrêter'))
+                  TextButton(onPressed: () => rec.stop(), child: Text(L.of(context)!.sStop))
                 else if (r.status == RecStatus.scheduled)
-                  TextButton(onPressed: () => rec.cancelScheduled(r.id), child: const Text('Annuler')),
+                  TextButton(onPressed: () => rec.cancelScheduled(r.id), child: Text(L.of(context)!.sCancel)),
               ]),
             ),
       ]),
@@ -541,7 +539,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _folderRow('downloadsDir', 'Documents/KTV Téléchargements'),
         Divider(height: 24, color: KtvColors.line),
         if (jobs.isEmpty)
-          Text('Aucun téléchargement. Bouton ⬇ sur un film ou un épisode.', style: TextStyle(color: KtvColors.muted, fontSize: 13))
+          Text(L.of(context)!.sNoDownload, style: TextStyle(color: KtvColors.muted, fontSize: 13))
         else
           for (final j in jobs.reversed)
             Padding(
@@ -563,10 +561,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 Text(
                   switch (j.status) {
                     DownloadStatus.done => '✓',
-                    DownloadStatus.error => 'échec',
-                    DownloadStatus.canceled => 'annulé',
+                    DownloadStatus.error => L.of(context)!.sFailed2,
+                    DownloadStatus.canceled => L.of(context)!.sCanceled2,
                     DownloadStatus.downloading => '${(j.progress * 100).round()}%',
-                    DownloadStatus.queued => 'en file',
+                    DownloadStatus.queued => L.of(context)!.sQueued2,
                   },
                   style: TextStyle(color: KtvColors.muted, fontSize: 12),
                 ),
@@ -592,12 +590,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             subtitle: Text(p.srv, style: TextStyle(color: KtvColors.muted, fontSize: 12)),
             trailing: Row(mainAxisSize: MainAxisSize.min, children: [
               if (p.id == prof?.id) Icon(Icons.check_circle, color: KtvColors.accent, size: 18),
-              if (p.id != prof?.id) TextButton(onPressed: () => ref.read(authControllerProvider.notifier).switchTo(p), child: const Text('Activer')),
+              if (p.id != prof?.id) TextButton(onPressed: () => ref.read(authControllerProvider.notifier).switchTo(p), child: Text(L.of(context)!.sActivate)),
               IconButton(icon: Icon(Icons.delete_outline, color: KtvColors.muted), onPressed: () => ref.read(authControllerProvider.notifier).deleteProfile(p.id)),
             ]),
           ),
         const SizedBox(height: 12),
-        FilledButton.tonalIcon(onPressed: () => ref.read(authControllerProvider.notifier).logout(), icon: const Icon(Icons.logout), label: const Text('Se déconnecter')),
+        FilledButton.tonalIcon(onPressed: () => ref.read(authControllerProvider.notifier).logout(), icon: Icon(Icons.logout), label: Text(L.of(context)!.sLogout)),
       ]),
     ];
   }
@@ -613,7 +611,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final lang = prefs.settingStr('appLang', 'system');
     return [
       _card([
-        Text(L.of(context)!.language, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+        Text(L.of(context)!.language, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
         const SizedBox(height: 8),
         DropdownButton<String>(
           value: lang,
@@ -632,13 +630,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           },
         ),
         const SizedBox(height: 18),
-        Text(L.of(context)!.themeAppearance, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+        Text(L.of(context)!.themeAppearance, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
         const SizedBox(height: 8),
         SegmentedButton<bool>(
           showSelectedIcon: false,
           segments: [
-            ButtonSegment(value: false, icon: const Icon(Icons.dark_mode, size: 16), label: Text(L.of(context)!.themeDark)),
-            ButtonSegment(value: true, icon: const Icon(Icons.light_mode, size: 16), label: Text(L.of(context)!.themeLight)),
+            ButtonSegment(value: false, icon: Icon(Icons.dark_mode, size: 16), label: Text(L.of(context)!.themeDark)),
+            ButtonSegment(value: true, icon: Icon(Icons.light_mode, size: 16), label: Text(L.of(context)!.themeLight)),
           ],
           selected: {light},
           onSelectionChanged: (s) async {
@@ -649,7 +647,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           },
         ),
         const SizedBox(height: 18),
-        Text(L.of(context)!.themeAccent, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+        Text(L.of(context)!.themeAccent, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
         const SizedBox(height: 4),
         Text(L.of(context)!.themeAccentHint, style: TextStyle(color: KtvColors.muted, fontSize: 12)),
         const SizedBox(height: 12),
@@ -702,7 +700,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     ];
     return [
       _card([
-        Text('Coche les rangées à afficher sur l\'accueil.', style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+        Text(L.of(context)!.sHomeRowsHint, style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
         for (final r in rails)
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
@@ -725,13 +723,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           Expanded(child: Text('${recent.length} entrée(s)', style: TextStyle(color: KtvColors.muted, fontSize: 12.5))),
           if (recent.isNotEmpty)
             TextButton.icon(
-              onPressed: () async { await ref.read(prefsProvider).clearRecent(); setState(() {}); _toast('Historique effacé'); },
+              onPressed: () async { final msg = L.of(context)!.sHistoryCleared; await ref.read(prefsProvider).clearRecent(); setState(() {}); _toast(msg); },
               icon: const Icon(Icons.delete_outline, size: 18),
-              label: const Text('Effacer'),
+              label: Text(L.of(context)!.sClear),
             ),
         ]),
         if (recent.isEmpty)
-          Text('Aucun historique.', style: TextStyle(color: KtvColors.muted, fontSize: 13))
+          Text(L.of(context)!.sNoHistory, style: TextStyle(color: KtvColors.muted, fontSize: 13))
         else
           for (final e in recent)
             ListTile(
@@ -755,12 +753,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   List<Widget> _diagnostic() {
     return [
       _card([
-        Text('Teste la latence de l\'API, les connexions et le débit du flux.', style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+        Text(L.of(context)!.sDiagHint, style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
         const SizedBox(height: 12),
         FilledButton.icon(
           onPressed: _diagRunning ? null : _runDiagnostic,
           icon: _diagRunning ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.speed),
-          label: const Text('Lancer le test'),
+          label: Text(L.of(context)!.sRunTest),
         ),
         if (_diagText != null) ...[
           const SizedBox(height: 14),
@@ -822,10 +820,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             icon: _checkingUpdate
                 ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                 : const Icon(Icons.system_update_alt),
-            label: const Text('Vérifier les mises à jour'),
+            label: Text(L.of(context)!.sCheckUpdates),
           ),
           const SizedBox(width: 10),
-          TextButton(onPressed: () => _openUrl('https://github.com/khalilbenaz/ktv-flutter/releases'), child: const Text('Voir les releases')),
+          TextButton(onPressed: () => _openUrl('https://github.com/khalilbenaz/ktv-flutter/releases'), child: Text(L.of(context)!.sSeeReleases)),
         ]),
         if (u != null) ...[
           const SizedBox(height: 14),
@@ -847,7 +845,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             else
               Text('✓ Téléchargé — remplace KTV.app dans /Applications puis relance.', style: TextStyle(color: KtvColors.accent, fontSize: 12.5)),
           ] else
-            Text('✓ Vous avez la dernière version.', style: TextStyle(color: KtvColors.accent, fontWeight: FontWeight.w600)),
+            Text(L.of(context)!.sUpToDate, style: TextStyle(color: KtvColors.accent, fontWeight: FontWeight.w600)),
         ],
         const SizedBox(height: 10),
         SelectableText('github.com/khalilbenaz/ktv-flutter', style: TextStyle(color: KtvColors.accent2, fontSize: 12)),
@@ -860,7 +858,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final info = await ref.read(updateServiceProvider).check();
     if (!mounted) return;
     setState(() { _checkingUpdate = false; _update = info; });
-    if (info == null) _toast('Impossible de vérifier les mises à jour.');
+    if (info == null) _toast(L.of(context)!.sUpdateErr);
   }
 
   Future<void> _downloadUpdate() async {
@@ -880,7 +878,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       } catch (_) {}
       _toast('Téléchargé : $path');
     } else {
-      _toast('Échec du téléchargement.');
+      _toast(L.of(context)!.sDownloadErr);
     }
   }
 
@@ -901,8 +899,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ]),
         const SizedBox(height: 8),
         Wrap(spacing: 8, runSpacing: 6, children: [
-          FilledButton.tonalIcon(onPressed: () => _pickFolder(key), icon: const Icon(Icons.drive_folder_upload, size: 18), label: const Text('Changer le dossier…')),
-          TextButton.icon(onPressed: () => _openFolder(key, defLabel), icon: const Icon(Icons.open_in_new, size: 16), label: const Text('Ouvrir')),
+          FilledButton.tonalIcon(onPressed: () => _pickFolder(key), icon: Icon(Icons.drive_folder_upload, size: 18), label: Text(L.of(context)!.sChangeFolder)),
+          TextButton.icon(onPressed: () => _openFolder(key, defLabel), icon: Icon(Icons.open_in_new, size: 16), label: Text(L.of(context)!.sOpen)),
           if (path.isNotEmpty) TextButton(onPressed: () async { await prefs.setSetting(key, null); setState(() {}); }, child: const Text('Réinitialiser')),
         ]),
       ],
@@ -910,7 +908,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _pickFolder(String key) async {
-    final dir = await FilePicker.platform.getDirectoryPath(dialogTitle: 'Choisir le dossier');
+    final dir = await FilePicker.platform.getDirectoryPath(dialogTitle: L.of(context)!.sChooseFolder);
     if (dir != null && dir.isNotEmpty) {
       await ref.read(prefsProvider).setSetting(key, dir);
       if (mounted) setState(() {});
@@ -987,14 +985,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _connectTrakt() async {
     final trakt = ref.read(traktServiceProvider);
     if (ref.read(prefsProvider).settingStr('traktClientId').isEmpty) {
-      _toast('Renseigne d\'abord le Client ID.');
+      _toast(L.of(context)!.sNeedClientId);
       return;
     }
     Map<String, dynamic> code;
     try {
       code = await trakt.requestDeviceCode();
     } catch (_) {
-      if (mounted) _toast('Échec de la demande de code Trakt.');
+      if (mounted) _toast(L.of(context)!.sTraktCodeErr);
       return;
     }
     final userCode = code['user_code']?.toString() ?? '';
@@ -1017,12 +1015,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         });
         return AlertDialog(
           backgroundColor: KtvColors.panel,
-          title: const Text('Connexion Trakt'),
+          title: Text(L.of(context)!.sTraktConnDialog),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
-            Text('Va sur :', style: TextStyle(color: KtvColors.muted)),
+            Text(L.of(context)!.sGoTo, style: TextStyle(color: KtvColors.muted)),
             SelectableText(url, style: TextStyle(color: KtvColors.accent2, fontWeight: FontWeight.w700)),
             const SizedBox(height: 12),
-            Text('et saisis le code :', style: TextStyle(color: KtvColors.muted)),
+            Text(L.of(context)!.sEnterCode, style: TextStyle(color: KtvColors.muted)),
             SelectableText(userCode, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: 3)),
             const SizedBox(height: 12),
             CircularProgressIndicator(color: KtvColors.accent),

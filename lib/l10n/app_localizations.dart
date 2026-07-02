@@ -776,6 +776,588 @@ abstract class L {
   /// In fr, this message translates to:
   /// **'Épisode suivant'**
   String get nextEpisode;
+
+  /// No description provided for @sAccErr.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de récupérer les infos d\'abonnement.'**
+  String get sAccErr;
+
+  /// No description provided for @sNotConnected.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non connecté.'**
+  String get sNotConnected;
+
+  /// No description provided for @sStatus.
+  ///
+  /// In fr, this message translates to:
+  /// **'Statut'**
+  String get sStatus;
+
+  /// No description provided for @sExpiration.
+  ///
+  /// In fr, this message translates to:
+  /// **'Expiration'**
+  String get sExpiration;
+
+  /// No description provided for @sConnections.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexions'**
+  String get sConnections;
+
+  /// No description provided for @sTrial.
+  ///
+  /// In fr, this message translates to:
+  /// **'Essai'**
+  String get sTrial;
+
+  /// No description provided for @sUser.
+  ///
+  /// In fr, this message translates to:
+  /// **'Utilisateur'**
+  String get sUser;
+
+  /// No description provided for @sServer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Serveur'**
+  String get sServer;
+
+  /// No description provided for @sCreatedOn.
+  ///
+  /// In fr, this message translates to:
+  /// **'Créé le'**
+  String get sCreatedOn;
+
+  /// No description provided for @sTimezone.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fuseau'**
+  String get sTimezone;
+
+  /// No description provided for @sFormats.
+  ///
+  /// In fr, this message translates to:
+  /// **'Formats'**
+  String get sFormats;
+
+  /// No description provided for @sUnlimited.
+  ///
+  /// In fr, this message translates to:
+  /// **'Illimité'**
+  String get sUnlimited;
+
+  /// No description provided for @sYes.
+  ///
+  /// In fr, this message translates to:
+  /// **'Oui'**
+  String get sYes;
+
+  /// No description provided for @sNo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non'**
+  String get sNo;
+
+  /// No description provided for @sBufferHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'« Faible latence » = plus proche du direct. « Stable » = gros tampon, moins de coupures.'**
+  String get sBufferHint;
+
+  /// No description provided for @sBufLow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Faible latence'**
+  String get sBufLow;
+
+  /// No description provided for @sBufBalanced.
+  ///
+  /// In fr, this message translates to:
+  /// **'Équilibré (défaut)'**
+  String get sBufBalanced;
+
+  /// No description provided for @sBufStable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Stable (gros tampon)'**
+  String get sBufStable;
+
+  /// No description provided for @sBufApplied.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appliqué au prochain lancement de lecture (propriété mpv cache-secs).'**
+  String get sBufApplied;
+
+  /// No description provided for @sAutoplay.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecture auto de l\'épisode suivant'**
+  String get sAutoplay;
+
+  /// No description provided for @sAutoplayHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enchaîne la série à la fin d\'un épisode'**
+  String get sAutoplayHint;
+
+  /// No description provided for @sEpgHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Guide (XMLTV) du fournisseur, utilisé car get_short_epg est bloqué (403). Cache 6 h.'**
+  String get sEpgHint;
+
+  /// No description provided for @sRefreshEpg.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rafraîchir l\'EPG'**
+  String get sRefreshEpg;
+
+  /// No description provided for @sEpgReloading.
+  ///
+  /// In fr, this message translates to:
+  /// **'EPG en cours de rechargement…'**
+  String get sEpgReloading;
+
+  /// No description provided for @sCatalogHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharge films & séries depuis le fournisseur (après ajout de nouveaux contenus).'**
+  String get sCatalogHint;
+
+  /// No description provided for @sRefreshMovies.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rafraîchir les films'**
+  String get sRefreshMovies;
+
+  /// No description provided for @sRefreshSeries.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rafraîchir les séries'**
+  String get sRefreshSeries;
+
+  /// No description provided for @sRefreshAll.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tout rafraîchir'**
+  String get sRefreshAll;
+
+  /// No description provided for @sMoviesRefreshed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Films rafraîchis'**
+  String get sMoviesRefreshed;
+
+  /// No description provided for @sSeriesRefreshed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Séries rafraîchies'**
+  String get sSeriesRefreshed;
+
+  /// No description provided for @sCatalogRefreshed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Catalogue et EPG rafraîchis'**
+  String get sCatalogRefreshed;
+
+  /// No description provided for @sTmdbHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Affiches, notes, synopsis et casting pour les films & séries.'**
+  String get sTmdbHint;
+
+  /// No description provided for @sTmdbEnable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer TMDB'**
+  String get sTmdbEnable;
+
+  /// No description provided for @sTmdbLang.
+  ///
+  /// In fr, this message translates to:
+  /// **'Langue des métadonnées'**
+  String get sTmdbLang;
+
+  /// No description provided for @sTmdbKeyHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Clé v4 perso (optionnel — sinon proxy KTV) :'**
+  String get sTmdbKeyHint;
+
+  /// No description provided for @sTmdbKey.
+  ///
+  /// In fr, this message translates to:
+  /// **'Clé TMDB v4 (optionnel)'**
+  String get sTmdbKey;
+
+  /// No description provided for @sTraktHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Crée une appli sur trakt.tv/oauth/applications, colle Client ID + Secret.'**
+  String get sTraktHint;
+
+  /// No description provided for @sClientId.
+  ///
+  /// In fr, this message translates to:
+  /// **'Client ID'**
+  String get sClientId;
+
+  /// No description provided for @sClientSecret.
+  ///
+  /// In fr, this message translates to:
+  /// **'Client Secret'**
+  String get sClientSecret;
+
+  /// No description provided for @sTraktScrobble.
+  ///
+  /// In fr, this message translates to:
+  /// **'Marquer vu automatiquement à la fin'**
+  String get sTraktScrobble;
+
+  /// No description provided for @sTraktReco.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recommandations « Recommandé pour vous »'**
+  String get sTraktReco;
+
+  /// No description provided for @sTraktConnect.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connecter (code device)'**
+  String get sTraktConnect;
+
+  /// No description provided for @sTraktConnDialog.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion Trakt'**
+  String get sTraktConnDialog;
+
+  /// No description provided for @sGoTo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Va sur :'**
+  String get sGoTo;
+
+  /// No description provided for @sEnterCode.
+  ///
+  /// In fr, this message translates to:
+  /// **'et saisis le code :'**
+  String get sEnterCode;
+
+  /// No description provided for @sTraktCodeErr.
+  ///
+  /// In fr, this message translates to:
+  /// **'Échec de la demande de code Trakt.'**
+  String get sTraktCodeErr;
+
+  /// No description provided for @sNeedClientId.
+  ///
+  /// In fr, this message translates to:
+  /// **'Renseigne d\'abord le Client ID.'**
+  String get sNeedClientId;
+
+  /// No description provided for @sSyncHint1.
+  ///
+  /// In fr, this message translates to:
+  /// **'Synchronise reprise, favoris, historique, catégories et profils entre tes appareils. '**
+  String get sSyncHint1;
+
+  /// No description provided for @sSyncHint2.
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité = ton compte Trakt. Tout est chiffré avec ta phrase secrète : le serveur ne peut rien lire.'**
+  String get sSyncHint2;
+
+  /// No description provided for @sSyncNeedTrakt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connecte d\'abord Trakt (section « Synchronisation Trakt »).'**
+  String get sSyncNeedTrakt;
+
+  /// No description provided for @sPassphraseLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Phrase secrète (identique sur tous tes appareils)'**
+  String get sPassphraseLabel;
+
+  /// No description provided for @sPassphraseChoose.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisis une phrase secrète'**
+  String get sPassphraseChoose;
+
+  /// No description provided for @sPassphraseSet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déjà définie — saisir pour changer'**
+  String get sPassphraseSet;
+
+  /// No description provided for @sSyncEnable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer la synchro'**
+  String get sSyncEnable;
+
+  /// No description provided for @sSyncNow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Synchroniser maintenant'**
+  String get sSyncNow;
+
+  /// No description provided for @sDisable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Désactiver'**
+  String get sDisable;
+
+  /// No description provided for @sPassphraseShort.
+  ///
+  /// In fr, this message translates to:
+  /// **'Phrase trop courte (min. 4 caractères).'**
+  String get sPassphraseShort;
+
+  /// No description provided for @sSyncEnabledNoSync.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activée — pas encore synchronisée.'**
+  String get sSyncEnabledNoSync;
+
+  /// No description provided for @sSyncDisabled.
+  ///
+  /// In fr, this message translates to:
+  /// **'Désactivée.'**
+  String get sSyncDisabled;
+
+  /// No description provided for @sSyncServer.
+  ///
+  /// In fr, this message translates to:
+  /// **'Serveur de synchro (avancé)'**
+  String get sSyncServer;
+
+  /// No description provided for @sAutoRefreshHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharge périodiquement chaînes, films, séries et EPG en arrière-plan.'**
+  String get sAutoRefreshHint;
+
+  /// No description provided for @sFrequency.
+  ///
+  /// In fr, this message translates to:
+  /// **'Fréquence'**
+  String get sFrequency;
+
+  /// No description provided for @sEvery30.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes les 30 min'**
+  String get sEvery30;
+
+  /// No description provided for @sEvery1h.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes les heures'**
+  String get sEvery1h;
+
+  /// No description provided for @sEvery3h.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes les 3 h'**
+  String get sEvery3h;
+
+  /// No description provided for @sEvery6h.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes les 6 h'**
+  String get sEvery6h;
+
+  /// No description provided for @sRefreshNow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Actualiser maintenant'**
+  String get sRefreshNow;
+
+  /// No description provided for @sRefreshed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Actualisé'**
+  String get sRefreshed;
+
+  /// No description provided for @sNoRecording.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun enregistrement.'**
+  String get sNoRecording;
+
+  /// No description provided for @sStop.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrêter'**
+  String get sStop;
+
+  /// No description provided for @sInProgress.
+  ///
+  /// In fr, this message translates to:
+  /// **'En cours…'**
+  String get sInProgress;
+
+  /// No description provided for @sCancel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler'**
+  String get sCancel;
+
+  /// No description provided for @sNoDownload.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun téléchargement. Bouton ⬇ sur un film ou un épisode.'**
+  String get sNoDownload;
+
+  /// No description provided for @sNoHistory.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun historique.'**
+  String get sNoHistory;
+
+  /// No description provided for @sHistoryCleared.
+  ///
+  /// In fr, this message translates to:
+  /// **'Historique effacé'**
+  String get sHistoryCleared;
+
+  /// No description provided for @sClear.
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer'**
+  String get sClear;
+
+  /// No description provided for @sDiagHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Teste la latence de l\'API, les connexions et le débit du flux.'**
+  String get sDiagHint;
+
+  /// No description provided for @sRunTest.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lancer le test'**
+  String get sRunTest;
+
+  /// No description provided for @sLogout.
+  ///
+  /// In fr, this message translates to:
+  /// **'Se déconnecter'**
+  String get sLogout;
+
+  /// No description provided for @sActivate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer'**
+  String get sActivate;
+
+  /// No description provided for @sManage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gérer'**
+  String get sManage;
+
+  /// No description provided for @sCatManageHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisis les catégories du fournisseur à afficher ou masquer, pour chaque section. '**
+  String get sCatManageHint;
+
+  /// No description provided for @sCatDefault.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans réglage, KTV applique son filtre par défaut (FR / Maroc / beIN Sports).'**
+  String get sCatDefault;
+
+  /// No description provided for @sHomeRowsHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Coche les rangées à afficher sur l\'accueil.'**
+  String get sHomeRowsHint;
+
+  /// No description provided for @sCheckUpdates.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier les mises à jour'**
+  String get sCheckUpdates;
+
+  /// No description provided for @sSeeReleases.
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir les releases'**
+  String get sSeeReleases;
+
+  /// No description provided for @sUpdateErr.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de vérifier les mises à jour.'**
+  String get sUpdateErr;
+
+  /// No description provided for @sUpToDate.
+  ///
+  /// In fr, this message translates to:
+  /// **'✓ Vous avez la dernière version.'**
+  String get sUpToDate;
+
+  /// No description provided for @sDownloadErr.
+  ///
+  /// In fr, this message translates to:
+  /// **'Échec du téléchargement.'**
+  String get sDownloadErr;
+
+  /// No description provided for @sChangeFolder.
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer le dossier…'**
+  String get sChangeFolder;
+
+  /// No description provided for @sChooseFolder.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir le dossier'**
+  String get sChooseFolder;
+
+  /// No description provided for @sOpen.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ouvrir'**
+  String get sOpen;
+
+  /// No description provided for @sNoData.
+  ///
+  /// In fr, this message translates to:
+  /// **'aucune donnée'**
+  String get sNoData;
+
+  /// No description provided for @sQueued2.
+  ///
+  /// In fr, this message translates to:
+  /// **'en file'**
+  String get sQueued2;
+
+  /// No description provided for @sFailed2.
+  ///
+  /// In fr, this message translates to:
+  /// **'échec'**
+  String get sFailed2;
+
+  /// No description provided for @sCanceled2.
+  ///
+  /// In fr, this message translates to:
+  /// **'annulé'**
+  String get sCanceled2;
+
+  /// No description provided for @sFreqOff.
+  ///
+  /// In fr, this message translates to:
+  /// **'Désactivée'**
+  String get sFreqOff;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {
