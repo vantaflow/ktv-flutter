@@ -387,8 +387,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           const SizedBox(height: 6),
           TextField(
             controller: _syncPassCtrl,
-            obscureText: true,
-            decoration: InputDecoration(hintText: enabled ? '•••••• (déjà définie — saisir pour changer)' : 'Choisis une phrase secrète'),
+            decoration: InputDecoration(hintText: enabled ? 'Déjà définie — saisir pour changer' : 'Choisis une phrase secrète'),
           ),
           const SizedBox(height: 12),
           Wrap(spacing: 10, runSpacing: 10, children: [
