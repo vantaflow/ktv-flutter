@@ -183,10 +183,11 @@ class _ProgramTile extends ConsumerWidget {
     final url = PlayLauncher.timeshiftUrl(ref, channel, program);
     if (url == null) return;
     final title = program.title.isEmpty ? 'Programme' : program.title;
-    ref.read(downloadControllerProvider.notifier).enqueue(
+    final dur = (program.stop - program.start).clamp(60, 6 * 3600);
+    ref.read(downloadControllerProvider.notifier).enqueueStream(
           name: '${channel.name} - $title (rediffusion)',
           url: url,
-          ext: 'ts',
+          durationSec: dur,
         );
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Téléchargement lancé : « $title » — Réglages → Téléchargements')),
