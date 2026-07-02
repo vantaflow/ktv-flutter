@@ -4,21 +4,25 @@ import 'package:media_kit/media_kit.dart';
 import 'package:window_manager/window_manager.dart';
 import 'app.dart';
 import 'core/providers.dart';
+import 'core/platform.dart';
 import 'core/storage/prefs_store.dart';
 import 'core/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
-  await windowManager.ensureInitialized();
-  await windowManager.waitUntilReadyToShow(
-    const WindowOptions(size: Size(1280, 800), minimumSize: Size(940, 600), title: 'KTV', center: true),
-    () async {
-      await windowManager.show();
-      await windowManager.focus();
-      await windowManager.maximize(); // démarre en grand (remplit l'écran)
-    },
-  );
+  // Gestion de fenêtre : desktop uniquement (window_manager n'existe pas sur mobile).
+  if (kDesktop) {
+    await windowManager.ensureInitialized();
+    await windowManager.waitUntilReadyToShow(
+      const WindowOptions(size: Size(1280, 800), minimumSize: Size(940, 600), title: 'KTV', center: true),
+      () async {
+        await windowManager.show();
+        await windowManager.focus();
+        await windowManager.maximize(); // démarre en grand (remplit l'écran)
+      },
+    );
+  }
   final prefs = await PrefsStore.create();
   // Applique le thème enregistré avant le 1er rendu.
   KtvColors.apply(light: prefs.settingBool('themeLight', false), accentKey: prefs.settingStr('accentColor', 'orange'));

@@ -10,6 +10,7 @@ import '../../core/providers.dart';
 import '../../core/connection/connection_lock.dart';
 import '../../core/storage/prefs_store.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/platform.dart';
 import '../../core/models/models.dart';
 import '../../services/trakt/trakt_service.dart';
 import '../../services/trakt/trakt_providers.dart';
@@ -751,15 +752,19 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                       if (_hasNext)
                         IconButton(tooltip: 'Épisode suivant', onPressed: _playNext, icon: const Icon(Icons.skip_next, color: Colors.white)),
                       IconButton(tooltip: 'Réglages de lecture (vitesse, audio, sous-titres)', onPressed: _openPlaybackSheet, icon: const Icon(Icons.tune, color: Colors.white)),
-                      IconButton(tooltip: _pip ? 'Quitter le mode fenêtre' : 'Fenêtre flottante (PiP)', onPressed: _togglePip, icon: Icon(_pip ? Icons.close_fullscreen : Icons.picture_in_picture_alt, color: _pip ? KtvColors.accent : Colors.white)),
+                      if (kDesktop) // PiP = gestion de fenêtre desktop
+                        IconButton(tooltip: _pip ? 'Quitter le mode fenêtre' : 'Fenêtre flottante (PiP)', onPressed: _togglePip, icon: Icon(_pip ? Icons.close_fullscreen : Icons.picture_in_picture_alt, color: _pip ? KtvColors.accent : Colors.white)),
                       if (widget.request.isLive) ...[
-                        IconButton(
-                          tooltip: isRec ? 'Arrêter l\'enregistrement' : 'Enregistrer',
-                          onPressed: _toggleRecord,
-                          icon: Icon(isRec ? Icons.stop_circle : Icons.fiber_manual_record, color: KtvColors.rec),
-                        ),
-                        IconButton(tooltip: 'Programmer', onPressed: _scheduleDialog, icon: const Icon(Icons.schedule, color: Colors.white)),
-                        IconButton(tooltip: 'Partager (restream LAN / tunnel)', onPressed: _restreamDialog, icon: const Icon(Icons.cast, color: Colors.white)),
+                        // Enregistrement / programmation / restream = ffmpeg+cloudflared (desktop uniquement).
+                        if (kDesktop) ...[
+                          IconButton(
+                            tooltip: isRec ? 'Arrêter l\'enregistrement' : 'Enregistrer',
+                            onPressed: _toggleRecord,
+                            icon: Icon(isRec ? Icons.stop_circle : Icons.fiber_manual_record, color: KtvColors.rec),
+                          ),
+                          IconButton(tooltip: 'Programmer', onPressed: _scheduleDialog, icon: const Icon(Icons.schedule, color: Colors.white)),
+                          IconButton(tooltip: 'Partager (restream LAN / tunnel)', onPressed: _restreamDialog, icon: const Icon(Icons.cast, color: Colors.white)),
+                        ],
                         if (widget.request.liveCategoryId != null)
                           IconButton(tooltip: 'Chaînes', onPressed: () => setState(() => _sidebarOpen = !_sidebarOpen), icon: Icon(Icons.dvr, color: _sidebarOpen ? KtvColors.accent : Colors.white)),
                       ],

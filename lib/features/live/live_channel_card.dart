@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/models.dart';
 import '../../core/providers.dart';
+import '../../core/platform.dart';
 import '../../core/theme/app_theme.dart';
 import '../auth/auth_controller.dart';
 import '../../services/recording/recording_service.dart';
@@ -59,7 +60,7 @@ class LiveChannelCard extends ConsumerWidget {
                       },
                     ),
                   ),
-                  Positioned(
+                  if (kDesktop) Positioned(
                     top: 2,
                     left: 2,
                     child: IconButton(

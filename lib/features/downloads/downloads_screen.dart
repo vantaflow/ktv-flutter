@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers.dart';
+import '../../core/platform.dart';
 import '../../services/downloads/download_service.dart';
 import '../player/play_launcher.dart';
 
@@ -56,7 +57,7 @@ class DownloadsScreen extends ConsumerWidget {
               children: [
                 const Text('Téléchargements', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
                 const Spacer(),
-                TextButton.icon(onPressed: () => _openFolder(ref), icon: const Icon(Icons.folder_open, size: 18), label: const Text('Dossier')),
+                if (kDesktop) TextButton.icon(onPressed: () => _openFolder(ref), icon: const Icon(Icons.folder_open, size: 18), label: const Text('Dossier')),
                 if (finished.isNotEmpty)
                   TextButton.icon(onPressed: ctrl.clearFinished, icon: const Icon(Icons.clear_all, size: 18), label: const Text('Vider terminés')),
               ],
@@ -88,7 +89,7 @@ class DownloadsScreen extends ConsumerWidget {
                           _FinishedTile(
                             job: j,
                             onPlay: j.filePath != null ? () => PlayLauncher.localFile(context, ref, j.name, j.filePath!) : null,
-                            onReveal: j.filePath != null ? () => _reveal(j.filePath!) : null,
+                            onReveal: (kDesktop && j.filePath != null) ? () => _reveal(j.filePath!) : null,
                             onRemove: () => ctrl.remove(j.id),
                           ),
                       ],
