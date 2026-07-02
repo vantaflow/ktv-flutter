@@ -703,4 +703,11 @@ class LFr extends L {
 
   @override
   String get epgRecord => 'Enregistrer';
+
+  @override
+  String get hwdec => 'Décodage matériel';
+
+  @override
+  String get hwdecHint =>
+      'Désactivez si la lecture plante ou fige (surtout sous Windows). Appliqué au prochain lancement de lecture.';
 }

@@ -259,5 +259,7 @@
   "catchupWatch": "Watch again (catch-up)",
   "catchupUnavailable": "Catch-up not available on this channel.",
   "epgSchedule": "Schedule",
-  "epgRecord": "Record"
+  "epgRecord": "Record",
+  "hwdec": "Hardware decoding",
+  "hwdecHint": "Disable if playback crashes or freezes (especially on Windows). Applied on next playback."
 }

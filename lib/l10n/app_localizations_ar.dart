@@ -695,4 +695,11 @@ class LAr extends L {
 
   @override
   String get epgRecord => 'تسجيل';
+
+  @override
+  String get hwdec => 'فك التشفير بالعتاد';
+
+  @override
+  String get hwdecHint =>
+      'عطّله إذا تعطّل التشغيل أو تجمّد (خاصة على Windows). يُطبَّق عند التشغيل التالي.';
 }

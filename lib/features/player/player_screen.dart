@@ -30,7 +30,7 @@ class PlayerScreen extends ConsumerStatefulWidget {
 
 class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   late final Player _player = Player();
-  late final VideoController _video = VideoController(_player);
+  late final VideoController _video;
   late final PrefsStore _prefs;
   late final ConnectionLock _lock;
   late final TraktService _trakt;
@@ -75,6 +75,12 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   void initState() {
     super.initState();
     _prefs = ref.read(prefsProvider);
+    // Décodage matériel désactivable : sur certains GPU/pilotes Windows, le hwdec
+    // HEVC/MKV plante libmpv (ferme l'app). En logiciel c'est plus lent mais stable.
+    _video = VideoController(
+      _player,
+      configuration: VideoControllerConfiguration(enableHardwareAcceleration: _prefs.settingBool('hwdec', true)),
+    );
     _lock = ref.read(connectionLockProvider);
     _trakt = ref.read(traktServiceProvider);
     // Tampon → propriété mpv (cache-secs) selon le réglage.
@@ -348,6 +354,16 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                   TextButton(onPressed: () { _setSubDelay(0); setSheet(() {}); }, child: Text(L.of(context)!.reset)),
                 ]),
               ],
+              const SizedBox(height: 8),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                activeThumbColor: KtvColors.accent,
+                title: Text(L.of(context)!.hwdec, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                subtitle: Text(L.of(context)!.hwdecHint, style: TextStyle(color: KtvColors.muted, fontSize: 11.5)),
+                value: _prefs.settingBool('hwdec', true),
+                onChanged: (v) async { await _prefs.setSetting('hwdec', v); setSheet(() {}); setState(() {}); },
+              ),
             ],
           ),
         ),

@@ -698,4 +698,11 @@ class LEn extends L {
 
   @override
   String get epgRecord => 'Record';
+
+  @override
+  String get hwdec => 'Hardware decoding';
+
+  @override
+  String get hwdecHint =>
+      'Disable if playback crashes or freezes (especially on Windows). Applied on next playback.';
 }

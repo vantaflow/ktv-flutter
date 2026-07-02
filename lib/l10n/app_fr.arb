@@ -259,5 +259,7 @@
   "catchupWatch": "Revoir (catch-up)",
   "catchupUnavailable": "Catch-up non disponible sur cette chaîne.",
   "epgSchedule": "Programmer",
-  "epgRecord": "Enregistrer"
+  "epgRecord": "Enregistrer",
+  "hwdec": "Décodage matériel",
+  "hwdecHint": "Désactivez si la lecture plante ou fige (surtout sous Windows). Appliqué au prochain lancement de lecture."
 }

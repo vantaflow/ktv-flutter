@@ -199,6 +199,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           value: prefs.settingBool('autoplayNext', true),
           onChanged: (v) async { await prefs.setSetting('autoplayNext', v); setState(() {}); },
         ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          activeThumbColor: KtvColors.accent,
+          title: Text(L.of(context)!.hwdec),
+          subtitle: Text(L.of(context)!.hwdecHint, style: TextStyle(color: KtvColors.muted, fontSize: 12)),
+          value: prefs.settingBool('hwdec', true),
+          onChanged: (v) async { await prefs.setSetting('hwdec', v); setState(() {}); },
+        ),
       ]),
     ];
   }

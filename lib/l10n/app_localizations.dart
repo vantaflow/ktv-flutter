@@ -1418,6 +1418,18 @@ abstract class L {
   /// In fr, this message translates to:
   /// **'Enregistrer'**
   String get epgRecord;
+
+  /// No description provided for @hwdec.
+  ///
+  /// In fr, this message translates to:
+  /// **'Décodage matériel'**
+  String get hwdec;
+
+  /// No description provided for @hwdecHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Désactivez si la lecture plante ou fige (surtout sous Windows). Appliqué au prochain lancement de lecture.'**
+  String get hwdecHint;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {
