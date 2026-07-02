@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../logic/format.dart';
+import '../platform.dart';
 import '../../services/epg/epg_providers.dart';
 import 'poster_card.dart';
 
@@ -16,7 +17,9 @@ class _LiveRailCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final index = ref.watch(epgIndexProvider).asData?.value;
+    // EPG (XMLTV ~81 Mo) chargé seulement sur desktop : évite la pression mémoire
+    // au démarrage sur mobile/TV (l'accueil n'a pas besoin du programme en cours).
+    final index = kDesktop ? ref.watch(epgIndexProvider).asData?.value : null;
     final ch = LiveChannel(streamId: entry.id, name: entry.name, icon: entry.cover, categoryId: entry.categoryId ?? '');
     final (now, _) = index?.nowNext(ch) ?? (null, null);
     return PosterCard(

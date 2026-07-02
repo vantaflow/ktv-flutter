@@ -7,6 +7,7 @@ import '../../core/widgets/async_view.dart';
 import '../../core/widgets/filter_bar.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers.dart';
+import '../../core/platform.dart';
 import '../home/home_providers.dart';
 import 'movie_detail_sheet.dart';
 import 'vod_providers.dart';
@@ -63,7 +64,7 @@ class _VodScreenState extends ConsumerState<VodScreen> {
           loading: () => const SizedBox(height: 44),
           error: (_, _) => const SizedBox(height: 44),
           data: (list) => CategoryChips(
-            categories: [Category(kAllCatId, L.of(context)!.catAll), ...list],
+            categories: [if (kDesktop) Category(kAllCatId, L.of(context)!.catAll), ...list],
             selectedId: selected,
             onSelect: (id) => ref.read(selectedVodCategoryProvider.notifier).state = id,
           ),

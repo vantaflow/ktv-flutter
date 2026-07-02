@@ -7,6 +7,7 @@ import '../../core/widgets/async_view.dart';
 import '../../core/widgets/filter_bar.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers.dart';
+import '../../core/platform.dart';
 import '../home/home_providers.dart';
 import '../vod/vod_screen.dart' show kAllCatId;
 import 'series_providers.dart';
@@ -61,7 +62,7 @@ class _SeriesScreenState extends ConsumerState<SeriesScreen> {
           loading: () => const SizedBox(height: 44),
           error: (_, _) => const SizedBox(height: 44),
           data: (list) => CategoryChips(
-            categories: [Category(kAllCatId, L.of(context)!.catAll), ...list],
+            categories: [if (kDesktop) Category(kAllCatId, L.of(context)!.catAll), ...list],
             selectedId: selected,
             onSelect: (id) => ref.read(selectedSeriesCategoryProvider.notifier).state = id,
           ),

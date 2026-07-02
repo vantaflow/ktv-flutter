@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers.dart';
+import '../../core/platform.dart';
 import '../../core/widgets/media_rail.dart';
 import '../../core/widgets/poster_rail.dart';
 import '../auth/auth_controller.dart';
@@ -83,15 +84,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             SliverToBoxAdapter(
               child: MediaRail(title: L.of(context)!.railRecent, items: recent, grid: grid, progressOf: progressOf, remainingOf: remainingOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
             ),
-          if (prefs.settingBool('home_watchlist', true)) SliverToBoxAdapter(child: _watchlistRail(grid)),
-          if (prefs.settingBool('traktRecommendationsEnabled', true)) ...[
-            if (prefs.settingBool('home_recoMovies', true)) SliverToBoxAdapter(child: _recoRail(grid)),
-            if (prefs.settingBool('home_recoSeries', true)) SliverToBoxAdapter(child: _recoSeriesRail(grid)),
+          // Rangées « catalogue complet » (Derniers/Recommandé/Watchlist) : elles
+          // chargent tout le catalogue (~170k) en mémoire → réservées au DESKTOP.
+          // Sur mobile/TV (RAM limitée), on les masque pour éviter les crashs OOM.
+          if (kDesktop) ...[
+            if (prefs.settingBool('home_watchlist', true)) SliverToBoxAdapter(child: _watchlistRail(grid)),
+            if (prefs.settingBool('traktRecommendationsEnabled', true)) ...[
+              if (prefs.settingBool('home_recoMovies', true)) SliverToBoxAdapter(child: _recoRail(grid)),
+              if (prefs.settingBool('home_recoSeries', true)) SliverToBoxAdapter(child: _recoSeriesRail(grid)),
+            ],
+            if (prefs.settingBool('home_latestMovies', true)) SliverToBoxAdapter(child: _latestVodRail(grid)),
+            if (prefs.settingBool('home_latestSeries', true)) SliverToBoxAdapter(child: _latestSeriesRail(grid)),
           ],
-          if (prefs.settingBool('home_latestMovies', true)) SliverToBoxAdapter(child: _latestVodRail(grid)),
-          if (prefs.settingBool('home_latestSeries', true)) SliverToBoxAdapter(child: _latestSeriesRail(grid)),
-          if (recent.isEmpty && favs.isEmpty)
-            SliverToBoxAdapter(child: Padding(padding: const EdgeInsets.only(top: 40), child: _loadingOrEmpty())),
+          if (recent.isEmpty && favs.isEmpty && mediaFavs.isEmpty)
+            SliverToBoxAdapter(child: Padding(padding: const EdgeInsets.only(top: 40), child: kDesktop ? _loadingOrEmpty() : const _EmptyHome())),
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
         ],
       ),
