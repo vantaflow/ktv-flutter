@@ -22,11 +22,11 @@ Le moteur `<video>` de Chromium (Electron) ne lit pas les MKV/HEVC/multi-pistes 
 - **Enregistrement** : sans couper la lecture, **heure de début précise**, qualité **compact (720p)** ou originale, indicateur REC, **dossier configurable**
 - **Trakt** : connexion (code), scrobble auto, **watchlist**, marquage films & épisodes
 - **Téléchargements** (file séquentielle, **dossier configurable**)
-- **Restream** : partage du flux en HLS sur le **réseau local** + **tunnel Cloudflare** (regarder sur un autre appareil)
+- **Restream / partage** : relais **HLS local partagé** (une seule connexion fournisseur — la lecture locale continue) diffusé sur le **réseau local** + **tunnel Cloudflare** (`cloudflared` **bundlé**, aucune installation) pour regarder sur un autre appareil
 - **Picture-in-Picture** : fenêtre flottante toujours au premier plan
-- **Système** : **mise à jour in-app** (GitHub), **rafraîchissement automatique** catalogue/EPG, **diagnostic réseau**, **historique complet**, **accent personnalisable** (7 couleurs)
-- **Thèmes** : clair/sombre + **accent personnalisable** (7 couleurs)
-- Catalogue : catégorie **« Toutes »** (agrège tout), **filtres masquables**
+- **Thèmes** : **clair / sombre** + **accent personnalisable** (7 couleurs)
+- **Catalogue** : catégorie **« Toutes »** (agrège toutes les catégories), **filtres masquables**
+- **Système** : **mise à jour in-app** (GitHub), **rafraîchissement automatique** catalogue/EPG, **diagnostic réseau**, **historique complet**, dossiers configurables
 - Démarrage agrandi · fenêtre centrée
 
 ### Feuille de route (à venir)
@@ -36,7 +36,7 @@ Multi-sources M3U/Xtream fusionnées · reprise inter-appareils.
 
 ```bash
 flutter pub get
-bash tool/fetch_ffmpeg.sh   # récupère le binaire ffmpeg statique (bundlé, non versionné)
+bash tool/fetch_ffmpeg.sh   # récupère ffmpeg + cloudflared (bundlés, non versionnés)
 flutter run -d macos        # ou: flutter run -d windows
 ```
 
@@ -46,7 +46,7 @@ Prérequis : Flutter 3.41+, et sur macOS **CocoaPods** (`brew install cocoapods`
 
 ```bash
 bash tool/fetch_ffmpeg.sh
-flutter build macos --release      # → build/macos/Build/Products/Release/ktv.app
+flutter build macos --release      # → build/macos/Build/Products/Release/KTV.app
 flutter build windows --release    # (sur Windows)
 ```
 
@@ -63,9 +63,9 @@ Toute la logique métier pure (nettoyage de titres, matching TMDB, parsing de du
 Feature-first, sans code monolithique :
 
 ```
-lib/core/      modèles · client Xtream · stockage · logique pure (+tests) · thème · widgets
+lib/core/      modèles · client Xtream · stockage · logique pure (+tests) · thème · widgets · process (ffmpeg/cloudflared)
 lib/features/  auth · home · live · vod · series · guide · search · player · settings
-lib/services/  tmdb · trakt · downloads · recording
+lib/services/  tmdb · trakt · epg (xmltv) · downloads · recording · restream · update
 ```
 
 ## Licence
