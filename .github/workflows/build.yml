@@ -92,11 +92,14 @@ jobs:
           cache: true
       - name: Dépendances
         run: flutter pub get
-      - name: Build APK (par ABI)
+      - name: Build APK universel (toutes archis — recommandé, marche partout)
+        run: flutter build apk --release
+      - name: Build APK par ABI (plus léger)
         run: flutter build apk --release --split-per-abi
       - name: Renommer les APK
         run: |
           cd build/app/outputs/flutter-apk
+          cp app-release.apk KTV-android-universal.apk
           cp app-arm64-v8a-release.apk KTV-android-arm64.apk
           cp app-armeabi-v7a-release.apk KTV-android-arm32.apk
       - name: Attacher à la release
@@ -104,6 +107,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
+            build/app/outputs/flutter-apk/KTV-android-universal.apk
             build/app/outputs/flutter-apk/KTV-android-arm64.apk
             build/app/outputs/flutter-apk/KTV-android-arm32.apk
       - name: Upload artefact (runs manuels)
