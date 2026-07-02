@@ -686,4 +686,16 @@ class LEn extends L {
 
   @override
   String get catchupNoArchive => 'No channel offers catch-up on this provider.';
+
+  @override
+  String get catchupWatch => 'Watch again (catch-up)';
+
+  @override
+  String get catchupUnavailable => 'Catch-up not available on this channel.';
+
+  @override
+  String get epgSchedule => 'Schedule';
+
+  @override
+  String get epgRecord => 'Record';
 }

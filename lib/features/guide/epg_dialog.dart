@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../auth/auth_controller.dart';
 import '../../services/recording/recording_service.dart';
 import '../player/play_launcher.dart';
+import '../../l10n/app_localizations.dart';
 
 String epgTime(int ts) {
   if (ts == 0) return '';
@@ -88,25 +89,31 @@ void showEpgProgram(BuildContext context, WidgetRef ref, LiveChannel channel, Ep
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  if (isPast)
+                  // Catch-up seulement si la chaîne expose réellement une archive.
+                  if (isPast && channel.tvArchive)
                     FilledButton.icon(
                       onPressed: () { Navigator.pop(context); PlayLauncher.timeshift(context, ref, channel, p); },
                       icon: const Icon(Icons.replay, size: 18),
-                      label: const Text('Revoir (catch-up)'),
-                    )
-                  else
+                      label: Text(L.of(context)!.catchupWatch),
+                    ),
+                  if (isPast && !channel.tvArchive)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(L.of(context)!.catchupUnavailable, style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+                    ),
+                  if (!isPast)
                     FilledButton.icon(
                       onPressed: () { Navigator.pop(context); PlayLauncher.live(context, ref, channel); },
                       icon: const Icon(Icons.play_arrow, size: 18),
-                      label: const Text('Regarder'),
+                      label: Text(L.of(context)!.actionWatch),
                     ),
                   if (!isPast)
                     FilledButton.tonalIcon(
                       onPressed: scheduleRec,
                       icon: const Icon(Icons.fiber_manual_record, size: 16, color: KtvColors.rec),
-                      label: Text(isFuture ? 'Programmer' : 'Enregistrer'),
+                      label: Text(isFuture ? L.of(context)!.epgSchedule : L.of(context)!.epgRecord),
                     ),
-                  TextButton(onPressed: () => Navigator.pop(context), child: const Text('Fermer')),
+                  TextButton(onPressed: () => Navigator.pop(context), child: Text(L.of(context)!.actionClose)),
                 ],
               ),
             ],

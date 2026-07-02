@@ -691,4 +691,16 @@ class LFr extends L {
   @override
   String get catchupNoArchive =>
       'Aucune chaîne ne propose la rediffusion (catch-up) chez ce fournisseur.';
+
+  @override
+  String get catchupWatch => 'Revoir (catch-up)';
+
+  @override
+  String get catchupUnavailable => 'Catch-up non disponible sur cette chaîne.';
+
+  @override
+  String get epgSchedule => 'Programmer';
+
+  @override
+  String get epgRecord => 'Enregistrer';
 }

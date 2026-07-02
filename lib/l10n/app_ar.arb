@@ -255,5 +255,9 @@
       "n": {}
     }
   },
-  "catchupNoArchive": "لا توجد قناة تدعم الإعادة لدى هذا المزوّد."
+  "catchupNoArchive": "لا توجد قناة تدعم الإعادة لدى هذا المزوّد.",
+  "catchupWatch": "إعادة المشاهدة",
+  "catchupUnavailable": "الإعادة غير متاحة على هذه القناة.",
+  "epgSchedule": "جدولة",
+  "epgRecord": "تسجيل"
 }

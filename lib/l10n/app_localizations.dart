@@ -1394,6 +1394,30 @@ abstract class L {
   /// In fr, this message translates to:
   /// **'Aucune chaîne ne propose la rediffusion (catch-up) chez ce fournisseur.'**
   String get catchupNoArchive;
+
+  /// No description provided for @catchupWatch.
+  ///
+  /// In fr, this message translates to:
+  /// **'Revoir (catch-up)'**
+  String get catchupWatch;
+
+  /// No description provided for @catchupUnavailable.
+  ///
+  /// In fr, this message translates to:
+  /// **'Catch-up non disponible sur cette chaîne.'**
+  String get catchupUnavailable;
+
+  /// No description provided for @epgSchedule.
+  ///
+  /// In fr, this message translates to:
+  /// **'Programmer'**
+  String get epgSchedule;
+
+  /// No description provided for @epgRecord.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrer'**
+  String get epgRecord;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

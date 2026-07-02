@@ -683,4 +683,16 @@ class LAr extends L {
 
   @override
   String get catchupNoArchive => 'لا توجد قناة تدعم الإعادة لدى هذا المزوّد.';
+
+  @override
+  String get catchupWatch => 'إعادة المشاهدة';
+
+  @override
+  String get catchupUnavailable => 'الإعادة غير متاحة على هذه القناة.';
+
+  @override
+  String get epgSchedule => 'جدولة';
+
+  @override
+  String get epgRecord => 'تسجيل';
 }

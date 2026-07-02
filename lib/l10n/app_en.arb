@@ -255,5 +255,9 @@
       "n": {}
     }
   },
-  "catchupNoArchive": "No channel offers catch-up on this provider."
+  "catchupNoArchive": "No channel offers catch-up on this provider.",
+  "catchupWatch": "Watch again (catch-up)",
+  "catchupUnavailable": "Catch-up not available on this channel.",
+  "epgSchedule": "Schedule",
+  "epgRecord": "Record"
 }

@@ -255,5 +255,9 @@
       "n": {}
     }
   },
-  "catchupNoArchive": "Aucune chaîne ne propose la rediffusion (catch-up) chez ce fournisseur."
+  "catchupNoArchive": "Aucune chaîne ne propose la rediffusion (catch-up) chez ce fournisseur.",
+  "catchupWatch": "Revoir (catch-up)",
+  "catchupUnavailable": "Catch-up non disponible sur cette chaîne.",
+  "epgSchedule": "Programmer",
+  "epgRecord": "Enregistrer"
 }
