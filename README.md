@@ -15,7 +15,7 @@ Le moteur `<video>` de Chromium (Electron) ne lit pas les MKV/HEVC/multi-pistes 
 - **Connexion Xtream** multi-profils (bascule + infos abonnement)
 - **Accueil personnalisable** : affichage **rangées ou grille**, choix des sections affichées · Reprendre (avec **temps restant** ⏳) · Vu récemment · Favoris · **Recommandé pour vous** (TMDB fondé sur ton catalogue) · **Ma liste (Trakt)** · Derniers ajouts. Les **cartes de chaînes live** montrent le **logo tel quel** + le **programme EPG en cours**.
 - **Live TV** : EPG en cours (description + horaires), favoris, enregistrement, **recherche par programme en cours**
-- **Films / Séries** : fiches TMDB (affiche, backdrop, synopsis, note, casting), **filtres & tri** (note, 4K/HDR), **téléchargement par épisode/saison**, **marquer vu** (Trakt)
+- **Films / Séries** : fiches TMDB (affiche, backdrop, synopsis, note, casting), **filtres & tri** (note, 4K/HDR), **favoris**, **téléchargement par épisode, par saison ou série complète**, **marquer vu** (Trakt)
 - **Rediffusion (catch-up dédié)** : onglet dédié — par catégorie → chaîne (celles qui proposent l'archive) → programmes des derniers jours **groupés par jour**, à **revoir** ou **télécharger**
 - **Gestion des catégories** : afficher/masquer **et réorganiser** (glisser-déposer) les catégories du fournisseur, **séparément pour Live · Films · Séries** (Réglages → Catégories)
 - **Guide TV → action** : **catch-up** (revoir un programme passé), regarder en direct, **programmer l'enregistrement** sur la plage du programme
