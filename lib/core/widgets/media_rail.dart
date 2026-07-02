@@ -1,7 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
+import '../../services/epg/epg_providers.dart';
 import 'poster_card.dart';
+
+/// Carte d'une chaîne live dans un rail : logo « contain » + programme EPG en
+/// cours (résolu par nom via l'index XMLTV) affiché dans l'espace du letterbox.
+class _LiveRailCard extends ConsumerWidget {
+  final RecentEntry entry;
+  final double width;
+  final VoidCallback onTap;
+  const _LiveRailCard({required this.entry, required this.width, required this.onTap});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final index = ref.watch(epgIndexProvider).asData?.value;
+    final ch = LiveChannel(streamId: entry.id, name: entry.name, icon: entry.cover, categoryId: entry.categoryId ?? '');
+    final (now, _) = index?.nowNext(ch) ?? (null, null);
+    return PosterCard(
+      title: entry.name,
+      imageUrl: entry.cover,
+      width: width,
+      aspectRatio: 2 / 3,
+      fit: BoxFit.contain,
+      nowPlaying: now?.title,
+      onTap: onTap,
+    );
+  }
+}
 
 /// Rangée « à la Netflix » d'entrées rejouables (accueil). [grid] = plusieurs
 /// lignes (au lieu du défilement horizontal).
@@ -14,16 +41,20 @@ class MediaRail extends StatelessWidget {
 
   const MediaRail({super.key, required this.title, required this.items, required this.onTap, this.progressOf, this.grid = false});
 
-  Widget _card(RecentEntry e, {double width = 130}) => PosterCard(
-        title: e.name,
-        imageUrl: e.cover,
-        width: width,
-        aspectRatio: 2 / 3,
-        // Les logos de chaînes live sont affichés tels quels (contain, sans crop).
-        fit: e.kind == MediaKind.live ? BoxFit.contain : BoxFit.cover,
-        progress: progressOf?.call(e) ?? 0,
-        onTap: () => onTap(e),
-      );
+  Widget _card(RecentEntry e, {double width = 130}) {
+    // Chaînes live : logo tel quel (contain) + programme EPG en cours dans l'espace.
+    if (e.kind == MediaKind.live) {
+      return _LiveRailCard(entry: e, width: width, onTap: () => onTap(e));
+    }
+    return PosterCard(
+      title: e.name,
+      imageUrl: e.cover,
+      width: width,
+      aspectRatio: 2 / 3,
+      progress: progressOf?.call(e) ?? 0,
+      onTap: () => onTap(e),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -15,6 +15,7 @@ class PosterCard extends StatelessWidget {
   final bool isFav;
   final VoidCallback? onFavToggle;
   final BoxFit fit; // contain pour les logos de chaînes (pas de crop)
+  final String? nowPlaying; // programme EPG en cours (chaînes live)
 
   const PosterCard({
     super.key,
@@ -29,6 +30,7 @@ class PosterCard extends StatelessWidget {
     this.isFav = false,
     this.onFavToggle,
     this.fit = BoxFit.cover,
+    this.nowPlaying,
   });
 
   @override
@@ -68,6 +70,42 @@ class PosterCard extends StatelessWidget {
                           icon: Icon(isFav ? Icons.favorite : Icons.favorite_border,
                               color: isFav ? KtvColors.accent : Colors.white70),
                           onPressed: onFavToggle,
+                        ),
+                      ),
+                    if (nowPlaying != null && nowPlaying!.isNotEmpty)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          padding: const EdgeInsets.fromLTRB(7, 14, 7, 6),
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Colors.transparent, Colors.black87],
+                            ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                margin: const EdgeInsets.only(top: 3),
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(color: KtvColors.rec, shape: BoxShape.circle),
+                              ),
+                              const SizedBox(width: 5),
+                              Expanded(
+                                child: Text(
+                                  nowPlaying!,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 10.5, height: 1.15, color: Colors.white, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     if (progress > 0)

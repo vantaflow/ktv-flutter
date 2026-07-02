@@ -56,15 +56,22 @@ class PlayLauncher {
     _open(context, ref, PlaybackRequest(url: urls.series(ep.id, ep.ext), title: s.name, subtitle: sub, kind: MediaKind.series, resumeKey: key, knownDurationSec: durationSec, playlist: playlist, playlistIndex: index));
   }
 
-  /// Catch-up / rediffusion : rejoue un programme passé via l'URL timeshift Xtream.
-  static void timeshift(BuildContext context, WidgetRef ref, LiveChannel ch, EpgProgram p) {
+  /// Construit l'URL timeshift Xtream d'un programme passé (réutilisée par la
+  /// lecture ET le téléchargement de rediffusion). Renvoie null si pas de profil.
+  static String? timeshiftUrl(WidgetRef ref, LiveChannel ch, EpgProgram p) {
     final urls = ref.read(xtreamUrlsProvider);
-    if (urls == null) return;
+    if (urls == null) return null;
     final start = DateTime.fromMillisecondsSinceEpoch(p.start * 1000);
     final durMin = ((p.stop - p.start) / 60).ceil().clamp(1, 600);
     String two(int n) => n.toString().padLeft(2, '0');
     final ymdHi = '${start.year}-${two(start.month)}-${two(start.day)}:${two(start.hour)}-${two(start.minute)}';
-    final url = urls.timeshift(ch.streamId, durMin, ymdHi);
+    return urls.timeshift(ch.streamId, durMin, ymdHi);
+  }
+
+  /// Catch-up / rediffusion : rejoue un programme passé via l'URL timeshift Xtream.
+  static void timeshift(BuildContext context, WidgetRef ref, LiveChannel ch, EpgProgram p) {
+    final url = timeshiftUrl(ref, ch, p);
+    if (url == null) return;
     _open(context, ref, PlaybackRequest(url: url, title: p.title.isEmpty ? ch.name : p.title, subtitle: '${ch.name} · rediffusion', kind: MediaKind.movie));
   }
 

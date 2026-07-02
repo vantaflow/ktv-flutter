@@ -9,6 +9,7 @@ import '../../services/epg/epg_providers.dart';
 import '../live/live_providers.dart';
 import '../player/play_launcher.dart';
 import '../guide/epg_dialog.dart';
+import '../../services/downloads/download_service.dart';
 
 final _selectedCatchupCatProvider = StateProvider<String?>((ref) => null);
 final _selectedCatchupChannelProvider = StateProvider<LiveChannel?>((ref) => null);
@@ -177,6 +178,20 @@ class _ProgramTile extends ConsumerWidget {
   final EpgProgram program;
   const _ProgramTile({required this.channel, required this.program});
 
+  void _download(BuildContext context, WidgetRef ref) {
+    final url = PlayLauncher.timeshiftUrl(ref, channel, program);
+    if (url == null) return;
+    final title = program.title.isEmpty ? 'Programme' : program.title;
+    ref.read(downloadControllerProvider.notifier).enqueue(
+          name: '${channel.name} - $title (rediffusion)',
+          url: url,
+          ext: 'ts',
+        );
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Téléchargement lancé : « $title » — Réglages → Téléchargements')),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dur = epgDuration(program);
@@ -185,7 +200,7 @@ class _ProgramTile extends ConsumerWidget {
       borderRadius: BorderRadius.circular(10),
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
         decoration: BoxDecoration(
           color: KtvColors.panel2,
           borderRadius: BorderRadius.circular(10),
@@ -205,6 +220,12 @@ class _ProgramTile extends ConsumerWidget {
                       style: TextStyle(color: KtvColors.muted, fontSize: 11.5)),
                 ],
               ),
+            ),
+            IconButton(
+              tooltip: 'Télécharger la rediffusion',
+              visualDensity: VisualDensity.compact,
+              icon: Icon(Icons.download_rounded, color: KtvColors.muted, size: 20),
+              onPressed: () => _download(context, ref),
             ),
             Icon(Icons.play_arrow_rounded, color: KtvColors.muted, size: 22),
           ],
