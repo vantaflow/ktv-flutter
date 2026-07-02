@@ -35,10 +35,12 @@ Le moteur `<video>` de Chromium (Electron) ne lit pas les MKV/HEVC/multi-pistes 
 - Démarrage agrandi · fenêtre centrée
 
 ### Feuille de route (à venir)
-- Multi-sources M3U/Xtream fusionnées
-- Contrôle parental (verrou PIN sur catégories)
-- Traduction FR/EN/AR des écrans restants (la base + les écrans principaux sont déjà traduits)
-- Version iOS
+- **Multi-sources M3U/Xtream fusionnées** (plusieurs abonnements + playlists `.m3u` dans un catalogue unifié)
+- **Contrôle parental** (verrou PIN sur les catégories)
+- **Enregistrement de série entière** (enregistrer automatiquement les nouveaux épisodes)
+- **Version iOS**
+
+_Livré récemment : Android · synchro inter-appareils chiffrée · favoris Films & Séries · interface multilingue FR/EN/AR (RTL) · gestion & réorganisation des catégories · catch-up dédié._
 
 ## Développement
 
