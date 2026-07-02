@@ -43,8 +43,10 @@ class _VodScreenState extends ConsumerState<VodScreen> {
           padding: const EdgeInsets.fromLTRB(16, 16, 8, 8),
           child: Row(children: [
             const Text('Films', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
-            const Spacer(),
-            if (showFilters) Flexible(flex: 6, child: FilterBar(filter: _filter, onChanged: (f) => setState(() => _filter = f))),
+            if (showFilters)
+              Expanded(child: Align(alignment: Alignment.centerRight, child: FilterBar(filter: _filter, onChanged: (f) => setState(() => _filter = f))))
+            else
+              const Spacer(),
             const SizedBox(width: 4),
             IconButton(
               tooltip: showFilters ? 'Masquer les filtres' : 'Afficher les filtres',

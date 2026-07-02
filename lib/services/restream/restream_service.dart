@@ -85,7 +85,7 @@ class RestreamController extends Notifier<RestreamState> {
       _ff = await Process.start(ff, [
         '-hide_banner', '-loglevel', 'error', '-user_agent', 'KTV',
         '-i', url,
-        '-c', 'copy', '-bsf:a', 'aac_adtstoasc',
+        '-c', 'copy', // PAS de aac_adtstoasc ici : c'est pour le MP4, ça casse le HLS/TS
         '-f', 'hls', '-hls_time', '4', '-hls_list_size', '6',
         '-hls_flags', 'delete_segments+append_list+omit_endlist',
         '-hls_segment_filename', '${dir.path}/seg%03d.ts',

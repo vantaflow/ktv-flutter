@@ -49,11 +49,9 @@ class FilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
+    return Row(
+      mainAxisSize: MainAxisSize.min, // se dimensionne au contenu → collé à droite
+      children: [
           _sortChip('Récents', CatalogSort.recent),
           const SizedBox(width: 6),
           _sortChip('Note', CatalogSort.rating),
@@ -82,7 +80,6 @@ class FilterBar extends StatelessWidget {
             onSelected: (v) => onChanged(filter.copyWith(onlyHq: v)),
           ),
         ],
-      ),
     );
   }
 

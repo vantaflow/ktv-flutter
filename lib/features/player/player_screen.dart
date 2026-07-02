@@ -693,7 +693,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
       final was = prev?.status ?? RestreamStatus.idle;
       if (next.status == RestreamStatus.live && next.localUrl != null && !_relayActive) {
         _relayActive = true;
-        _player.open(Media(next.localUrl!));
+        _player.open(Media(next.localUrl!), play: true);
+        _player.play();
         _applyTweaks();
       } else if (was != RestreamStatus.idle && next.status == RestreamStatus.idle && _relayActive) {
         _relayActive = false;
