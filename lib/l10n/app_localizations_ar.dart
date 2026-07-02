@@ -273,4 +273,85 @@ class LAr extends L {
 
   @override
   String get themeAccentHint => 'يُطبَّق فورًا على كامل الواجهة.';
+
+  @override
+  String get filterShow => 'إظهار المرشحات';
+
+  @override
+  String get filterHide => 'إخفاء المرشحات';
+
+  @override
+  String get catAll => '⭐ الكل';
+
+  @override
+  String get emptyNoMovie => 'لا يوجد فيلم';
+
+  @override
+  String get emptyNoMovieFilter => 'لا يوجد فيلم لهذه المرشحات';
+
+  @override
+  String get emptyNoSeries => 'لا يوجد مسلسل';
+
+  @override
+  String get emptyNoSeriesFilter => 'لا يوجد مسلسل لهذه المرشحات';
+
+  @override
+  String get sortRecent => 'الأحدث';
+
+  @override
+  String get sortAZ => 'أ→ي';
+
+  @override
+  String get allRatings => 'كل التقييمات';
+
+  @override
+  String get hq4kHdr => '4K / HDR';
+
+  @override
+  String get searchMin => 'اكتب حرفين على الأقل';
+
+  @override
+  String get secNow => '📡 يُعرض الآن';
+
+  @override
+  String get secChannels => '📺 القنوات';
+
+  @override
+  String get secMovies => '🎬 أفلام';
+
+  @override
+  String get secSeries => '🎞️ مسلسلات';
+
+  @override
+  String get trackAudio => 'المسار الصوتي';
+
+  @override
+  String get trackSubtitles => 'الترجمة';
+
+  @override
+  String get trackOff => 'معطّل';
+
+  @override
+  String get trackAuto => 'تلقائي';
+
+  @override
+  String get trackLive => 'مباشر';
+
+  @override
+  String get playbackSettings => 'إعدادات التشغيل';
+
+  @override
+  String get speed => 'السرعة';
+
+  @override
+  String get audioBoost => 'تعزيز الصوت';
+
+  @override
+  String get subDelay => 'تأخير الترجمة';
+
+  @override
+  String get reset => 'إعادة تعيين';
+
+  @override
+  String get nextEpisode => 'الحلقة التالية';
 }

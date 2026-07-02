@@ -156,7 +156,7 @@ class _CatchupPrograms extends ConsumerWidget {
     // Groupement par jour.
     final groups = <String, List<EpgProgram>>{};
     for (final p in past) {
-      groups.putIfAbsent(_dayLabel(p.start), () => []).add(p);
+      groups.putIfAbsent(_dayLabel(context, p.start), () => []).add(p);
     }
 
     return ListView(
@@ -239,13 +239,13 @@ class _ProgramTile extends ConsumerWidget {
 const _weekdays = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 const _months = ['janv.', 'févr.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
 
-String _dayLabel(int startTs) {
+String _dayLabel(BuildContext context, int startTs) {
   final d = DateTime.fromMillisecondsSinceEpoch(startTs * 1000);
   final today = DateTime.now();
   final day = DateTime(d.year, d.month, d.day);
   final ref = DateTime(today.year, today.month, today.day);
   final diff = ref.difference(day).inDays;
-  if (diff == 0) return "Aujourd'hui";
-  if (diff == 1) return 'Hier';
+  if (diff == 0) return L.of(context)!.dayToday;
+  if (diff == 1) return L.of(context)!.dayYesterday;
   return '${_weekdays[d.weekday - 1]} ${d.day} ${_months[d.month - 1]}';
 }

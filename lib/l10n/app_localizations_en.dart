@@ -273,4 +273,85 @@ class LEn extends L {
 
   @override
   String get themeAccentHint => 'Applies immediately to the whole interface.';
+
+  @override
+  String get filterShow => 'Show filters';
+
+  @override
+  String get filterHide => 'Hide filters';
+
+  @override
+  String get catAll => '⭐ All';
+
+  @override
+  String get emptyNoMovie => 'No movie';
+
+  @override
+  String get emptyNoMovieFilter => 'No movie for these filters';
+
+  @override
+  String get emptyNoSeries => 'No series';
+
+  @override
+  String get emptyNoSeriesFilter => 'No series for these filters';
+
+  @override
+  String get sortRecent => 'Recent';
+
+  @override
+  String get sortAZ => 'A→Z';
+
+  @override
+  String get allRatings => 'All ratings';
+
+  @override
+  String get hq4kHdr => '4K / HDR';
+
+  @override
+  String get searchMin => 'Type at least 2 characters';
+
+  @override
+  String get secNow => '📡 On TV now';
+
+  @override
+  String get secChannels => '📺 Channels';
+
+  @override
+  String get secMovies => '🎬 Movies';
+
+  @override
+  String get secSeries => '🎞️ Series';
+
+  @override
+  String get trackAudio => 'Audio track';
+
+  @override
+  String get trackSubtitles => 'Subtitles';
+
+  @override
+  String get trackOff => 'Off';
+
+  @override
+  String get trackAuto => 'Auto';
+
+  @override
+  String get trackLive => 'Live';
+
+  @override
+  String get playbackSettings => 'Playback settings';
+
+  @override
+  String get speed => 'Speed';
+
+  @override
+  String get audioBoost => 'Audio boost';
+
+  @override
+  String get subDelay => 'Subtitle delay';
+
+  @override
+  String get reset => 'Reset';
+
+  @override
+  String get nextEpisode => 'Next episode';
 }

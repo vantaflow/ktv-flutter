@@ -47,7 +47,11 @@
   "catchupSubtitle": "أعد تشغيل برامج الأيام الأخيرة على القنوات التي تدعم الإعادة.",
   "catchupSelectChannel": "اختر قناة",
   "catchupNone": "لا توجد إعادة متاحة لـ «{channel}».\nلا يوجد دليل EPG أو الإعادة غير متوفرة.",
-  "@catchupNone": { "placeholders": { "channel": {} } },
+  "@catchupNone": {
+    "placeholders": {
+      "channel": {}
+    }
+  },
   "catchupDownload": "تنزيل الإعادة",
   "dayToday": "اليوم",
   "dayYesterday": "أمس",
@@ -55,9 +59,17 @@
   "downloadsFolder": "المجلد",
   "downloadsClearDone": "مسح المكتملة",
   "downloadsInProgress": "قيد التنفيذ ({n})",
-  "@downloadsInProgress": { "placeholders": { "n": {} } },
+  "@downloadsInProgress": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "downloadsDone": "مكتملة ({n})",
-  "@downloadsDone": { "placeholders": { "n": {} } },
+  "@downloadsDone": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "downloadsEmpty": "لا توجد تنزيلات.\nزر ⬇ على فيلم أو حلقة أو إعادة.",
   "downloadsQueued": "في الانتظار",
   "downloadsFailed": "فشل",
@@ -88,5 +100,32 @@
   "themeDark": "داكن",
   "themeLight": "فاتح",
   "themeAccent": "لون التمييز",
-  "themeAccentHint": "يُطبَّق فورًا على كامل الواجهة."
+  "themeAccentHint": "يُطبَّق فورًا على كامل الواجهة.",
+  "filterShow": "إظهار المرشحات",
+  "filterHide": "إخفاء المرشحات",
+  "catAll": "⭐ الكل",
+  "emptyNoMovie": "لا يوجد فيلم",
+  "emptyNoMovieFilter": "لا يوجد فيلم لهذه المرشحات",
+  "emptyNoSeries": "لا يوجد مسلسل",
+  "emptyNoSeriesFilter": "لا يوجد مسلسل لهذه المرشحات",
+  "sortRecent": "الأحدث",
+  "sortAZ": "أ→ي",
+  "allRatings": "كل التقييمات",
+  "hq4kHdr": "4K / HDR",
+  "searchMin": "اكتب حرفين على الأقل",
+  "secNow": "📡 يُعرض الآن",
+  "secChannels": "📺 القنوات",
+  "secMovies": "🎬 أفلام",
+  "secSeries": "🎞️ مسلسلات",
+  "trackAudio": "المسار الصوتي",
+  "trackSubtitles": "الترجمة",
+  "trackOff": "معطّل",
+  "trackAuto": "تلقائي",
+  "trackLive": "مباشر",
+  "playbackSettings": "إعدادات التشغيل",
+  "speed": "السرعة",
+  "audioBoost": "تعزيز الصوت",
+  "subDelay": "تأخير الترجمة",
+  "reset": "إعادة تعيين",
+  "nextEpisode": "الحلقة التالية"
 }

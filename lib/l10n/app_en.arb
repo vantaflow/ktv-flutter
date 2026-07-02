@@ -47,7 +47,11 @@
   "catchupSubtitle": "Replay the last few days on channels that offer catch-up.",
   "catchupSelectChannel": "Select a channel",
   "catchupNone": "No catch-up available for \"{channel}\".\nNo EPG guide or catch-up not offered.",
-  "@catchupNone": { "placeholders": { "channel": {} } },
+  "@catchupNone": {
+    "placeholders": {
+      "channel": {}
+    }
+  },
   "catchupDownload": "Download the replay",
   "dayToday": "Today",
   "dayYesterday": "Yesterday",
@@ -55,9 +59,17 @@
   "downloadsFolder": "Folder",
   "downloadsClearDone": "Clear finished",
   "downloadsInProgress": "In progress ({n})",
-  "@downloadsInProgress": { "placeholders": { "n": {} } },
+  "@downloadsInProgress": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "downloadsDone": "Finished ({n})",
-  "@downloadsDone": { "placeholders": { "n": {} } },
+  "@downloadsDone": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "downloadsEmpty": "No downloads.\n⬇ button on a movie, an episode or a replay.",
   "downloadsQueued": "queued",
   "downloadsFailed": "failed",
@@ -88,5 +100,32 @@
   "themeDark": "Dark",
   "themeLight": "Light",
   "themeAccent": "Accent color",
-  "themeAccentHint": "Applies immediately to the whole interface."
+  "themeAccentHint": "Applies immediately to the whole interface.",
+  "filterShow": "Show filters",
+  "filterHide": "Hide filters",
+  "catAll": "⭐ All",
+  "emptyNoMovie": "No movie",
+  "emptyNoMovieFilter": "No movie for these filters",
+  "emptyNoSeries": "No series",
+  "emptyNoSeriesFilter": "No series for these filters",
+  "sortRecent": "Recent",
+  "sortAZ": "A→Z",
+  "allRatings": "All ratings",
+  "hq4kHdr": "4K / HDR",
+  "searchMin": "Type at least 2 characters",
+  "secNow": "📡 On TV now",
+  "secChannels": "📺 Channels",
+  "secMovies": "🎬 Movies",
+  "secSeries": "🎞️ Series",
+  "trackAudio": "Audio track",
+  "trackSubtitles": "Subtitles",
+  "trackOff": "Off",
+  "trackAuto": "Auto",
+  "trackLive": "Live",
+  "playbackSettings": "Playback settings",
+  "speed": "Speed",
+  "audioBoost": "Audio boost",
+  "subDelay": "Subtitle delay",
+  "reset": "Reset",
+  "nextEpisode": "Next episode"
 }

@@ -47,7 +47,11 @@
   "catchupSubtitle": "Rejouez les programmes des derniers jours sur les chaînes qui proposent le catch-up.",
   "catchupSelectChannel": "Sélectionnez une chaîne",
   "catchupNone": "Aucune rediffusion disponible pour « {channel} ».\nGuide EPG absent ou catch-up non proposé.",
-  "@catchupNone": { "placeholders": { "channel": {} } },
+  "@catchupNone": {
+    "placeholders": {
+      "channel": {}
+    }
+  },
   "catchupDownload": "Télécharger la rediffusion",
   "dayToday": "Aujourd'hui",
   "dayYesterday": "Hier",
@@ -55,9 +59,17 @@
   "downloadsFolder": "Dossier",
   "downloadsClearDone": "Vider terminés",
   "downloadsInProgress": "En cours ({n})",
-  "@downloadsInProgress": { "placeholders": { "n": {} } },
+  "@downloadsInProgress": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "downloadsDone": "Terminés ({n})",
-  "@downloadsDone": { "placeholders": { "n": {} } },
+  "@downloadsDone": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "downloadsEmpty": "Aucun téléchargement.\nBouton ⬇ sur un film, un épisode ou une rediffusion.",
   "downloadsQueued": "en file",
   "downloadsFailed": "échec",
@@ -88,5 +100,32 @@
   "themeDark": "Sombre",
   "themeLight": "Clair",
   "themeAccent": "Couleur d'accent",
-  "themeAccentHint": "S'applique immédiatement à toute l'interface."
+  "themeAccentHint": "S'applique immédiatement à toute l'interface.",
+  "filterShow": "Afficher les filtres",
+  "filterHide": "Masquer les filtres",
+  "catAll": "⭐ Toutes",
+  "emptyNoMovie": "Aucun film",
+  "emptyNoMovieFilter": "Aucun film pour ces filtres",
+  "emptyNoSeries": "Aucune série",
+  "emptyNoSeriesFilter": "Aucune série pour ces filtres",
+  "sortRecent": "Récents",
+  "sortAZ": "A→Z",
+  "allRatings": "Toutes notes",
+  "hq4kHdr": "4K / HDR",
+  "searchMin": "Tape au moins 2 caractères",
+  "secNow": "📡 En ce moment à la TV",
+  "secChannels": "📺 Chaînes",
+  "secMovies": "🎬 Films",
+  "secSeries": "🎞️ Séries",
+  "trackAudio": "Piste audio",
+  "trackSubtitles": "Sous-titres",
+  "trackOff": "Désactivé",
+  "trackAuto": "Auto",
+  "trackLive": "Direct",
+  "playbackSettings": "Réglages de lecture",
+  "speed": "Vitesse",
+  "audioBoost": "Boost audio",
+  "subDelay": "Délai sous-titres",
+  "reset": "Réinitialiser",
+  "nextEpisode": "Épisode suivant"
 }

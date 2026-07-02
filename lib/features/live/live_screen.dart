@@ -6,6 +6,7 @@ import '../../core/widgets/async_view.dart';
 import '../player/play_launcher.dart';
 import 'live_channel_card.dart';
 import 'live_providers.dart';
+import '../../l10n/app_localizations.dart';
 
 class LiveScreen extends ConsumerStatefulWidget {
   const LiveScreen({super.key});
@@ -30,9 +31,9 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text('Live TV', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Text(L.of(context)!.navLive, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
         ),
         cats.when(
           loading: () => const SizedBox(height: 44),
@@ -47,7 +48,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
         Expanded(
           child: AsyncView(
             value: ref.watch(liveStreamsProvider),
-            emptyBuilder: () => const Center(child: Text('Aucune chaîne', style: TextStyle(color: Colors.white38))),
+            emptyBuilder: () => Center(child: Text(L.of(context)!.emptyNoChannel, style: TextStyle(color: Colors.white38))),
             data: (List<LiveChannel> channels) => GridView.builder(
               padding: const EdgeInsets.all(16),
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(

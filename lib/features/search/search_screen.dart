@@ -10,6 +10,7 @@ import '../series/series_detail_sheet.dart';
 import '../player/play_launcher.dart';
 import '../../services/epg/epg_providers.dart';
 import 'search_providers.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Résultats de recherche (le champ est dans la barre supérieure du shell).
 /// Affiché par-dessus le contenu dès que la requête ≥ 2 caractères.
@@ -22,7 +23,7 @@ class SearchResults extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final q = ref.watch(searchQueryProvider).toLowerCase();
     if (q.length < 2) {
-      return Center(child: Text('Tape au moins 2 caractères', style: TextStyle(color: KtvColors.muted)));
+      return Center(child: Text(L.of(context)!.searchMin, style: TextStyle(color: KtvColors.muted)));
     }
     final movies = ref.watch(allVodProvider).asData?.value ?? const <VodItem>[];
     final series = ref.watch(allSeriesProvider).asData?.value ?? const <SeriesItem>[];
@@ -47,15 +48,15 @@ class SearchResults extends ConsumerWidget {
     }
 
     if (mHit.isEmpty && sHit.isEmpty && cHit.isEmpty && eHit.isEmpty) {
-      return Center(child: Text('Aucun résultat', style: TextStyle(color: KtvColors.muted)));
+      return Center(child: Text(L.of(context)!.emptyNoResult, style: TextStyle(color: KtvColors.muted)));
     }
     return ListView(
       padding: const EdgeInsets.only(bottom: 24, top: 8),
       children: [
-        if (eHit.isNotEmpty) ...[_section('📡 En ce moment à la TV', eHit.length), _epgList(context, ref, eHit)],
-        if (cHit.isNotEmpty) ...[_section('📺 Chaînes', cHit.length), _liveGrid(context, ref, cHit)],
-        if (mHit.isNotEmpty) ...[_section('🎬 Films', mHit.length), _posterGrid(mHit.map((m) => _Item(m.name, m.cover, m.rating, () => showMovieDetail(context, m))).toList())],
-        if (sHit.isNotEmpty) ...[_section('🎞️ Séries', sHit.length), _posterGrid(sHit.map((s) => _Item(s.name, s.cover, s.rating, () => showSeriesDetail(context, s))).toList())],
+        if (eHit.isNotEmpty) ...[_section(L.of(context)!.secNow, eHit.length), _epgList(context, ref, eHit)],
+        if (cHit.isNotEmpty) ...[_section(L.of(context)!.secChannels, cHit.length), _liveGrid(context, ref, cHit)],
+        if (mHit.isNotEmpty) ...[_section(L.of(context)!.secMovies, mHit.length), _posterGrid(mHit.map((m) => _Item(m.name, m.cover, m.rating, () => showMovieDetail(context, m))).toList())],
+        if (sHit.isNotEmpty) ...[_section(L.of(context)!.secSeries, sHit.length), _posterGrid(sHit.map((s) => _Item(s.name, s.cover, s.rating, () => showSeriesDetail(context, s))).toList())],
       ],
     );
   }

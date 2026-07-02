@@ -11,6 +11,7 @@ import '../home/home_providers.dart';
 import '../vod/vod_screen.dart' show kAllCatId;
 import 'series_providers.dart';
 import 'series_detail_sheet.dart';
+import '../../l10n/app_localizations.dart';
 
 class SeriesScreen extends ConsumerStatefulWidget {
   const SeriesScreen({super.key});
@@ -43,14 +44,14 @@ class _SeriesScreenState extends ConsumerState<SeriesScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 8, 8),
           child: Row(children: [
-            const Text('Séries', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+            Text(L.of(context)!.navSeries, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
             if (showFilters)
               Expanded(child: Align(alignment: Alignment.centerRight, child: FilterBar(filter: _filter, onChanged: (f) => setState(() => _filter = f))))
             else
               const Spacer(),
             const SizedBox(width: 4),
             IconButton(
-              tooltip: showFilters ? 'Masquer les filtres' : 'Afficher les filtres',
+              tooltip: showFilters ? L.of(context)!.filterHide : L.of(context)!.filterShow,
               icon: Icon(showFilters ? Icons.filter_list_off : Icons.filter_list, color: showFilters ? KtvColors.accent : KtvColors.muted),
               onPressed: () async { await prefs.setSetting('catalogFilters', !showFilters); setState(() {}); },
             ),
@@ -60,7 +61,7 @@ class _SeriesScreenState extends ConsumerState<SeriesScreen> {
           loading: () => const SizedBox(height: 44),
           error: (_, _) => const SizedBox(height: 44),
           data: (list) => CategoryChips(
-            categories: [const Category(kAllCatId, '⭐ Toutes'), ...list],
+            categories: [Category(kAllCatId, L.of(context)!.catAll), ...list],
             selectedId: selected,
             onSelect: (id) => ref.read(selectedSeriesCategoryProvider.notifier).state = id,
           ),
@@ -69,10 +70,10 @@ class _SeriesScreenState extends ConsumerState<SeriesScreen> {
         Expanded(
           child: AsyncView(
             value: isAll ? ref.watch(allSeriesProvider) : ref.watch(seriesListProvider),
-            emptyBuilder: () => const Center(child: Text('Aucune série', style: TextStyle(color: Colors.white38))),
+            emptyBuilder: () => Center(child: Text(L.of(context)!.emptyNoSeries, style: TextStyle(color: Colors.white38))),
             data: (List<SeriesItem> all) {
               final series = applyCatalogFilter(all, _filter, nameOf: (s) => s.name, ratingOf: (s) => s.rating, addedOf: (s) => s.lastModified);
-              if (series.isEmpty) return const Center(child: Text('Aucune série pour ces filtres', style: TextStyle(color: Colors.white38)));
+              if (series.isEmpty) return Center(child: Text(L.of(context)!.emptyNoSeriesFilter, style: TextStyle(color: Colors.white38)));
               return GridView.builder(
                 padding: const EdgeInsets.all(16),
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(

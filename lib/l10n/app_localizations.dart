@@ -614,6 +614,168 @@ abstract class L {
   /// In fr, this message translates to:
   /// **'S\'applique immédiatement à toute l\'interface.'**
   String get themeAccentHint;
+
+  /// No description provided for @filterShow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Afficher les filtres'**
+  String get filterShow;
+
+  /// No description provided for @filterHide.
+  ///
+  /// In fr, this message translates to:
+  /// **'Masquer les filtres'**
+  String get filterHide;
+
+  /// No description provided for @catAll.
+  ///
+  /// In fr, this message translates to:
+  /// **'⭐ Toutes'**
+  String get catAll;
+
+  /// No description provided for @emptyNoMovie.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun film'**
+  String get emptyNoMovie;
+
+  /// No description provided for @emptyNoMovieFilter.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun film pour ces filtres'**
+  String get emptyNoMovieFilter;
+
+  /// No description provided for @emptyNoSeries.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune série'**
+  String get emptyNoSeries;
+
+  /// No description provided for @emptyNoSeriesFilter.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune série pour ces filtres'**
+  String get emptyNoSeriesFilter;
+
+  /// No description provided for @sortRecent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Récents'**
+  String get sortRecent;
+
+  /// No description provided for @sortAZ.
+  ///
+  /// In fr, this message translates to:
+  /// **'A→Z'**
+  String get sortAZ;
+
+  /// No description provided for @allRatings.
+  ///
+  /// In fr, this message translates to:
+  /// **'Toutes notes'**
+  String get allRatings;
+
+  /// No description provided for @hq4kHdr.
+  ///
+  /// In fr, this message translates to:
+  /// **'4K / HDR'**
+  String get hq4kHdr;
+
+  /// No description provided for @searchMin.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tape au moins 2 caractères'**
+  String get searchMin;
+
+  /// No description provided for @secNow.
+  ///
+  /// In fr, this message translates to:
+  /// **'📡 En ce moment à la TV'**
+  String get secNow;
+
+  /// No description provided for @secChannels.
+  ///
+  /// In fr, this message translates to:
+  /// **'📺 Chaînes'**
+  String get secChannels;
+
+  /// No description provided for @secMovies.
+  ///
+  /// In fr, this message translates to:
+  /// **'🎬 Films'**
+  String get secMovies;
+
+  /// No description provided for @secSeries.
+  ///
+  /// In fr, this message translates to:
+  /// **'🎞️ Séries'**
+  String get secSeries;
+
+  /// No description provided for @trackAudio.
+  ///
+  /// In fr, this message translates to:
+  /// **'Piste audio'**
+  String get trackAudio;
+
+  /// No description provided for @trackSubtitles.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sous-titres'**
+  String get trackSubtitles;
+
+  /// No description provided for @trackOff.
+  ///
+  /// In fr, this message translates to:
+  /// **'Désactivé'**
+  String get trackOff;
+
+  /// No description provided for @trackAuto.
+  ///
+  /// In fr, this message translates to:
+  /// **'Auto'**
+  String get trackAuto;
+
+  /// No description provided for @trackLive.
+  ///
+  /// In fr, this message translates to:
+  /// **'Direct'**
+  String get trackLive;
+
+  /// No description provided for @playbackSettings.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réglages de lecture'**
+  String get playbackSettings;
+
+  /// No description provided for @speed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vitesse'**
+  String get speed;
+
+  /// No description provided for @audioBoost.
+  ///
+  /// In fr, this message translates to:
+  /// **'Boost audio'**
+  String get audioBoost;
+
+  /// No description provided for @subDelay.
+  ///
+  /// In fr, this message translates to:
+  /// **'Délai sous-titres'**
+  String get subDelay;
+
+  /// No description provided for @reset.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réinitialiser'**
+  String get reset;
+
+  /// No description provided for @nextEpisode.
+  ///
+  /// In fr, this message translates to:
+  /// **'Épisode suivant'**
+  String get nextEpisode;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

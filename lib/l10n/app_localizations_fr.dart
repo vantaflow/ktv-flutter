@@ -275,4 +275,85 @@ class LFr extends L {
   @override
   String get themeAccentHint =>
       'S\'applique immédiatement à toute l\'interface.';
+
+  @override
+  String get filterShow => 'Afficher les filtres';
+
+  @override
+  String get filterHide => 'Masquer les filtres';
+
+  @override
+  String get catAll => '⭐ Toutes';
+
+  @override
+  String get emptyNoMovie => 'Aucun film';
+
+  @override
+  String get emptyNoMovieFilter => 'Aucun film pour ces filtres';
+
+  @override
+  String get emptyNoSeries => 'Aucune série';
+
+  @override
+  String get emptyNoSeriesFilter => 'Aucune série pour ces filtres';
+
+  @override
+  String get sortRecent => 'Récents';
+
+  @override
+  String get sortAZ => 'A→Z';
+
+  @override
+  String get allRatings => 'Toutes notes';
+
+  @override
+  String get hq4kHdr => '4K / HDR';
+
+  @override
+  String get searchMin => 'Tape au moins 2 caractères';
+
+  @override
+  String get secNow => '📡 En ce moment à la TV';
+
+  @override
+  String get secChannels => '📺 Chaînes';
+
+  @override
+  String get secMovies => '🎬 Films';
+
+  @override
+  String get secSeries => '🎞️ Séries';
+
+  @override
+  String get trackAudio => 'Piste audio';
+
+  @override
+  String get trackSubtitles => 'Sous-titres';
+
+  @override
+  String get trackOff => 'Désactivé';
+
+  @override
+  String get trackAuto => 'Auto';
+
+  @override
+  String get trackLive => 'Direct';
+
+  @override
+  String get playbackSettings => 'Réglages de lecture';
+
+  @override
+  String get speed => 'Vitesse';
+
+  @override
+  String get audioBoost => 'Boost audio';
+
+  @override
+  String get subDelay => 'Délai sous-titres';
+
+  @override
+  String get reset => 'Réinitialiser';
+
+  @override
+  String get nextEpisode => 'Épisode suivant';
 }

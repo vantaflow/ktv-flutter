@@ -19,6 +19,7 @@ import '../../services/restream/restream_service.dart';
 import '../auth/auth_controller.dart';
 import '../live/live_providers.dart';
 import 'player_controls.dart';
+import '../../l10n/app_localizations.dart';
 
 class PlayerScreen extends ConsumerStatefulWidget {
   final PlaybackRequest request;
@@ -298,9 +299,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Réglages de lecture', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+              Text(L.of(context)!.playbackSettings, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
               const SizedBox(height: 16),
-              const Text('Vitesse', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+              Text(L.of(context)!.speed, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
               const SizedBox(height: 6),
               Wrap(spacing: 8, children: [
                 for (final r in const [0.5, 0.75, 1.0, 1.25, 1.5, 2.0])
@@ -317,7 +318,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                   ),
               ]),
               const SizedBox(height: 16),
-              const Text('Boost audio', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+              Text(L.of(context)!.audioBoost, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
               const SizedBox(height: 6),
               Wrap(spacing: 8, children: [
                 for (final b in const [100, 125, 150, 200])
@@ -337,14 +338,14 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
               ]),
               if (_subtitle.length > 1) ...[
                 const SizedBox(height: 16),
-                const Text('Délai sous-titres', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                Text(L.of(context)!.subDelay, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
                 const SizedBox(height: 6),
                 Row(children: [
                   IconButton(onPressed: () { _setSubDelay(_subDelay - 0.25); setSheet(() {}); }, icon: const Icon(Icons.remove_circle_outline, color: Colors.white)),
                   Text('${_subDelay > 0 ? '+' : ''}${_subDelay.toStringAsFixed(2)} s', style: const TextStyle(fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()])),
                   IconButton(onPressed: () { _setSubDelay(_subDelay + 0.25); setSheet(() {}); }, icon: const Icon(Icons.add_circle_outline, color: Colors.white)),
                   const Spacer(),
-                  TextButton(onPressed: () { _setSubDelay(0); setSheet(() {}); }, child: const Text('Réinitialiser')),
+                  TextButton(onPressed: () { _setSubDelay(0); setSheet(() {}); }, child: Text(L.of(context)!.reset)),
                 ]),
               ],
             ],
@@ -750,8 +751,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                       ),
                       if (isRec) const _RecBadge(),
                       if (_hasNext)
-                        IconButton(tooltip: 'Épisode suivant', onPressed: _playNext, icon: const Icon(Icons.skip_next, color: Colors.white)),
-                      IconButton(tooltip: 'Réglages de lecture (vitesse, audio, sous-titres)', onPressed: _openPlaybackSheet, icon: const Icon(Icons.tune, color: Colors.white)),
+                        IconButton(tooltip: L.of(context)!.nextEpisode, onPressed: _playNext, icon: const Icon(Icons.skip_next, color: Colors.white)),
+                      IconButton(tooltip: L.of(context)!.playbackSettings, onPressed: _openPlaybackSheet, icon: const Icon(Icons.tune, color: Colors.white)),
                       if (kDesktop) // PiP = gestion de fenêtre desktop
                         IconButton(tooltip: _pip ? 'Quitter le mode fenêtre' : 'Fenêtre flottante (PiP)', onPressed: _togglePip, icon: Icon(_pip ? Icons.close_fullscreen : Icons.picture_in_picture_alt, color: _pip ? KtvColors.accent : Colors.white)),
                       if (widget.request.isLive) ...[

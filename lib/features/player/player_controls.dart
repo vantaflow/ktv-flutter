@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/logic/format.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Barre de contrôle custom du lecteur (UI pure). Pilotée par le PlayerScreen.
 class PlayerControls extends StatelessWidget {
@@ -70,10 +71,10 @@ class PlayerControls extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           if (isLive)
-            const Row(children: [
-              Icon(Icons.circle, color: KtvColors.rec, size: 10),
-              SizedBox(width: 6),
-              Text('Direct', style: TextStyle(color: KtvColors.rec, fontWeight: FontWeight.w700)),
+            Row(children: [
+              const Icon(Icons.circle, color: KtvColors.rec, size: 10),
+              const SizedBox(width: 6),
+              Text(L.of(context)!.trackLive, style: const TextStyle(color: KtvColors.rec, fontWeight: FontWeight.w700)),
             ])
           else ...[
             Text(fmtClock(position.inSeconds), style: const TextStyle(color: Colors.white, fontFeatures: [FontFeature.tabularFigures()])),
@@ -104,20 +105,20 @@ class PlayerControls extends StatelessWidget {
           if (audioTracks.length > 2)
             _menu<AudioTrack>(
               icon: Icons.volume_up,
-              tooltip: 'Piste audio',
+              tooltip: L.of(context)!.trackAudio,
               items: audioTracks,
               currentId: currentAudioId,
-              labelOf: (a) => _trackLabel(a.id, a.title, a.language),
+              labelOf: (a) => _trackLabel(context, a.id, a.title, a.language),
               idOf: (a) => a.id,
               onSelect: onSelectAudio,
             ),
           if (subtitleTracks.length > 1)
             _menu<SubtitleTrack>(
               icon: Icons.subtitles,
-              tooltip: 'Sous-titres',
+              tooltip: L.of(context)!.trackSubtitles,
               items: subtitleTracks,
               currentId: currentSubtitleId,
-              labelOf: (s) => _trackLabel(s.id, s.title, s.language),
+              labelOf: (s) => _trackLabel(context, s.id, s.title, s.language),
               idOf: (s) => s.id,
               onSelect: onSelectSubtitle,
             ),
@@ -148,9 +149,9 @@ class PlayerControls extends StatelessWidget {
     );
   }
 
-  String _trackLabel(String id, String? title, String? language) {
-    if (id == 'auto') return 'Auto';
-    if (id == 'no') return 'Désactivé';
+  String _trackLabel(BuildContext context, String id, String? title, String? language) {
+    if (id == 'auto') return L.of(context)!.trackAuto;
+    if (id == 'no') return L.of(context)!.trackOff;
     final parts = [language, title].where((e) => e != null && e.isNotEmpty).toList();
     return parts.isEmpty ? 'Piste $id' : parts.join(' · ');
   }
