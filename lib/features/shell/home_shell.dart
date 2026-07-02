@@ -214,9 +214,10 @@ class _NavItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
+        width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 12),
-        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(color: active ? KtvColors.panel2 : null, borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        decoration: BoxDecoration(color: active ? KtvColors.panel2 : null, borderRadius: BorderRadius.circular(10)),
         child: Column(
           children: [
             Icon(icon, color: active ? KtvColors.accent : KtvColors.muted, size: 24),
