@@ -244,7 +244,13 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(icon, color: active ? KtvColors.accent : KtvColors.muted, size: 24),
             const SizedBox(height: 4),
-            Text(label, style: TextStyle(fontSize: 10, color: active ? KtvColors.txt : KtvColors.muted)),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 9, height: 1.1, color: active ? KtvColors.txt : KtvColors.muted),
+            ),
           ],
         ),
       ),
