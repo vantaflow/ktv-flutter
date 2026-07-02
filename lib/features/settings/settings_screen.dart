@@ -13,6 +13,7 @@ import '../../core/providers.dart';
 import '../../core/version.dart';
 import '../../core/storage/prefs_store.dart';
 import '../../services/trakt/trakt_providers.dart';
+import '../../services/sync/sync_providers.dart';
 import '../../services/update/update_service.dart';
 import '../../services/downloads/download_service.dart';
 import '../../services/recording/recording_service.dart';
@@ -37,6 +38,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   double? _dlProgress;
   bool _diagRunning = false;
   String? _diagText;
+  final _syncPassCtrl = TextEditingController();
+  final _syncEndpointCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final ctrl = ref.read(syncControllerProvider.notifier);
+    _syncEndpointCtrl.text = ctrl.endpoint;
+  }
+
+  @override
+  void dispose() {
+    _syncPassCtrl.dispose();
+    _syncEndpointCtrl.dispose();
+    super.dispose();
+  }
 
   static const _tabs = [
     (icon: Icons.person_rounded, label: 'Compte & abonnement'),
@@ -48,6 +65,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     (icon: Icons.category_rounded, label: 'Catégories'),
     (icon: Icons.theaters_rounded, label: 'Enrichissement TMDB'),
     (icon: Icons.sync_rounded, label: 'Synchronisation Trakt'),
+    (icon: Icons.cloud_sync_rounded, label: 'Synchro appareils'),
     (icon: Icons.autorenew_rounded, label: 'Mise à jour auto'),
     (icon: Icons.fiber_manual_record, label: 'Enregistrements'),
     (icon: Icons.download_rounded, label: 'Téléchargements'),
@@ -101,6 +119,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   'Catégories' => _categories(),
                   'Enrichissement TMDB' => _tmdb(prefs),
                   'Synchronisation Trakt' => _trakt(prefs),
+                  'Synchro appareils' => _syncDevices(prefs),
                   'Mise à jour auto' => _autoRefresh(prefs),
                   'Enregistrements' => _recordings(),
                   'Téléchargements' => _downloads(),
@@ -338,6 +357,99 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           FilledButton.tonalIcon(onPressed: () async { await ref.read(traktServiceProvider).disconnect(); setState(() {}); }, icon: const Icon(Icons.link_off), label: const Text('✓ Connecté — Déconnecter'))
         else
           FilledButton.icon(onPressed: _connectTrakt, icon: const Icon(Icons.link), label: const Text('Connecter (code device)')),
+      ]),
+    ];
+  }
+
+  // --- ☁️ Synchro appareils (compte Trakt + chiffrement) ---
+  List<Widget> _syncDevices(PrefsStore prefs) {
+    final ctrl = ref.read(syncControllerProvider.notifier);
+    final st = ref.watch(syncControllerProvider);
+    final connected = prefs.traktConnected;
+    final enabled = ctrl.enabled;
+
+    return [
+      _card([
+        Text(
+          'Synchronise reprise, favoris, historique, catégories et profils entre tes appareils. '
+          'Identité = ton compte Trakt. Tout est chiffré avec ta phrase secrète : le serveur ne peut rien lire.',
+          style: TextStyle(color: KtvColors.muted, fontSize: 12.5, height: 1.4),
+        ),
+        const SizedBox(height: 14),
+        if (!connected)
+          Row(children: [
+            Icon(Icons.info_outline, size: 18, color: KtvColors.accent2),
+            const SizedBox(width: 8),
+            Expanded(child: Text('Connecte d\'abord Trakt (section « Synchronisation Trakt »).', style: TextStyle(color: KtvColors.accent2, fontSize: 12.5))),
+          ])
+        else ...[
+          Text('Phrase secrète (identique sur tous tes appareils)', style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _syncPassCtrl,
+            obscureText: true,
+            decoration: InputDecoration(hintText: enabled ? '•••••• (déjà définie — saisir pour changer)' : 'Choisis une phrase secrète'),
+          ),
+          const SizedBox(height: 12),
+          Wrap(spacing: 10, runSpacing: 10, children: [
+            if (!enabled)
+              FilledButton.icon(
+                onPressed: st.status == SyncStatus.syncing
+                    ? null
+                    : () async {
+                        if (_syncPassCtrl.text.trim().length < 4) { _toast('Phrase trop courte (min. 4 caractères).'); return; }
+                        await ctrl.activate(_syncPassCtrl.text.trim());
+                        _syncPassCtrl.clear();
+                        setState(() {});
+                      },
+                icon: const Icon(Icons.cloud_done_outlined),
+                label: const Text('Activer la synchro'),
+              )
+            else ...[
+              FilledButton.icon(
+                onPressed: st.status == SyncStatus.syncing ? null : () async {
+                  if (_syncPassCtrl.text.trim().isNotEmpty) {
+                    await ctrl.activate(_syncPassCtrl.text.trim());
+                  } else {
+                    await ctrl.syncNow();
+                  }
+                  _syncPassCtrl.clear();
+                  setState(() {});
+                },
+                icon: st.status == SyncStatus.syncing
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.sync),
+                label: const Text('Synchroniser maintenant'),
+              ),
+              FilledButton.tonalIcon(
+                onPressed: () async { await ctrl.disable(); setState(() {}); },
+                icon: const Icon(Icons.cloud_off),
+                label: const Text('Désactiver'),
+              ),
+            ],
+          ]),
+          const SizedBox(height: 10),
+          Row(children: [
+            Icon(
+              switch (st.status) { SyncStatus.ok => Icons.check_circle, SyncStatus.error => Icons.error_outline, SyncStatus.syncing => Icons.sync, _ => Icons.cloud_queue },
+              size: 16,
+              color: st.status == SyncStatus.error ? KtvColors.rec : (st.status == SyncStatus.ok ? KtvColors.accent : KtvColors.muted),
+            ),
+            const SizedBox(width: 8),
+            Expanded(child: Text(
+              st.message ?? (st.lastAt > 0 ? 'Dernière synchro : ${_dateTime(st.lastAt)}' : (enabled ? 'Activée — pas encore synchronisée.' : 'Désactivée.')),
+              style: TextStyle(color: st.status == SyncStatus.error ? KtvColors.rec : KtvColors.muted, fontSize: 12),
+            )),
+          ]),
+        ],
+        Divider(height: 26, color: KtvColors.line),
+        Text('Serveur de synchro (avancé)', style: TextStyle(color: KtvColors.muted, fontSize: 12)),
+        const SizedBox(height: 6),
+        TextField(
+          controller: _syncEndpointCtrl,
+          decoration: const InputDecoration(hintText: 'https://ktv-sync.<compte>.workers.dev'),
+          onChanged: (v) => ctrl.setEndpoint(v),
+        ),
       ]),
     ];
   }

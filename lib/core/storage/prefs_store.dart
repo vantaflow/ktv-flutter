@@ -261,4 +261,38 @@ class PrefsStore {
   }
 
   bool get traktConnected => (traktToken()?['access_token'] ?? '').toString().isNotEmpty;
+
+  // --- Synchronisation inter-appareils ---
+  /// Clés incluses dans le bundle synchronisé (le cache TMDB et le jeton Trakt
+  /// en sont volontairement exclus).
+  static const syncKeys = <String>[
+    'ktv_resume',
+    'iptv_watched',
+    'iptv_favs_v2',
+    'iptv_recent',
+    'ktv_settings',
+    'category_visibility',
+    'category_order',
+    'xtream_profiles',
+    'xtream_active',
+  ];
+
+  /// Lit/écrit une clé de préférence comme JSON décodé (usage synchro).
+  Object? readJson(String key) {
+    final raw = _p.getString(key);
+    if (raw == null) return null;
+    try {
+      return jsonDecode(raw);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> writeJson(String key, Object? value) =>
+      value == null ? _p.remove(key) : _p.setString(key, jsonEncode(value));
+
+  /// État local de la synchro (jamais synchronisé lui-même) : phrase secrète,
+  /// endpoint, version/updatedAt du dernier sync.
+  Map<String, dynamic> syncLocal() => _map('ktv_sync_local');
+  Future<void> setSyncLocal(Map<String, dynamic> m) => _saveMap('ktv_sync_local', m);
 }

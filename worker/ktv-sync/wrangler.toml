@@ -1,0 +1,19 @@
+name = "ktv-sync"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# KV : stocke le blob chiffré par compte (sync:{slug}) + cache token→slug.
+kv_namespaces = [
+  { binding = "SYNC", id = "4c3d514e1b1d433d92f1bcc7577c0143" }
+]
+
+# D1 (registre des comptes) est OPTIONNEL — non activé ici (quota D1 atteint sur
+# le compte). Le Worker fonctionne en KV-only ; l'écriture D1 est best-effort et
+# ignorée si le binding DB est absent. Pour l'activer : décommenter et remplir
+# l'id après `wrangler d1 create ktv-sync` + `d1 execute --file=schema.sql`.
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "ktv-sync"
+# database_id = "REMPLACER_PAR_D1_ID"
+
+# Secret (ne pas committer) : wrangler secret put TRAKT_CLIENT_ID

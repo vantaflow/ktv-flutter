@@ -14,6 +14,7 @@ import '../search/search_providers.dart';
 import '../settings/settings_screen.dart';
 import '../home/home_providers.dart';
 import '../../services/recording/recording_service.dart';
+import '../../services/sync/sync_providers.dart';
 
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
@@ -36,6 +37,16 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     (icon: Icons.download_rounded, label: 'Téléchargements'),
     (icon: Icons.settings_rounded, label: 'Réglages'),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Synchro inter-appareils au lancement (si activée).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final sync = ref.read(syncControllerProvider.notifier);
+      if (sync.enabled) sync.syncNow();
+    });
+  }
 
   @override
   void dispose() {
