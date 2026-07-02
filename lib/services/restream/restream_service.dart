@@ -103,6 +103,17 @@ class RestreamController extends Notifier<RestreamState> {
       _server = await HttpServer.bind(InternetAddress.anyIPv4, _port, shared: true);
       _server!.listen((req) => _serve(req, dir));
 
+      // Attend que la playlist HLS soit réellement prête (≥ 1 segment) avant
+      // d'annoncer « live » — sinon le player ouvrirait un flux vide.
+      final ready = await _waitReady(dir);
+      if (!ready) {
+        if (state.status != RestreamStatus.error) {
+          _cleanup();
+          state = RestreamState(status: RestreamStatus.error, name: name, error: 'Le relais n\'a pas démarré à temps (connexion fournisseur ?)');
+        }
+        return;
+      }
+
       final ip = await _lanIp();
       final lan = ip == null ? null : 'http://$ip:$_port/index.m3u8';
       state = RestreamState(status: RestreamStatus.live, name: name, lanUrl: lan, localUrl: 'http://127.0.0.1:$_port/index.m3u8');
@@ -129,6 +140,19 @@ class RestreamController extends Notifier<RestreamState> {
       p.stdout.transform(const SystemEncoding().decoder).listen(scan);
       p.stderr.transform(const SystemEncoding().decoder).listen(scan);
     }).catchError((_) {});
+  }
+
+  /// Attend que la playlist référence ≥ 1 segment (~jusqu'à 15 s).
+  Future<bool> _waitReady(Directory dir) async {
+    final pl = File('${dir.path}/index.m3u8');
+    for (var i = 0; i < 30; i++) {
+      if (state.status == RestreamStatus.error) return false; // ffmpeg a échoué
+      try {
+        if (pl.existsSync() && pl.readAsStringSync().contains('.ts')) return true;
+      } catch (_) {}
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
+    return false;
   }
 
   Future<void> _serve(HttpRequest req, Directory dir) async {

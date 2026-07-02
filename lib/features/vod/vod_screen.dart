@@ -43,14 +43,14 @@ class _VodScreenState extends ConsumerState<VodScreen> {
           padding: const EdgeInsets.fromLTRB(16, 16, 8, 8),
           child: Row(children: [
             const Text('Films', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
-            const SizedBox(width: 16),
+            const Spacer(),
+            if (showFilters) Flexible(flex: 6, child: FilterBar(filter: _filter, onChanged: (f) => setState(() => _filter = f))),
+            const SizedBox(width: 4),
             IconButton(
               tooltip: showFilters ? 'Masquer les filtres' : 'Afficher les filtres',
               icon: Icon(showFilters ? Icons.filter_list_off : Icons.filter_list, color: showFilters ? KtvColors.accent : KtvColors.muted),
               onPressed: () async { await prefs.setSetting('catalogFilters', !showFilters); setState(() {}); },
             ),
-            const SizedBox(width: 4),
-            Expanded(child: showFilters ? FilterBar(filter: _filter, onChanged: (f) => setState(() => _filter = f)) : const SizedBox.shrink()),
           ]),
         ),
         cats.when(
