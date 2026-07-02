@@ -19,6 +19,8 @@ import '../../services/recording/recording_service.dart';
 import '../../services/epg/epg_providers.dart';
 import '../home/home_providers.dart';
 import '../auth/auth_controller.dart';
+import '../categories/category_prefs.dart';
+import '../categories/category_manager_screen.dart';
 
 /// Section sélectionnée dans les Réglages (layout 2 colonnes façon ancienne KTV).
 final _settingsTabProvider = StateProvider<int>((ref) => 0);
@@ -43,6 +45,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     (icon: Icons.home_rounded, label: 'Accueil'),
     (icon: Icons.event_note_rounded, label: 'EPG externe'),
     (icon: Icons.movie_filter_rounded, label: 'Catalogue'),
+    (icon: Icons.category_rounded, label: 'Catégories'),
     (icon: Icons.theaters_rounded, label: 'Enrichissement TMDB'),
     (icon: Icons.sync_rounded, label: 'Synchronisation Trakt'),
     (icon: Icons.autorenew_rounded, label: 'Mise à jour auto'),
@@ -95,6 +98,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   'Accueil' => _homeCategories(prefs),
                   'EPG externe' => _epg(),
                   'Catalogue' => _catalog(),
+                  'Catégories' => _categories(),
                   'Enrichissement TMDB' => _tmdb(prefs),
                   'Synchronisation Trakt' => _trakt(prefs),
                   'Mise à jour auto' => _autoRefresh(prefs),
@@ -221,6 +225,42 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           FilledButton.tonalIcon(onPressed: () { ref.invalidate(allSeriesProvider); ref.invalidate(latestSeriesProvider); _toast('Séries rafraîchies'); }, icon: const Icon(Icons.grid_view_rounded), label: const Text('Rafraîchir les séries')),
           FilledButton.icon(onPressed: () { ref.read(autoRefreshControllerProvider.notifier).refreshNow(); _toast('Catalogue et EPG rafraîchis'); }, icon: const Icon(Icons.refresh), label: const Text('Tout rafraîchir')),
         ]),
+      ]),
+    ];
+  }
+
+  // --- 🗂 Catégories (garder/masquer par section) ---
+  List<Widget> _categories() {
+    Widget row(CatSection section, IconData icon) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Icon(icon, color: KtvColors.accent, size: 22),
+              const SizedBox(width: 12),
+              Expanded(child: Text(section.label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600))),
+              FilledButton.tonalIcon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => CategoryManagerScreen(section: section)),
+                ),
+                icon: const Icon(Icons.tune, size: 18),
+                label: const Text('Gérer'),
+              ),
+            ],
+          ),
+        );
+    return [
+      _card([
+        Text(
+          'Choisissez les catégories du fournisseur à afficher ou masquer, pour chaque section. '
+          'Sans réglage, KTV applique son filtre par défaut (FR / Maroc / beIN Sports).',
+          style: TextStyle(color: KtvColors.muted, fontSize: 12.5, height: 1.4),
+        ),
+        const SizedBox(height: 12),
+        row(CatSection.live, Icons.live_tv_rounded),
+        Divider(height: 16, color: KtvColors.line),
+        row(CatSection.vod, Icons.movie_rounded),
+        Divider(height: 16, color: KtvColors.line),
+        row(CatSection.series, Icons.grid_view_rounded),
       ]),
     ];
   }

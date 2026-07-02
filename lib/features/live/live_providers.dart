@@ -2,13 +2,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import '../../core/models/models.dart';
 import '../../core/logic/text_utils.dart';
+import '../../core/providers.dart';
+import '../categories/category_prefs.dart';
 import '../auth/auth_controller.dart';
 
-final liveCategoriesProvider = FutureProvider<List<Category>>((ref) async {
+/// Toutes les catégories LIVE du fournisseur (brutes, pour l'écran de gestion).
+final liveCategoriesAllProvider = FutureProvider<List<Category>>((ref) async {
   final c = ref.watch(xtreamClientProvider);
   if (c == null) return [];
-  final cats = await c.liveCategories();
-  return cats.where((cat) => categoryAllowed(cat.name)).toList();
+  return c.liveCategories();
+});
+
+/// Catégories LIVE visibles : override utilisateur sinon heuristique FR/Maroc/beIN.
+final liveCategoriesProvider = FutureProvider<List<Category>>((ref) async {
+  ref.watch(categoryVisibilityTickProvider);
+  final cats = await ref.watch(liveCategoriesAllProvider.future);
+  final prof = ref.watch(authControllerProvider);
+  final ov = prof == null ? const <String, bool>{} : ref.read(prefsProvider).categoryVisibility(prof.id, CatSection.live.key);
+  return cats.where((cat) => categoryVisible(catId: cat.id, name: cat.name, overrides: ov, heuristic: categoryAllowed)).toList();
 });
 
 final selectedLiveCategoryProvider = StateProvider<String?>((ref) => null);

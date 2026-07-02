@@ -14,6 +14,7 @@ class PosterCard extends StatelessWidget {
   final double aspectRatio;
   final bool isFav;
   final VoidCallback? onFavToggle;
+  final BoxFit fit; // contain pour les logos de chaînes (pas de crop)
 
   const PosterCard({
     super.key,
@@ -27,6 +28,7 @@ class PosterCard extends StatelessWidget {
     this.aspectRatio = 2 / 3,
     this.isFav = false,
     this.onFavToggle,
+    this.fit = BoxFit.cover,
   });
 
   @override
@@ -46,6 +48,7 @@ class PosterCard extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
+                    ColoredBox(color: KtvColors.panel2), // fond derrière les logos « contain »
                     _image(),
                     if (rating != null && rating! > 0)
                       Positioned(
@@ -100,7 +103,7 @@ class PosterCard extends StatelessWidget {
     if (imageUrl == null || imageUrl!.isEmpty) return const _PosterFallback();
     return CachedNetworkImage(
       imageUrl: imageUrl!,
-      fit: BoxFit.cover,
+      fit: fit,
       placeholder: (_, _) => ColoredBox(color: KtvColors.panel2),
       errorWidget: (_, _, _) => const _PosterFallback(),
     );

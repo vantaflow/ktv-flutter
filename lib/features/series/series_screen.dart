@@ -24,8 +24,11 @@ class _SeriesScreenState extends ConsumerState<SeriesScreen> {
   Widget build(BuildContext context) {
     ref.listen(seriesCategoriesProvider, (_, next) {
       final cats = next.asData?.value;
-      if (cats != null && cats.isNotEmpty && ref.read(selectedSeriesCategoryProvider) == null) {
-        ref.read(selectedSeriesCategoryProvider.notifier).state = cats.first.id;
+      if (cats != null && cats.isNotEmpty) {
+        final sel = ref.read(selectedSeriesCategoryProvider);
+        if (sel == null || !cats.any((c) => c.id == sel)) {
+          ref.read(selectedSeriesCategoryProvider.notifier).state = cats.first.id;
+        }
       }
     });
     final cats = ref.watch(seriesCategoriesProvider);

@@ -90,7 +90,7 @@ class XmltvService {
       body = r.data ?? '';
     }
     final nowS = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    final windowStart = nowS - 7200; // −2 h
+    final windowStart = nowS - 3 * 86400; // −3 j (alimente le catch-up / rediffusion)
     final windowEnd = nowS + 2 * 86400; // +2 j
     final byId = <String, List<EpgProgram>>{};
     final nameToId = <String, String>{};

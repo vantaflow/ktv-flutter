@@ -19,6 +19,8 @@ class MediaRail extends StatelessWidget {
         imageUrl: e.cover,
         width: width,
         aspectRatio: 2 / 3,
+        // Les logos de chaînes live sont affichés tels quels (contain, sans crop).
+        fit: e.kind == MediaKind.live ? BoxFit.contain : BoxFit.cover,
         progress: progressOf?.call(e) ?? 0,
         onTap: () => onTap(e),
       );

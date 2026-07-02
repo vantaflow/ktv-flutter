@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../models/models.dart';
 import 'xtream_urls.dart';
@@ -21,8 +22,15 @@ class XtreamClient {
     final r = await _dio.get(urls.api(params));
     final data = r.data;
     if (data is String) {
-      // Certains panels renvoient du JSON en text/plain.
-      return data.isEmpty ? null : (data);
+      // Certains panels renvoient le JSON en text/plain : Dio ne le décode pas.
+      // C'est notamment le cas de l'appel d'auth (base) sur certains fournisseurs,
+      // d'où un « Non connecté » alors que le reste du catalogue charge bien.
+      if (data.isEmpty) return null;
+      try {
+        return jsonDecode(data);
+      } catch (_) {
+        return data;
+      }
     }
     return data;
   }

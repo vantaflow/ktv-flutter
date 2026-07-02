@@ -193,6 +193,40 @@ class PrefsStore {
     await _saveMap(_kSettings, m);
   }
 
+  // --- Visibilité des catégories (garder/masquer par profil + section) ---
+  // Structure : { "<profileId>|<section>": { "<catId>": bool } }.
+  // Absence de clé = pas d'override → on retombe sur l'heuristique par défaut.
+  static const _kCatVis = 'category_visibility';
+
+  Map<String, bool> categoryVisibility(String profileId, String section) {
+    final sub = _map(_kCatVis)['$profileId|$section'];
+    if (sub is Map) {
+      return sub.map((k, v) => MapEntry(k.toString(), v == true));
+    }
+    return {};
+  }
+
+  Future<void> setCategoryVisible(String profileId, String section, String catId, bool visible) async {
+    final all = _map(_kCatVis);
+    final k = '$profileId|$section';
+    final sub = (all[k] is Map) ? Map<String, dynamic>.from(all[k]) : <String, dynamic>{};
+    sub[catId] = visible;
+    all[k] = sub;
+    await _saveMap(_kCatVis, all);
+  }
+
+  Future<void> setCategoryVisibilityBulk(String profileId, String section, Map<String, bool> vis) async {
+    final all = _map(_kCatVis);
+    all['$profileId|$section'] = vis;
+    await _saveMap(_kCatVis, all);
+  }
+
+  /// Supprime tous les overrides d'une section → retour aux valeurs par défaut.
+  Future<void> clearCategoryVisibility(String profileId, String section) async {
+    final all = _map(_kCatVis)..remove('$profileId|$section');
+    await _saveMap(_kCatVis, all);
+  }
+
   // Jeton Trakt (ktv_trakt).
   Map<String, dynamic>? traktToken() {
     final m = _map('ktv_trakt');

@@ -2,13 +2,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import '../../core/models/models.dart';
 import '../../core/logic/text_utils.dart';
+import '../../core/providers.dart';
+import '../categories/category_prefs.dart';
 import '../auth/auth_controller.dart';
 
-final seriesCategoriesProvider = FutureProvider<List<Category>>((ref) async {
+/// Toutes les catégories Séries du fournisseur (brutes, pour l'écran de gestion).
+final seriesCategoriesAllProvider = FutureProvider<List<Category>>((ref) async {
   final c = ref.watch(xtreamClientProvider);
   if (c == null) return [];
-  final cats = await c.seriesCategories();
-  return cats.where((cat) => frCategoryAllowed(cat.name)).toList();
+  return c.seriesCategories();
+});
+
+/// Catégories Séries visibles : override utilisateur sinon heuristique « françaises ».
+final seriesCategoriesProvider = FutureProvider<List<Category>>((ref) async {
+  ref.watch(categoryVisibilityTickProvider);
+  final cats = await ref.watch(seriesCategoriesAllProvider.future);
+  final prof = ref.watch(authControllerProvider);
+  final ov = prof == null ? const <String, bool>{} : ref.read(prefsProvider).categoryVisibility(prof.id, CatSection.series.key);
+  return cats.where((cat) => categoryVisible(catId: cat.id, name: cat.name, overrides: ov, heuristic: frCategoryAllowed)).toList();
 });
 
 final selectedSeriesCategoryProvider = StateProvider<String?>((ref) => null);

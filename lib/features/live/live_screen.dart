@@ -18,8 +18,11 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
   Widget build(BuildContext context) {
     ref.listen(liveCategoriesProvider, (_, next) {
       final cats = next.asData?.value;
-      if (cats != null && cats.isNotEmpty && ref.read(selectedLiveCategoryProvider) == null) {
-        ref.read(selectedLiveCategoryProvider.notifier).state = cats.first.id;
+      if (cats != null && cats.isNotEmpty) {
+        final sel = ref.read(selectedLiveCategoryProvider);
+        if (sel == null || !cats.any((c) => c.id == sel)) {
+          ref.read(selectedLiveCategoryProvider.notifier).state = cats.first.id;
+        }
       }
     });
     final cats = ref.watch(liveCategoriesProvider);

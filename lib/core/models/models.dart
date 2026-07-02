@@ -36,13 +36,25 @@ class LiveChannel {
   final String? icon;
   final String categoryId;
   final String? epgChannelId;
-  const LiveChannel({required this.streamId, required this.name, this.icon, required this.categoryId, this.epgChannelId});
+  final bool tvArchive; // catch-up disponible côté fournisseur
+  final int tvArchiveDuration; // profondeur d'archive en jours (0 = inconnu)
+  const LiveChannel({
+    required this.streamId,
+    required this.name,
+    this.icon,
+    required this.categoryId,
+    this.epgChannelId,
+    this.tvArchive = false,
+    this.tvArchiveDuration = 0,
+  });
   factory LiveChannel.fromJson(Map<String, dynamic> j) => LiveChannel(
         streamId: _s(j['stream_id']),
         name: _s(j['name']),
         icon: _sn(j['stream_icon']),
         categoryId: _s(j['category_id']),
         epgChannelId: _sn(j['epg_channel_id']),
+        tvArchive: _s(j['tv_archive']) == '1',
+        tvArchiveDuration: int.tryParse(_s(j['tv_archive_duration'])) ?? 0,
       );
 }
 

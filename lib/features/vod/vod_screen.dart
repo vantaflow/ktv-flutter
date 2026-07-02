@@ -26,8 +26,11 @@ class _VodScreenState extends ConsumerState<VodScreen> {
     // Auto-sélection de la 1re catégorie.
     ref.listen(vodCategoriesProvider, (_, next) {
       final cats = next.asData?.value;
-      if (cats != null && cats.isNotEmpty && ref.read(selectedVodCategoryProvider) == null) {
-        ref.read(selectedVodCategoryProvider.notifier).state = cats.first.id;
+      if (cats != null && cats.isNotEmpty) {
+        final sel = ref.read(selectedVodCategoryProvider);
+        if (sel == null || !cats.any((c) => c.id == sel)) {
+          ref.read(selectedVodCategoryProvider.notifier).state = cats.first.id;
+        }
       }
     });
     final cats = ref.watch(vodCategoriesProvider);
