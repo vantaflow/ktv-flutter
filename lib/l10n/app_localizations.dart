@@ -1430,6 +1430,72 @@ abstract class L {
   /// In fr, this message translates to:
   /// **'Désactivez si la lecture plante ou fige (surtout sous Windows). Appliqué au prochain lancement de lecture.'**
   String get hwdecHint;
+
+  /// No description provided for @syncLoginBtn.
+  ///
+  /// In fr, this message translates to:
+  /// **'Se connecter via un autre appareil'**
+  String get syncLoginBtn;
+
+  /// No description provided for @syncOrManual.
+  ///
+  /// In fr, this message translates to:
+  /// **'OU CONNEXION MANUELLE'**
+  String get syncOrManual;
+
+  /// No description provided for @syncWaiting.
+  ///
+  /// In fr, this message translates to:
+  /// **'En attente de l\'autorisation…'**
+  String get syncWaiting;
+
+  /// No description provided for @syncTraktCanceled.
+  ///
+  /// In fr, this message translates to:
+  /// **'Connexion Trakt annulée ou expirée.'**
+  String get syncTraktCanceled;
+
+  /// No description provided for @syncNoProfile.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun profil synchronisé trouvé. Active d\'abord la synchro sur un appareil déjà connecté.'**
+  String get syncNoProfile;
+
+  /// No description provided for @updTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mise à jour disponible'**
+  String get updTitle;
+
+  /// No description provided for @updBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'KTV {v} est disponible (tu as la {cur}).'**
+  String updBody(Object v, Object cur);
+
+  /// No description provided for @updNow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mettre à jour'**
+  String get updNow;
+
+  /// No description provided for @updLater.
+  ///
+  /// In fr, this message translates to:
+  /// **'Plus tard'**
+  String get updLater;
+
+  /// No description provided for @updDownloading.
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléchargement de la mise à jour…'**
+  String get updDownloading;
+
+  /// No description provided for @updCheckAtStart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier les mises à jour au démarrage'**
+  String get updCheckAtStart;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

@@ -261,5 +261,22 @@
   "epgSchedule": "Schedule",
   "epgRecord": "Record",
   "hwdec": "Hardware decoding",
-  "hwdecHint": "Disable if playback crashes or freezes (especially on Windows). Applied on next playback."
+  "hwdecHint": "Disable if playback crashes or freezes (especially on Windows). Applied on next playback.",
+  "syncLoginBtn": "Sign in from another device",
+  "syncOrManual": "OR MANUAL LOGIN",
+  "syncWaiting": "Waiting for authorization…",
+  "syncTraktCanceled": "Trakt connection canceled or expired.",
+  "syncNoProfile": "No synced profile found. Enable sync first on an already-connected device.",
+  "updTitle": "Update available",
+  "updBody": "KTV {v} is available (you have {cur}).",
+  "@updBody": {
+    "placeholders": {
+      "v": {},
+      "cur": {}
+    }
+  },
+  "updNow": "Update",
+  "updLater": "Later",
+  "updDownloading": "Downloading update…",
+  "updCheckAtStart": "Check for updates on startup"
 }

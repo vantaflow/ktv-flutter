@@ -710,4 +710,40 @@ class LFr extends L {
   @override
   String get hwdecHint =>
       'Désactivez si la lecture plante ou fige (surtout sous Windows). Appliqué au prochain lancement de lecture.';
+
+  @override
+  String get syncLoginBtn => 'Se connecter via un autre appareil';
+
+  @override
+  String get syncOrManual => 'OU CONNEXION MANUELLE';
+
+  @override
+  String get syncWaiting => 'En attente de l\'autorisation…';
+
+  @override
+  String get syncTraktCanceled => 'Connexion Trakt annulée ou expirée.';
+
+  @override
+  String get syncNoProfile =>
+      'Aucun profil synchronisé trouvé. Active d\'abord la synchro sur un appareil déjà connecté.';
+
+  @override
+  String get updTitle => 'Mise à jour disponible';
+
+  @override
+  String updBody(Object v, Object cur) {
+    return 'KTV $v est disponible (tu as la $cur).';
+  }
+
+  @override
+  String get updNow => 'Mettre à jour';
+
+  @override
+  String get updLater => 'Plus tard';
+
+  @override
+  String get updDownloading => 'Téléchargement de la mise à jour…';
+
+  @override
+  String get updCheckAtStart => 'Vérifier les mises à jour au démarrage';
 }

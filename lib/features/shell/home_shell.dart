@@ -15,6 +15,7 @@ import '../settings/settings_screen.dart';
 import '../home/home_providers.dart';
 import '../../services/recording/recording_service.dart';
 import '../../services/sync/sync_providers.dart';
+import '../../services/update/update_prompt.dart';
 import '../../l10n/app_localizations.dart';
 
 class HomeShell extends ConsumerStatefulWidget {
@@ -45,10 +46,11 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   @override
   void initState() {
     super.initState();
-    // Synchro inter-appareils au lancement (si activée).
+    // Synchro inter-appareils + vérification de mise à jour au lancement.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final sync = ref.read(syncControllerProvider.notifier);
       if (sync.enabled) sync.syncNow();
+      if (mounted) checkAndPromptUpdate(context, ref);
     });
   }
 

@@ -261,5 +261,22 @@
   "epgSchedule": "Programmer",
   "epgRecord": "Enregistrer",
   "hwdec": "Décodage matériel",
-  "hwdecHint": "Désactivez si la lecture plante ou fige (surtout sous Windows). Appliqué au prochain lancement de lecture."
+  "hwdecHint": "Désactivez si la lecture plante ou fige (surtout sous Windows). Appliqué au prochain lancement de lecture.",
+  "syncLoginBtn": "Se connecter via un autre appareil",
+  "syncOrManual": "OU CONNEXION MANUELLE",
+  "syncWaiting": "En attente de l'autorisation…",
+  "syncTraktCanceled": "Connexion Trakt annulée ou expirée.",
+  "syncNoProfile": "Aucun profil synchronisé trouvé. Active d'abord la synchro sur un appareil déjà connecté.",
+  "updTitle": "Mise à jour disponible",
+  "updBody": "KTV {v} est disponible (tu as la {cur}).",
+  "@updBody": {
+    "placeholders": {
+      "v": {},
+      "cur": {}
+    }
+  },
+  "updNow": "Mettre à jour",
+  "updLater": "Plus tard",
+  "updDownloading": "Téléchargement de la mise à jour…",
+  "updCheckAtStart": "Vérifier les mises à jour au démarrage"
 }

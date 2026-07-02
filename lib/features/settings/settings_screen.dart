@@ -821,7 +821,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         const Text('KTV — Flutter + media_kit', style: TextStyle(fontWeight: FontWeight.w700)),
         const SizedBox(height: 4),
         Text('Version $kAppVersion', style: TextStyle(color: KtvColors.muted, fontSize: 13)),
-        const SizedBox(height: 14),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          activeThumbColor: KtvColors.accent,
+          title: Text(L.of(context)!.updCheckAtStart),
+          value: ref.read(prefsProvider).settingBool('autoUpdateCheck', true),
+          onChanged: (v) async { await ref.read(prefsProvider).setSetting('autoUpdateCheck', v); setState(() {}); },
+        ),
+        const SizedBox(height: 6),
         Row(children: [
           FilledButton.icon(
             onPressed: _checkingUpdate ? null : _checkUpdate,

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
 import '../../core/version.dart';
 
 class UpdateInfo {
@@ -31,7 +32,8 @@ class UpdateService {
       final tag = (data['tag_name'] ?? '').toString().replaceFirst('v', '');
       final notes = (data['body'] ?? '').toString();
       final assets = (data['assets'] as List?) ?? const [];
-      final want = Platform.isMacOS ? 'macos' : 'windows';
+      // Cible l'artefact de la plateforme : APK universel sur Android, .zip sinon.
+      final want = Platform.isAndroid ? 'android-universal' : (Platform.isMacOS ? 'macos' : 'windows');
       String? url;
       String name = '';
       for (final a in assets) {
@@ -63,7 +65,8 @@ class UpdateService {
     if (info.assetUrl == null) return null;
     try {
       final dir = await getDownloadsDirectory() ?? await getApplicationDocumentsDirectory();
-      final path = '${dir.path}/${info.assetName.isEmpty ? 'KTV-update.zip' : info.assetName}';
+      final fallback = Platform.isAndroid ? 'KTV-update.apk' : 'KTV-update.zip';
+      final path = '${dir.path}/${info.assetName.isEmpty ? fallback : info.assetName}';
       await _dio.download(info.assetUrl!, path, onReceiveProgress: (r, t) {
         if (t > 0) onProgress?.call(r / t);
       });
@@ -71,6 +74,23 @@ class UpdateService {
     } catch (_) {
       return null;
     }
+  }
+
+  /// Android : télécharge l'APK puis ouvre l'installateur système.
+  /// Desktop : télécharge l'archive et la révèle dans le Finder/Explorateur.
+  Future<String?> downloadAndInstall(UpdateInfo info, {void Function(double)? onProgress}) async {
+    final path = await download(info, onProgress: onProgress);
+    if (path == null) return null;
+    try {
+      if (Platform.isAndroid) {
+        await OpenFilex.open(path); // → installateur de paquets Android
+      } else if (Platform.isMacOS) {
+        await Process.run('open', ['-R', path]);
+      } else if (Platform.isWindows) {
+        await Process.run('explorer', ['/select,', path]);
+      }
+    } catch (_) {}
+    return path;
   }
 }
 

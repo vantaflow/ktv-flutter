@@ -705,4 +705,40 @@ class LEn extends L {
   @override
   String get hwdecHint =>
       'Disable if playback crashes or freezes (especially on Windows). Applied on next playback.';
+
+  @override
+  String get syncLoginBtn => 'Sign in from another device';
+
+  @override
+  String get syncOrManual => 'OR MANUAL LOGIN';
+
+  @override
+  String get syncWaiting => 'Waiting for authorization…';
+
+  @override
+  String get syncTraktCanceled => 'Trakt connection canceled or expired.';
+
+  @override
+  String get syncNoProfile =>
+      'No synced profile found. Enable sync first on an already-connected device.';
+
+  @override
+  String get updTitle => 'Update available';
+
+  @override
+  String updBody(Object v, Object cur) {
+    return 'KTV $v is available (you have $cur).';
+  }
+
+  @override
+  String get updNow => 'Update';
+
+  @override
+  String get updLater => 'Later';
+
+  @override
+  String get updDownloading => 'Downloading update…';
+
+  @override
+  String get updCheckAtStart => 'Check for updates on startup';
 }

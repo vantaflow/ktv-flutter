@@ -702,4 +702,40 @@ class LAr extends L {
   @override
   String get hwdecHint =>
       'عطّله إذا تعطّل التشغيل أو تجمّد (خاصة على Windows). يُطبَّق عند التشغيل التالي.';
+
+  @override
+  String get syncLoginBtn => 'تسجيل الدخول من جهاز آخر';
+
+  @override
+  String get syncOrManual => 'أو تسجيل الدخول يدويًا';
+
+  @override
+  String get syncWaiting => 'في انتظار الإذن…';
+
+  @override
+  String get syncTraktCanceled => 'أُلغي اتصال Trakt أو انتهت صلاحيته.';
+
+  @override
+  String get syncNoProfile =>
+      'لم يُعثر على ملف متزامن. فعّل المزامنة أولًا على جهاز متصل.';
+
+  @override
+  String get updTitle => 'يتوفر تحديث';
+
+  @override
+  String updBody(Object v, Object cur) {
+    return 'يتوفر KTV $v (لديك $cur).';
+  }
+
+  @override
+  String get updNow => 'تحديث';
+
+  @override
+  String get updLater => 'لاحقًا';
+
+  @override
+  String get updDownloading => 'جارٍ تنزيل التحديث…';
+
+  @override
+  String get updCheckAtStart => 'التحقق من التحديثات عند البدء';
 }
