@@ -20,7 +20,7 @@
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,PUT,OPTIONS',
+  'Access-Control-Allow-Methods': 'GET,PUT,POST,OPTIONS',
   'Access-Control-Allow-Headers': 'Authorization,Content-Type,If-Match',
 };
 
@@ -62,6 +62,33 @@ export default {
     const url = new URL(req.url);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
     if (url.pathname === '/health') return json({ ok: true });
+
+    // --- Logs de débogage (non authentifié, temporaire) : l'app POSTe ses
+    //     traces/crashs ; GET renvoie les derniers (pour lecture par l'auteur). ---
+    if (url.pathname === '/log') {
+      if (req.method === 'POST') {
+        let b;
+        try { b = await req.json(); } catch { return json({ error: 'bad' }, 400); }
+        const entry = {
+          t: Date.now(),
+          id: String(b?.id || '?').slice(0, 40),
+          model: String(b?.model || '').slice(0, 100),
+          v: String(b?.version || '').slice(0, 20),
+          pf: String(b?.platform || '').slice(0, 40),
+          lines: Array.isArray(b?.lines) ? b.lines.slice(-60).map((x) => String(x).slice(0, 600)) : [],
+        };
+        const raw = await env.SYNC.get('logs:recent');
+        const arr = raw ? JSON.parse(raw) : [];
+        arr.push(entry);
+        while (arr.length > 400) arr.shift();
+        await env.SYNC.put('logs:recent', JSON.stringify(arr), { expirationTtl: 172800 });
+        return json({ ok: true });
+      }
+      if (req.method === 'GET') {
+        const raw = await env.SYNC.get('logs:recent');
+        return new Response(raw || '[]', { headers: { 'Content-Type': 'application/json', ...CORS } });
+      }
+    }
 
     if (url.pathname !== '/sync') return json({ error: 'not_found' }, 404);
 

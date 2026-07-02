@@ -1,3 +1,4 @@
+import '../../services/log/remote_log.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/models.dart';
@@ -51,8 +52,11 @@ final allVodProvider = FutureProvider<List<VodItem>>((ref) async {
   if (c == null) return [];
   final cats = await ref.watch(vodCategoriesProvider.future);
   final ids = cats.map((e) => e.id).toSet();
+  RemoteLog.log('allVod: fetch (cats=${ids.length})');
   final all = await c.vodStreams();
-  return all.where((m) => ids.contains(m.categoryId)).toList();
+  final out = all.where((m) => ids.contains(m.categoryId)).toList();
+  RemoteLog.log('allVod: ${all.length} bruts → ${out.length} filtrés');
+  return out;
 });
 
 final allSeriesProvider = FutureProvider<List<SeriesItem>>((ref) async {
@@ -60,8 +64,11 @@ final allSeriesProvider = FutureProvider<List<SeriesItem>>((ref) async {
   if (c == null) return [];
   final cats = await ref.watch(seriesCategoriesProvider.future);
   final ids = cats.map((e) => e.id).toSet();
+  RemoteLog.log('allSeries: fetch (cats=${ids.length})');
   final all = await c.seriesList();
-  return all.where((s) => ids.contains(s.categoryId)).toList();
+  final out = all.where((s) => ids.contains(s.categoryId)).toList();
+  RemoteLog.log('allSeries: ${all.length} bruts → ${out.length} filtrés');
+  return out;
 });
 
 /// Derniers films ajoutés (tri par `added` décroissant).
