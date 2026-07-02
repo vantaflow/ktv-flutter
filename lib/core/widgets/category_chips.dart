@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
+import 'tv_focusable.dart';
 
 /// Barre horizontale de catégories cliquables (chips), style KTV.
 class CategoryChips extends StatelessWidget {
@@ -22,8 +23,9 @@ class CategoryChips extends StatelessWidget {
         itemBuilder: (_, i) {
           final c = categories[i];
           final active = c.id == selectedId;
-          return GestureDetector(
+          return TvFocusable(
             onTap: () => onSelect(c.id),
+            borderRadius: BorderRadius.circular(20),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
               alignment: Alignment.center,

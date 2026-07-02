@@ -73,6 +73,8 @@ ThemeData buildKtvTheme() {
     brightness: KtvColors.isLight ? Brightness.light : Brightness.dark,
     scaffoldBackgroundColor: KtvColors.bg,
     colorScheme: scheme,
+    // Halo de focus visible (navigation télécommande Android TV).
+    focusColor: KtvColors.accent.withValues(alpha: 0.35),
     fontFamily: 'SF Pro Display',
     dividerColor: KtvColors.line,
     splashFactory: InkSparkle.splashFactory,

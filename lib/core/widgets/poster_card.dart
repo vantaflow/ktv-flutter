@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import 'tv_focusable.dart';
 
 /// Carte affiche réutilisable (film/série/chaîne) — image + titre + badges.
 class PosterCard extends StatelessWidget {
@@ -39,9 +40,8 @@ class PosterCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: width,
-      child: InkWell(
+      child: TvFocusable(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
