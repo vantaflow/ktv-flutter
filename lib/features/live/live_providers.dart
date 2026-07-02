@@ -35,6 +35,15 @@ final liveStreamsProvider = FutureProvider<List<LiveChannel>>((ref) async {
   return list.where((ch) => !isJunkChannel(ch.name)).toList();
 });
 
+/// Toutes les chaînes qui exposent une archive (tv_archive) — pour la Rediffusion.
+/// Indépendant du filtre de langue : le catch-up dépend de l'archive, pas de la langue.
+final archiveChannelsProvider = FutureProvider<List<LiveChannel>>((ref) async {
+  final c = ref.watch(xtreamClientProvider);
+  if (c == null) return const [];
+  final all = await c.liveStreams();
+  return all.where((ch) => ch.tvArchive && !isJunkChannel(ch.name)).toList();
+});
+
 /// Chaînes d'une catégorie donnée (pour le Guide TV), sans junk.
 final channelsByCategoryProvider = FutureProvider.family<List<LiveChannel>, String>((ref, categoryId) async {
   final c = ref.watch(xtreamClientProvider);

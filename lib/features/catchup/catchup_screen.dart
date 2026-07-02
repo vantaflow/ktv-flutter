@@ -26,17 +26,8 @@ class CatchupScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen(liveCategoriesProvider, (_, next) {
-      final cats = next.asData?.value;
-      if (cats != null && cats.isNotEmpty) {
-        final sel = ref.read(_selectedCatchupCatProvider);
-        if (sel == null || !cats.any((c) => c.id == sel)) {
-          ref.read(_selectedCatchupCatProvider.notifier).state = cats.first.id;
-          ref.read(_selectedCatchupChannelProvider.notifier).state = null;
-        }
-      }
-    });
-    final cats = ref.watch(liveCategoriesProvider);
+    final archive = ref.watch(archiveChannelsProvider);
+    final nameById = {for (final c in ref.watch(liveCategoriesAllProvider).asData?.value ?? const []) c.id: c.name};
     final selectedCat = ref.watch(_selectedCatchupCatProvider);
 
     return SafeArea(
@@ -49,42 +40,58 @@ class CatchupScreen extends ConsumerWidget {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-            child: Text(L.of(context)!.catchupSubtitle,
-                style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
+            child: Text(L.of(context)!.catchupSubtitle, style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
           ),
-          cats.when(
-            loading: () => const SizedBox(height: 44),
-            error: (_, _) => const SizedBox(height: 44),
-            data: (list) => CategoryChips(
-              categories: list,
-              selectedId: selectedCat,
-              onSelect: (id) {
-                ref.read(_selectedCatchupCatProvider.notifier).state = id;
-                ref.read(_selectedCatchupChannelProvider.notifier).state = null;
-              },
-            ),
-          ),
-          const SizedBox(height: 8),
           Expanded(
-            child: selectedCat == null
-                ? const SizedBox()
-                : AsyncView<List<LiveChannel>>(
-                    value: ref.watch(channelsByCategoryProvider(selectedCat)),
-                    emptyBuilder: () => Center(child: Text(L.of(context)!.emptyNoChannel, style: TextStyle(color: KtvColors.muted))),
-                    data: (channels) {
-                      // Chaînes avec archive déclarée ; sinon repli sur toutes (flag non fiable chez certains fournisseurs).
-                      final withArchive = channels.where((c) => c.tvArchive).toList();
-                      final list = withArchive.isNotEmpty ? withArchive : channels;
-                      return Row(
+            child: AsyncView<List<LiveChannel>>(
+              value: archive,
+              emptyBuilder: () => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(L.of(context)!.catchupNoArchive, textAlign: TextAlign.center, style: TextStyle(color: KtvColors.muted)),
+                ),
+              ),
+              data: (channels) {
+                // Catégories réellement présentes parmi les chaînes à archive.
+                final catIds = <String>[];
+                for (final ch in channels) {
+                  if (!catIds.contains(ch.categoryId)) catIds.add(ch.categoryId);
+                }
+                final cats = [for (final id in catIds) Category(id, nameById[id] ?? id)];
+                // Auto-sélection de la 1re catégorie.
+                final sel = (selectedCat != null && catIds.contains(selectedCat)) ? selectedCat : (catIds.isEmpty ? null : catIds.first);
+                if (sel != selectedCat) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    ref.read(_selectedCatchupCatProvider.notifier).state = sel;
+                  });
+                }
+                final list = channels.where((c) => c.categoryId == sel).toList();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CategoryChips(
+                      categories: cats,
+                      selectedId: sel,
+                      onSelect: (id) {
+                        ref.read(_selectedCatchupCatProvider.notifier).state = id;
+                        ref.read(_selectedCatchupChannelProvider.notifier).state = null;
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           SizedBox(width: 280, child: _ChannelList(channels: list)),
                           VerticalDivider(width: 1, color: KtvColors.line),
                           const Expanded(child: _CatchupPrograms()),
                         ],
-                      );
-                    },
-                  ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ],
       ),

@@ -683,4 +683,7 @@ class LEn extends L {
   String episodeN(Object n) {
     return 'Episode $n';
   }
+
+  @override
+  String get catchupNoArchive => 'No channel offers catch-up on this provider.';
 }

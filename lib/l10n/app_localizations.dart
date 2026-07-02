@@ -1388,6 +1388,12 @@ abstract class L {
   /// In fr, this message translates to:
   /// **'Épisode {n}'**
   String episodeN(Object n);
+
+  /// No description provided for @catchupNoArchive.
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucune chaîne ne propose la rediffusion (catch-up) chez ce fournisseur.'**
+  String get catchupNoArchive;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

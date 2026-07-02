@@ -254,5 +254,6 @@
     "placeholders": {
       "n": {}
     }
-  }
+  },
+  "catchupNoArchive": "No channel offers catch-up on this provider."
 }

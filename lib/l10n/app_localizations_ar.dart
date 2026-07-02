@@ -680,4 +680,7 @@ class LAr extends L {
   String episodeN(Object n) {
     return 'الحلقة $n';
   }
+
+  @override
+  String get catchupNoArchive => 'لا توجد قناة تدعم الإعادة لدى هذا المزوّد.';
 }

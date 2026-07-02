@@ -687,4 +687,8 @@ class LFr extends L {
   String episodeN(Object n) {
     return 'Épisode $n';
   }
+
+  @override
+  String get catchupNoArchive =>
+      'Aucune chaîne ne propose la rediffusion (catch-up) chez ce fournisseur.';
 }

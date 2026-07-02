@@ -254,5 +254,6 @@
     "placeholders": {
       "n": {}
     }
-  }
+  },
+  "catchupNoArchive": "Aucune chaîne ne propose la rediffusion (catch-up) chez ce fournisseur."
 }
