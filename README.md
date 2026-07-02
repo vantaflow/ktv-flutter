@@ -30,7 +30,10 @@ Le moteur `<video>` de Chromium (Electron) ne lit pas les MKV/HEVC/multi-pistes 
 - Démarrage agrandi · fenêtre centrée
 
 ### Feuille de route (à venir)
-Multi-sources M3U/Xtream fusionnées · reprise inter-appareils.
+- **Gestion des catégories** : afficher **toutes** les catégories du fournisseur et choisir lesquelles garder/masquer, **séparément pour Live · Films · Séries** (aujourd'hui filtré aux catégories FR par défaut)
+- **Catch-up / rediffusion mieux exposé** : une entrée dédiée (actuellement accessible uniquement via un programme du Guide)
+- Multi-sources M3U/Xtream fusionnées
+- Reprise inter-appareils
 
 ## Développement
 
