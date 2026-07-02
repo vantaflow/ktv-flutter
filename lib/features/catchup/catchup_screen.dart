@@ -53,7 +53,18 @@ class CatchupScreen extends ConsumerWidget {
                   child: Text(L.of(context)!.catchupNoArchive, textAlign: TextAlign.center, style: TextStyle(color: KtvColors.muted)),
                 ),
               ),
-              data: (channels) {
+              data: (allChannels) {
+                // Ne garder que les chaînes qui ont RÉELLEMENT des programmes passés
+                // dans l'EPG (sinon « aucune rediffusion » → inutile de les lister).
+                final index = ref.watch(epgIndexProvider).asData?.value;
+                if (index == null) {
+                  return Center(child: CircularProgressIndicator(color: KtvColors.accent));
+                }
+                final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+                final minStart = now - _archiveDays * 86400;
+                bool hasPast(LiveChannel c) =>
+                    index.forChannel(c).any((p) => p.stop > 0 && p.stop <= now && p.start >= minStart);
+                final channels = allChannels.where(hasPast).toList();
                 // Catégories qui ont au moins une chaîne à archive.
                 final archiveCatIds = channels.map((c) => c.categoryId).toSet();
                 // On garde uniquement les catégories ACTIVES (config Live) qui en contiennent.
