@@ -214,14 +214,16 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
             },
             itemBuilder: (_, i) {
               final c = active[i];
-              return ListTile(
+              // Toute la ligne est glissable (pas seulement la poignée).
+              return ReorderableDragStartListener(
                 key: ValueKey(c.id),
-                dense: true,
-                leading: Text('${i + 1}', style: TextStyle(color: KtvColors.muted, fontSize: 12, fontWeight: FontWeight.w700)),
-                title: Text(c.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13.5)),
-                trailing: ReorderableDragStartListener(
-                  index: i,
-                  child: Icon(Icons.drag_handle, color: KtvColors.muted),
+                index: i,
+                child: ListTile(
+                  dense: true,
+                  mouseCursor: SystemMouseCursors.grab,
+                  leading: Text('${i + 1}', style: TextStyle(color: KtvColors.muted, fontSize: 12, fontWeight: FontWeight.w700)),
+                  title: Text(c.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13.5)),
+                  trailing: Icon(Icons.drag_handle, color: KtvColors.muted),
                 ),
               );
             },
