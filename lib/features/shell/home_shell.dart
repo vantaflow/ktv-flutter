@@ -15,6 +15,7 @@ import '../settings/settings_screen.dart';
 import '../home/home_providers.dart';
 import '../../services/recording/recording_service.dart';
 import '../../services/sync/sync_providers.dart';
+import '../../services/log/remote_log.dart';
 import '../../services/update/update_prompt.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -46,6 +47,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   @override
   void initState() {
     super.initState();
+    RemoteLog.log('HomeShell init (accueil)');
     // Synchro inter-appareils + vérification de mise à jour au lancement.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final sync = ref.read(syncControllerProvider.notifier);

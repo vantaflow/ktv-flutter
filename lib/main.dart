@@ -45,6 +45,7 @@ Future<void> main() async {
     RemoteLog.log('prefs ok (profils=${prefs.profiles().length}, actif=${prefs.activeId() != null})');
     KtvColors.apply(light: prefs.settingBool('themeLight', false), accentKey: prefs.settingStr('accentColor', 'orange'));
     RemoteLog.log('runApp');
+    WidgetsBinding.instance.addPostFrameCallback((_) => RemoteLog.log('== first frame rendered =='));
     runApp(
       ProviderScope(
         overrides: [prefsProvider.overrideWithValue(prefs)],
