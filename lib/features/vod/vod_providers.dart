@@ -18,8 +18,11 @@ final vodCategoriesProvider = FutureProvider<List<Category>>((ref) async {
   ref.watch(categoryVisibilityTickProvider);
   final cats = await ref.watch(vodCategoriesAllProvider.future);
   final prof = ref.watch(authControllerProvider);
-  final ov = prof == null ? const <String, bool>{} : ref.read(prefsProvider).categoryVisibility(prof.id, CatSection.vod.key);
-  return cats.where((cat) => categoryVisible(catId: cat.id, name: cat.name, overrides: ov, heuristic: frCategoryAllowed)).toList();
+  final prefs = ref.read(prefsProvider);
+  final ov = prof == null ? const <String, bool>{} : prefs.categoryVisibility(prof.id, CatSection.vod.key);
+  final order = prof == null ? const <String>[] : prefs.categoryOrder(prof.id, CatSection.vod.key);
+  final visible = cats.where((cat) => categoryVisible(catId: cat.id, name: cat.name, overrides: ov, heuristic: frCategoryAllowed)).toList();
+  return orderCategories(visible, order);
 });
 
 /// Catégorie sélectionnée (null tant que non initialisée).

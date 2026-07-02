@@ -227,6 +227,25 @@ class PrefsStore {
     await _saveMap(_kCatVis, all);
   }
 
+  // --- Ordre des catégories (glisser-déposer) : {"<profileId>|<section>": [catId, …]} ---
+  static const _kCatOrder = 'category_order';
+
+  List<String> categoryOrder(String profileId, String section) {
+    final v = _map(_kCatOrder)['$profileId|$section'];
+    return v is List ? v.map((e) => e.toString()).toList() : const [];
+  }
+
+  Future<void> setCategoryOrder(String profileId, String section, List<String> ids) async {
+    final all = _map(_kCatOrder);
+    all['$profileId|$section'] = ids;
+    await _saveMap(_kCatOrder, all);
+  }
+
+  Future<void> clearCategoryOrder(String profileId, String section) async {
+    final all = _map(_kCatOrder)..remove('$profileId|$section');
+    await _saveMap(_kCatOrder, all);
+  }
+
   // Jeton Trakt (ktv_trakt).
   Map<String, dynamic>? traktToken() {
     final m = _map('ktv_trakt');

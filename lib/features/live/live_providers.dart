@@ -18,8 +18,11 @@ final liveCategoriesProvider = FutureProvider<List<Category>>((ref) async {
   ref.watch(categoryVisibilityTickProvider);
   final cats = await ref.watch(liveCategoriesAllProvider.future);
   final prof = ref.watch(authControllerProvider);
-  final ov = prof == null ? const <String, bool>{} : ref.read(prefsProvider).categoryVisibility(prof.id, CatSection.live.key);
-  return cats.where((cat) => categoryVisible(catId: cat.id, name: cat.name, overrides: ov, heuristic: categoryAllowed)).toList();
+  final prefs = ref.read(prefsProvider);
+  final ov = prof == null ? const <String, bool>{} : prefs.categoryVisibility(prof.id, CatSection.live.key);
+  final order = prof == null ? const <String>[] : prefs.categoryOrder(prof.id, CatSection.live.key);
+  final visible = cats.where((cat) => categoryVisible(catId: cat.id, name: cat.name, overrides: ov, heuristic: categoryAllowed)).toList();
+  return orderCategories(visible, order);
 });
 
 final selectedLiveCategoryProvider = StateProvider<String?>((ref) => null);

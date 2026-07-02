@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/legacy.dart';
+import '../../core/models/models.dart';
 
 /// Section de catalogue dont on gère les catégories.
 enum CatSection { live, vod, series }
@@ -31,4 +32,17 @@ bool categoryVisible({
   required bool Function(String?) heuristic,
 }) {
   return overrides[catId] ?? heuristic(name);
+}
+
+/// Applique l'ordre utilisateur [order] (liste d'ids) à [cats] : les catégories
+/// listées passent en tête dans cet ordre ; les autres suivent en conservant
+/// leur ordre d'origine (tri stable). [order] vide → [cats] inchangé.
+List<Category> orderCategories(List<Category> cats, List<String> order) {
+  if (order.isEmpty) return cats;
+  final pos = {for (var i = 0; i < order.length; i++) order[i]: i};
+  final indexed = <(int, Category)>[
+    for (var i = 0; i < cats.length; i++) (pos[cats[i].id] ?? (order.length + i), cats[i]),
+  ];
+  indexed.sort((a, b) => a.$1.compareTo(b.$1));
+  return [for (final e in indexed) e.$2];
 }
