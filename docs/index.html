@@ -89,15 +89,15 @@
   .rail .ri{position:relative}
   .rail .ri.on svg,.rail .ri.on span{position:relative;z-index:1;color:var(--accent);fill:var(--accent)}
   .rail .ri.on span{color:var(--txt)}
-  .content{padding:14px 16px;overflow:hidden;background:linear-gradient(180deg,rgba(255,106,44,.06),transparent 40%)}
-  .c-hero{height:96px;border-radius:12px;position:relative;overflow:hidden;margin-bottom:14px;
-    background:linear-gradient(120deg,#20242f,#171a22)}
-  .c-hero::after{content:"";position:absolute;inset:0;background:radial-gradient(220px 120px at 78% 20%,rgba(255,106,44,.4),transparent)}
-  .c-hero .badge{position:absolute;top:10px;left:12px;font-size:8px;font-weight:800;color:#fff;background:var(--accent);padding:3px 7px;border-radius:5px;letter-spacing:.5px}
-  .c-hero .ct{position:absolute;left:12px;bottom:12px}
-  .c-hero .ct .t{font-size:14px;font-weight:800}
-  .c-hero .ct .s{font-size:8.5px;color:var(--muted);margin-top:2px}
+  .content{padding:14px 16px;overflow:hidden}
+  .c-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .c-head .c-title{font-size:16px;font-weight:800}
+  .c-seg{display:flex;gap:3px;background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:3px}
+  .c-seg span{width:16px;height:11px;border-radius:4px;background:transparent}
+  .c-seg span.on{background:var(--grad)}
   .c-row-title{font-size:10px;font-weight:800;color:var(--muted);margin:0 0 8px}
+  .poster .rem{position:absolute;right:5px;bottom:7px;z-index:2;font-size:6.5px;font-weight:700;color:#fff;
+    background:rgba(0,0,0,.7);padding:2px 4px;border-radius:4px}
   .posters{display:flex;gap:9px}
   .poster{flex:1;aspect-ratio:2/3;border-radius:8px;position:relative;overflow:hidden;border:1px solid var(--line)}
   .poster i{position:absolute;inset:0;background:linear-gradient(160deg,#2a2f3c,#171a22)}
@@ -249,24 +249,31 @@
         </div>
         <div class="app-body">
           <div class="rail">
-            <div class="ri"><svg viewBox="0 0 24 24"><path d="M12 3 4 9v12h5v-7h6v7h5V9z"/></svg><span>Accueil</span></div>
-            <div class="ri on"><span class="pillbg"></span><svg viewBox="0 0 24 24"><path d="M4 6h16v10H4zm2 13h12v2H6z"/></svg><span>Live TV</span></div>
+            <div class="ri on"><span class="pillbg"></span><svg viewBox="0 0 24 24"><path d="M12 3 4 9v12h5v-7h6v7h5V9z"/></svg><span>Accueil</span></div>
+            <div class="ri"><svg viewBox="0 0 24 24"><path d="M4 6h16v10H4zm2 13h12v2H6z"/></svg><span>Live TV</span></div>
             <div class="ri"><svg viewBox="0 0 24 24"><path d="M4 4h16v3H4zm0 5h16v11H4z"/></svg><span>Films</span></div>
             <div class="ri"><svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z"/></svg><span>Séries</span></div>
             <div class="ri"><svg viewBox="0 0 24 24"><path d="M4 5h16v3H4zm0 5h16v3H4zm0 5h10v3H4z"/></svg><span>Guide</span></div>
             <div class="ri"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg><span>Redif.</span></div>
           </div>
           <div class="content">
-            <div class="c-hero">
-              <span class="badge">EN DIRECT</span>
-              <div class="ct"><div class="t">Le 20 Heures</div><div class="s">TF1 · 20:00 → 20:45</div></div>
+            <div class="c-head">
+              <div class="c-title">Accueil</div>
+              <div class="c-seg"><span class="on"></span><span></span></div>
             </div>
             <p class="c-row-title">Reprendre la lecture</p>
             <div class="posters">
-              <div class="poster p1"><i></i><div class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="bar"><b></b></div></div>
-              <div class="poster p2"><i></i><div class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="bar"><b style="width:38%"></b></div></div>
-              <div class="poster p3"><i></i><div class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="bar"><b style="width:80%"></b></div></div>
+              <div class="poster p1"><i></i><div class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><span class="rem">⏳ 42 min</span><div class="bar"><b></b></div></div>
+              <div class="poster p2"><i></i><div class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><span class="rem">⏳ 1 h 12</span><div class="bar"><b style="width:38%"></b></div></div>
+              <div class="poster p3"><i></i><div class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><span class="rem">⏳ 8 min</span><div class="bar"><b style="width:80%"></b></div></div>
+              <div class="poster p4"><i></i><div class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="bar"><b style="width:20%"></b></div></div>
+            </div>
+            <p class="c-row-title" style="margin-top:14px">Vu récemment</p>
+            <div class="posters">
               <div class="poster p4"><i></i><div class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+              <div class="poster p2"><i></i><div class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+              <div class="poster p1"><i></i><div class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+              <div class="poster p3"><i></i><div class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
             </div>
           </div>
         </div>
