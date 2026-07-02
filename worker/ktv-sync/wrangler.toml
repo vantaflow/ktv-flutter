@@ -7,13 +7,10 @@ kv_namespaces = [
   { binding = "SYNC", id = "4c3d514e1b1d433d92f1bcc7577c0143" }
 ]
 
-# D1 (registre des comptes) est OPTIONNEL — non activé ici (quota D1 atteint sur
-# le compte). Le Worker fonctionne en KV-only ; l'écriture D1 est best-effort et
-# ignorée si le binding DB est absent. Pour l'activer : décommenter et remplir
-# l'id après `wrangler d1 create ktv-sync` + `d1 execute --file=schema.sql`.
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "ktv-sync"
-# database_id = "REMPLACER_PAR_D1_ID"
+# D1 : registre des comptes (visibilité). Écriture best-effort côté Worker.
+[[d1_databases]]
+binding = "DB"
+database_name = "ktv-sync"
+database_id = "3a1025f3-917d-46cb-abdc-3f1b86c03d9a"
 
 # Secret (ne pas committer) : wrangler secret put TRAKT_CLIENT_ID
