@@ -22,6 +22,7 @@ import '../home/home_providers.dart';
 import '../auth/auth_controller.dart';
 import '../categories/category_prefs.dart';
 import '../categories/category_manager_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Section sélectionnée dans les Réglages (layout 2 colonnes façon ancienne KTV).
 final _settingsTabProvider = StateProvider<int>((ref) => 0);
@@ -614,8 +615,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     };
     final current = prefs.settingStr('accentColor', 'orange');
     final light = prefs.settingBool('themeLight', false);
+    final lang = prefs.settingStr('appLang', 'system');
     return [
       _card([
+        Text(L.of(context)!.language, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+        const SizedBox(height: 8),
+        DropdownButton<String>(
+          value: lang,
+          isExpanded: true,
+          items: [
+            DropdownMenuItem(value: 'system', child: Text(L.of(context)!.langSystem)),
+            DropdownMenuItem(value: 'fr', child: Text(L.of(context)!.langFrench)),
+            DropdownMenuItem(value: 'en', child: Text(L.of(context)!.langEnglish)),
+            DropdownMenuItem(value: 'ar', child: Text(L.of(context)!.langArabic)),
+          ],
+          onChanged: (v) async {
+            if (v == null) return;
+            await prefs.setSetting('appLang', v);
+            ref.read(localeProvider.notifier).state = localeForCode(v);
+            setState(() {});
+          },
+        ),
+        const SizedBox(height: 18),
         const Text('Apparence', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
         const SizedBox(height: 8),
         SegmentedButton<bool>(

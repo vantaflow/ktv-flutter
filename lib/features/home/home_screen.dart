@@ -9,6 +9,7 @@ import '../auth/auth_controller.dart';
 import '../player/play_launcher.dart';
 import '../vod/movie_detail_sheet.dart';
 import '../series/series_detail_sheet.dart';
+import '../../l10n/app_localizations.dart';
 import 'home_providers.dart';
 
 /// Accueil : « Reprendre la lecture » + « Vu récemment » (façon streaming).
@@ -61,12 +62,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           // Rails (chacun se masque tout seul s'il est vide ; activables dans Réglages → Accueil).
           if (prefs.settingBool('home_favs', true))
             SliverToBoxAdapter(
-              child: MediaRail(title: 'Chaînes favorites', items: favs, grid: grid, onTap: (e) => PlayLauncher.recent(context, ref, e)),
+              child: MediaRail(title: L.of(context)!.railFavChannels, items: favs, grid: grid, onTap: (e) => PlayLauncher.recent(context, ref, e)),
             ),
           if (prefs.settingBool('home_mediafavs', true))
             SliverToBoxAdapter(
               child: MediaRail(
-                title: 'Films & séries favoris',
+                title: L.of(context)!.railMediaFavs,
                 items: mediaFavs,
                 grid: grid,
                 onTap: (e) => e.kind == MediaKind.series
@@ -76,11 +77,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           if (prefs.settingBool('home_resume', true))
             SliverToBoxAdapter(
-              child: MediaRail(title: 'Reprendre la lecture', items: resume, grid: grid, progressOf: progressOf, remainingOf: remainingOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
+              child: MediaRail(title: L.of(context)!.railResume, items: resume, grid: grid, progressOf: progressOf, remainingOf: remainingOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
             ),
           if (prefs.settingBool('home_recent', true))
             SliverToBoxAdapter(
-              child: MediaRail(title: 'Vu récemment', items: recent, grid: grid, progressOf: progressOf, remainingOf: remainingOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
+              child: MediaRail(title: L.of(context)!.railRecent, items: recent, grid: grid, progressOf: progressOf, remainingOf: remainingOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
             ),
           if (prefs.settingBool('home_watchlist', true)) SliverToBoxAdapter(child: _watchlistRail(grid)),
           if (prefs.settingBool('traktRecommendationsEnabled', true)) ...[
@@ -106,7 +107,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _watchlistRail(bool grid) {
     final list = ref.watch(traktWatchlistProvider).asData?.value ?? const [];
     return PosterRail(
-      title: 'Ma liste (Trakt)',
+      title: L.of(context)!.railWatchlist,
       grid: grid,
       items: list.map((m) => PosterRailItem(title: m.name, cover: m.cover, rating: m.rating, onTap: () => _openMovie(m))).toList(),
     );
@@ -115,7 +116,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _recoRail(bool grid) {
     final recos = ref.watch(movieRecommendationsProvider).asData?.value ?? const [];
     return PosterRail(
-      title: 'Recommandé pour vous',
+      title: L.of(context)!.railRecoMovies,
       grid: grid,
       items: recos.map((m) => PosterRailItem(title: m.name, cover: m.cover, rating: m.rating, onTap: () => _openMovie(m))).toList(),
     );
@@ -124,7 +125,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _recoSeriesRail(bool grid) {
     final recos = ref.watch(seriesRecommendationsProvider).asData?.value ?? const [];
     return PosterRail(
-      title: 'Séries recommandées',
+      title: L.of(context)!.railRecoSeries,
       grid: grid,
       items: recos.map((s) => PosterRailItem(title: s.name, cover: s.cover, rating: s.rating, onTap: () => _openSeries(s))).toList(),
     );
@@ -133,7 +134,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _latestVodRail(bool grid) {
     final list = ref.watch(latestVodProvider).asData?.value ?? const [];
     return PosterRail(
-      title: 'Derniers films ajoutés',
+      title: L.of(context)!.railLatestMovies,
       grid: grid,
       items: list.map((m) => PosterRailItem(title: m.name, cover: m.cover, rating: m.rating, onTap: () => _openMovie(m))).toList(),
     );
@@ -142,7 +143,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _latestSeriesRail(bool grid) {
     final list = ref.watch(latestSeriesProvider).asData?.value ?? const [];
     return PosterRail(
-      title: 'Dernières séries ajoutées',
+      title: L.of(context)!.railLatestSeries,
       grid: grid,
       items: list.map((s) => PosterRailItem(title: s.name, cover: s.cover, rating: s.rating, onTap: () => _openSeries(s))).toList(),
     );

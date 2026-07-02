@@ -15,6 +15,7 @@ import '../settings/settings_screen.dart';
 import '../home/home_providers.dart';
 import '../../services/recording/recording_service.dart';
 import '../../services/sync/sync_providers.dart';
+import '../../l10n/app_localizations.dart';
 
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
@@ -27,16 +28,19 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   final _searchCtrl = TextEditingController();
   Timer? _debounce;
 
-  static const _dests = [
-    (icon: Icons.home_rounded, label: 'Accueil'),
-    (icon: Icons.live_tv_rounded, label: 'Live TV'),
-    (icon: Icons.movie_rounded, label: 'Films'),
-    (icon: Icons.grid_view_rounded, label: 'Séries'),
-    (icon: Icons.calendar_view_day_rounded, label: 'Guide'),
-    (icon: Icons.replay_circle_filled_rounded, label: 'Rediffusion'),
-    (icon: Icons.download_rounded, label: 'Téléchargements'),
-    (icon: Icons.settings_rounded, label: 'Réglages'),
+  static const _navIcons = <IconData>[
+    Icons.home_rounded,
+    Icons.live_tv_rounded,
+    Icons.movie_rounded,
+    Icons.grid_view_rounded,
+    Icons.calendar_view_day_rounded,
+    Icons.replay_circle_filled_rounded,
+    Icons.download_rounded,
+    Icons.settings_rounded,
   ];
+
+  static List<String> _navLabels(L l) =>
+      [l.navHome, l.navLive, l.navMovies, l.navSeries, l.navGuide, l.navCatchup, l.navDownloads, l.navSettings];
 
   @override
   void initState() {
@@ -73,11 +77,13 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     final query = ref.watch(searchQueryProvider);
     final searching = query.length >= 2;
     ref.watch(autoRefreshControllerProvider); // maintient le timer de rafraîchissement actif
+    final l = L.of(context)!;
     return Scaffold(
       body: Column(
         children: [
           _TopBar(
             controller: _searchCtrl,
+            hint: l.searchHint,
             onChanged: _onSearch,
             onClear: _clearSearch,
             recordingCount: ref.watch(recordingControllerProvider).where((r) => r.status == RecStatus.recording).length,
@@ -91,7 +97,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch, // rail pleine hauteur → couleur uniforme
               children: [
-                _NavRail(index: _index, onSelect: (i) {
+                _NavRail(index: _index, labels: _navLabels(l), onSelect: (i) {
                   _clearSearch(); // choisir un onglet quitte les résultats de recherche
                   setState(() => _index = i);
                 }),
@@ -124,11 +130,12 @@ class _HomeShellState extends ConsumerState<HomeShell> {
 
 class _TopBar extends StatelessWidget {
   final TextEditingController controller;
+  final String hint;
   final ValueChanged<String> onChanged;
   final VoidCallback onClear;
   final int recordingCount;
   final VoidCallback onRecTap;
-  const _TopBar({required this.controller, required this.onChanged, required this.onClear, this.recordingCount = 0, required this.onRecTap});
+  const _TopBar({required this.controller, required this.hint, required this.onChanged, required this.onClear, this.recordingCount = 0, required this.onRecTap});
 
   @override
   Widget build(BuildContext context) {
@@ -153,7 +160,7 @@ class _TopBar extends StatelessWidget {
                 controller: controller,
                 onChanged: onChanged,
                 decoration: InputDecoration(
-                  hintText: 'Rechercher chaînes, films, séries…',
+                  hintText: hint,
                   prefixIcon: Icon(Icons.search, size: 20, color: KtvColors.muted),
                   suffixIcon: controller.text.isEmpty
                       ? null
@@ -190,8 +197,9 @@ class _TopBar extends StatelessWidget {
 
 class _NavRail extends StatelessWidget {
   final int index;
+  final List<String> labels;
   final ValueChanged<int> onSelect;
-  const _NavRail({required this.index, required this.onSelect});
+  const _NavRail({required this.index, required this.labels, required this.onSelect});
 
   @override
   Widget build(BuildContext context) {
@@ -202,10 +210,10 @@ class _NavRail extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 12),
-            for (var i = 0; i < _HomeShellState._dests.length; i++)
+            for (var i = 0; i < _HomeShellState._navIcons.length; i++)
               _NavItem(
-                icon: _HomeShellState._dests[i].icon,
-                label: _HomeShellState._dests[i].label,
+                icon: _HomeShellState._navIcons[i],
+                label: labels[i],
                 active: i == index,
                 onTap: () => onSelect(i),
               ),
