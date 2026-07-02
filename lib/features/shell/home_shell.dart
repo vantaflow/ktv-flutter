@@ -8,6 +8,7 @@ import '../vod/vod_screen.dart';
 import '../series/series_screen.dart';
 import '../guide/guide_screen.dart';
 import '../catchup/catchup_screen.dart';
+import '../downloads/downloads_screen.dart';
 import '../search/search_screen.dart';
 import '../search/search_providers.dart';
 import '../settings/settings_screen.dart';
@@ -32,6 +33,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     (icon: Icons.grid_view_rounded, label: 'Séries'),
     (icon: Icons.calendar_view_day_rounded, label: 'Guide'),
     (icon: Icons.replay_circle_filled_rounded, label: 'Rediffusion'),
+    (icon: Icons.download_rounded, label: 'Téléchargements'),
     (icon: Icons.settings_rounded, label: 'Réglages'),
   ];
 
@@ -70,7 +72,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
             recordingCount: ref.watch(recordingControllerProvider).where((r) => r.status == RecStatus.recording).length,
             onRecTap: () {
               _clearSearch();
-              setState(() => _index = 6); // Réglages → section Enregistrements
+              setState(() => _index = 7); // Réglages → section Enregistrements
             },
           ),
           Divider(height: 1, color: KtvColors.line),
@@ -95,6 +97,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                             SeriesScreen(),
                             GuideScreen(),
                             CatchupScreen(),
+                            DownloadsScreen(),
                             SettingsScreen(),
                           ],
                         ),

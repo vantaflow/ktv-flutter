@@ -75,6 +75,11 @@ class PlayLauncher {
     _open(context, ref, PlaybackRequest(url: url, title: p.title.isEmpty ? ch.name : p.title, subtitle: '${ch.name} · rediffusion', kind: MediaKind.movie));
   }
 
+  /// Lit un fichier local déjà téléchargé (media_kit accepte un chemin de fichier).
+  static void localFile(BuildContext context, WidgetRef ref, String name, String path, {String? subtitle}) {
+    _open(context, ref, PlaybackRequest(url: path, title: name, subtitle: subtitle, kind: MediaKind.movie));
+  }
+
   static void live(BuildContext context, WidgetRef ref, LiveChannel ch) {
     final urls = ref.read(xtreamUrlsProvider);
     if (urls == null) return;

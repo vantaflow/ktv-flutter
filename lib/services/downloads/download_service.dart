@@ -84,6 +84,21 @@ class DownloadController extends Notifier<List<DownloadJob>> {
 
   void cancelCurrent() => _current?.cancel();
 
+  /// Retire une entrée de la liste (annule d'abord si c'est le téléchargement courant).
+  void remove(String id) {
+    final j = state.where((e) => e.id == id).firstOrNull;
+    if (j != null && j.status == DownloadStatus.downloading) _current?.cancel();
+    state = [for (final e in state) if (e.id != id) e];
+  }
+
+  /// Vide les entrées terminées / échouées / annulées.
+  void clearFinished() {
+    state = [
+      for (final e in state)
+        if (e.status == DownloadStatus.queued || e.status == DownloadStatus.downloading) e
+    ];
+  }
+
   void _update(String id, {DownloadStatus? status, double? progress, String? filePath}) {
     state = [
       for (final j in state)
