@@ -6,6 +6,7 @@ import '../../core/storage/prefs_store.dart';
 import '../../core/theme/app_theme.dart';
 import '../../features/auth/auth_controller.dart';
 import '../../features/categories/category_prefs.dart';
+import '../trakt/trakt_providers.dart';
 import 'crypto_box.dart';
 import 'sync_merge.dart';
 
@@ -60,12 +61,6 @@ class SyncController extends Notifier<SyncState> {
 
   Future<void> disable() => _patchLocal({'enabled': false});
 
-  String? get _token {
-    final t = _prefs.traktToken();
-    final v = (t?['access_token'] ?? '').toString();
-    return v.isEmpty ? null : v;
-  }
-
   Map<String, dynamic> _collectLocal() =>
       {for (final k in PrefsStore.syncKeys) if (_prefs.readJson(k) != null) k: _prefs.readJson(k)};
 
@@ -84,9 +79,10 @@ class SyncController extends Notifier<SyncState> {
   /// Pull → fusion → apply → push (concurrence optimiste via If-Match).
   Future<void> syncNow() async {
     if (!enabled) return;
-    final token = _token;
+    // Token Trakt frais (rafraîchi si expiré) — sinon reconnexion requise.
+    final token = await ref.read(traktServiceProvider).freshAccessToken();
     if (token == null) {
-      state = state.copyWith(status: SyncStatus.error, message: 'Connecte Trakt d\'abord.');
+      state = state.copyWith(status: SyncStatus.error, message: 'Session Trakt expirée — reconnecte Trakt (Réglages → Synchronisation Trakt).');
       return;
     }
     if (!hasPassphrase) {

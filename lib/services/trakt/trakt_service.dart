@@ -79,6 +79,17 @@ class TraktService {
 
   Future<void> disconnect() => _prefs.setTraktToken(null);
 
+  /// Renvoie un access_token FRAIS (rafraîchit via refresh_token si expiré).
+  /// null si non connecté ou si le refresh échoue → reconnexion device requise.
+  Future<String?> freshAccessToken() async {
+    if (!connected) return null;
+    final r = await _req('/users/settings'); // _req rafraîchit tout seul sur 401
+    if (r?.statusCode == 200) {
+      return _prefs.traktToken()?['access_token']?.toString();
+    }
+    return null;
+  }
+
   /// Marque un film comme vu (par titre + année ; Trakt fait le matching).
   Future<void> markMovieWatched(String rawName) async {
     final title = cleanTitle(rawName);
