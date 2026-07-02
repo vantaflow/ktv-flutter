@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
+import '../logic/format.dart';
 import '../../services/epg/epg_providers.dart';
 import 'poster_card.dart';
 
@@ -37,21 +38,24 @@ class MediaRail extends StatelessWidget {
   final List<RecentEntry> items;
   final void Function(RecentEntry) onTap;
   final double Function(RecentEntry)? progressOf;
+  final num? Function(RecentEntry)? remainingOf; // secondes restantes (barre de progression)
   final bool grid;
 
-  const MediaRail({super.key, required this.title, required this.items, required this.onTap, this.progressOf, this.grid = false});
+  const MediaRail({super.key, required this.title, required this.items, required this.onTap, this.progressOf, this.remainingOf, this.grid = false});
 
   Widget _card(RecentEntry e, {double width = 130}) {
     // Chaînes live : logo tel quel (contain) + programme EPG en cours dans l'espace.
     if (e.kind == MediaKind.live) {
       return _LiveRailCard(entry: e, width: width, onTap: () => onTap(e));
     }
+    final rem = remainingOf?.call(e);
     return PosterCard(
       title: e.name,
       imageUrl: e.cover,
       width: width,
       aspectRatio: 2 / 3,
       progress: progressOf?.call(e) ?? 0,
+      remaining: rem != null ? fmtRemaining(rem) : null,
       onTap: () => onTap(e),
     );
   }

@@ -36,6 +36,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return d > 0 ? (t / d) : 0;
     }
 
+    num? remainingOf(RecentEntry e) {
+      if (e.resumeKey == null) return null;
+      final r = prefs.resume(e.resumeKey!);
+      final t = (r?['t'] as num?)?.toDouble() ?? 0;
+      final d = (r?['d'] as num?)?.toDouble() ?? 0;
+      return (d > 0 && t < d) ? (d - t) : null;
+    }
+
     final resume = recent.where((e) => progressOf(e) > 0).toList();
     final favs = prefs
         .favChannels()
@@ -53,11 +61,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           if (prefs.settingBool('home_resume', true))
             SliverToBoxAdapter(
-              child: MediaRail(title: 'Reprendre la lecture', items: resume, grid: grid, progressOf: progressOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
+              child: MediaRail(title: 'Reprendre la lecture', items: resume, grid: grid, progressOf: progressOf, remainingOf: remainingOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
             ),
           if (prefs.settingBool('home_recent', true))
             SliverToBoxAdapter(
-              child: MediaRail(title: 'Vu récemment', items: recent, grid: grid, progressOf: progressOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
+              child: MediaRail(title: 'Vu récemment', items: recent, grid: grid, progressOf: progressOf, remainingOf: remainingOf, onTap: (e) => PlayLauncher.recent(context, ref, e)),
             ),
           if (prefs.settingBool('home_watchlist', true)) SliverToBoxAdapter(child: _watchlistRail(grid)),
           if (prefs.settingBool('traktRecommendationsEnabled', true)) ...[
