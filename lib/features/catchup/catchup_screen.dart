@@ -27,7 +27,9 @@ class CatchupScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final archive = ref.watch(archiveChannelsProvider);
-    final nameById = {for (final c in ref.watch(liveCategoriesAllProvider).asData?.value ?? const []) c.id: c.name};
+    // Catégories ACTIVES (visibilité + ordre de la config Live) — on n'affiche
+    // en catch-up que celles-ci, croisées avec la présence de chaînes à archive.
+    final visibleCats = ref.watch(liveCategoriesProvider).asData?.value ?? const <Category>[];
     final selectedCat = ref.watch(_selectedCatchupCatProvider);
 
     return SafeArea(
@@ -52,14 +54,21 @@ class CatchupScreen extends ConsumerWidget {
                 ),
               ),
               data: (channels) {
-                // Catégories réellement présentes parmi les chaînes à archive.
-                final catIds = <String>[];
-                for (final ch in channels) {
-                  if (!catIds.contains(ch.categoryId)) catIds.add(ch.categoryId);
+                // Catégories qui ont au moins une chaîne à archive.
+                final archiveCatIds = channels.map((c) => c.categoryId).toSet();
+                // On garde uniquement les catégories ACTIVES (config Live) qui en contiennent.
+                final cats = visibleCats.where((c) => archiveCatIds.contains(c.id)).toList();
+                final catIds = cats.map((c) => c.id).toList();
+                if (cats.isEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(L.of(context)!.catchupNoArchive, textAlign: TextAlign.center, style: TextStyle(color: KtvColors.muted)),
+                    ),
+                  );
                 }
-                final cats = [for (final id in catIds) Category(id, nameById[id] ?? id)];
                 // Auto-sélection de la 1re catégorie.
-                final sel = (selectedCat != null && catIds.contains(selectedCat)) ? selectedCat : (catIds.isEmpty ? null : catIds.first);
+                final sel = (selectedCat != null && catIds.contains(selectedCat)) ? selectedCat : catIds.first;
                 if (sel != selectedCat) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     ref.read(_selectedCatchupCatProvider.notifier).state = sel;
