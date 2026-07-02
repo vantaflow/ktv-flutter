@@ -3,73 +3,416 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KTV — lecteur Xtream (Flutter + libmpv)</title>
+<title>KTV — Lecteur IPTV / Xtream pour macOS &amp; Windows</title>
+<meta name="description" content="KTV : lecteur IPTV / Xtream desktop (macOS & Windows) propulsé par libmpv. Live TV, Films, Séries, Guide EPG, catch-up, enregistrement, restream, thèmes. Gratuit et open source.">
+<meta property="og:title" content="KTV — Lecteur IPTV / Xtream">
+<meta property="og:description" content="Live TV, VOD, Séries, Guide EPG, catch-up, enregistrement, restream — lecture native MKV/HEVC via libmpv.">
+<meta property="og:type" content="website">
 <style>
   :root{
-    --bg:#0e0f13; --panel:#16181f; --panel2:#1e212b; --line:#2a2d38;
-    --txt:#e8eaf0; --muted:#8a8f9e; --accent:#ff6a2c; --accent2:#ffb85a;
+    --bg:#0b0c10; --bg2:#0e1016; --panel:#14161e; --panel2:#1b1e28; --line:#282c38;
+    --txt:#eef0f6; --muted:#9096a6; --dim:#6b7180;
+    --accent:#ff6a2c; --accent2:#ffb45a; --accent3:#ff8f3c;
+    --grad:linear-gradient(135deg,var(--accent),var(--accent2));
+    --radius:18px; --maxw:1160px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.55}
-  a{color:var(--accent2);text-decoration:none}
-  .wrap{max-width:960px;margin:0 auto;padding:0 24px}
-  header{padding:80px 0 48px;text-align:center;background:radial-gradient(1200px 500px at 50% -10%,rgba(255,106,44,.18),transparent)}
-  .logo{display:inline-flex;align-items:center;gap:16px;margin-bottom:24px}
-  .mark{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-size:34px}
-  h1{font-size:52px;font-weight:800;letter-spacing:1px}
-  .lead{color:var(--muted);font-size:19px;max-width:640px;margin:16px auto 0}
-  .cta{display:inline-flex;gap:14px;margin-top:32px;flex-wrap:wrap;justify-content:center}
-  .btn{padding:14px 26px;border-radius:12px;font-weight:700;font-size:15px}
-  .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
-  .btn.ghost{border:1px solid var(--line);color:var(--txt)}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:56px 0}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
-  .card h3{font-size:16px;margin-bottom:8px;color:var(--accent2)}
-  .card p{color:var(--muted);font-size:14px}
-  .why{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:32px;margin:24px 0}
-  .why h2{font-size:24px;margin-bottom:12px}
-  .why p{color:var(--muted)}
-  code{background:var(--panel2);padding:2px 7px;border-radius:6px;font-size:13px;color:var(--accent2)}
-  footer{color:var(--muted);text-align:center;padding:56px 0;font-size:13px;border-top:1px solid var(--line);margin-top:56px}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  .accent-txt{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+
+  /* ---------- Header ---------- */
+  header.nav{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:saturate(160%) blur(14px);
+    background:rgba(11,12,16,.72);border-bottom:1px solid transparent;
+    transition:border-color .3s,background .3s;
+  }
+  header.nav.scrolled{border-color:var(--line);background:rgba(11,12,16,.9)}
+  .nav-in{display:flex;align-items:center;gap:14px;height:66px}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:19px;letter-spacing:.5px}
+  .brand .mk{width:34px;height:34px;border-radius:10px;background:var(--grad);display:grid;place-items:center;box-shadow:0 6px 18px rgba(255,106,44,.35)}
+  .brand .mk svg{width:18px;height:18px;fill:#fff}
+  .nav-links{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .nav-links a{padding:9px 14px;border-radius:10px;color:var(--muted);font-size:14px;font-weight:600;transition:.2s}
+  .nav-links a:hover{color:var(--txt);background:var(--panel2)}
+  .nav-links a.dl{background:var(--grad);color:#fff;box-shadow:0 6px 18px rgba(255,106,44,.32)}
+  .nav-links a.dl:hover{filter:brightness(1.06)}
+  .nav-links .ghost{border:1px solid var(--line)}
+  @media(max-width:720px){.nav-links a.hide-sm{display:none}}
+
+  /* ---------- Hero ---------- */
+  .hero{position:relative;padding:76px 0 40px;overflow:hidden}
+  .hero::before{content:"";position:absolute;inset:-20% -20% auto -20%;height:720px;z-index:0;
+    background:
+      radial-gradient(900px 420px at 22% -6%,rgba(255,106,44,.28),transparent 60%),
+      radial-gradient(760px 420px at 88% 6%,rgba(90,120,255,.16),transparent 60%);}
+  .hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:1.05fr 1fr;gap:52px;align-items:center}
+  @media(max-width:940px){.hero-grid{grid-template-columns:1fr;gap:40px}}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border:1px solid var(--line);
+    border-radius:999px;font-size:12.5px;font-weight:700;color:var(--muted);background:rgba(255,255,255,.02)}
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(255,106,44,.18)}
+  h1{font-size:clamp(38px,6vw,62px);line-height:1.03;font-weight:850;letter-spacing:-1px;margin:20px 0 0}
+  .lead{color:var(--muted);font-size:18.5px;max-width:540px;margin:20px 0 0}
+  .cta{display:flex;gap:14px;margin-top:30px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:10px;padding:15px 26px;border-radius:13px;font-weight:750;font-size:15px;transition:.2s}
+  .btn svg{width:18px;height:18px}
+  .btn.primary{background:var(--grad);color:#fff;box-shadow:0 12px 30px rgba(255,106,44,.34)}
+  .btn.primary:hover{transform:translateY(-2px);box-shadow:0 16px 38px rgba(255,106,44,.42)}
+  .btn.ghost{border:1px solid var(--line);color:var(--txt);background:rgba(255,255,255,.02)}
+  .btn.ghost:hover{background:var(--panel2);border-color:#39404f}
+  .hero-note{margin-top:16px;color:var(--dim);font-size:13px;display:flex;gap:16px;flex-wrap:wrap}
+  .hero-note b{color:var(--muted);font-weight:700}
+
+  /* ---------- App mockup ---------- */
+  .mock{position:relative}
+  .mock .glow{position:absolute;inset:8% 4%;background:var(--grad);filter:blur(60px);opacity:.28;border-radius:40px;z-index:0}
+  .app{position:relative;z-index:1;border:1px solid var(--line);border-radius:16px;overflow:hidden;
+    background:var(--bg2);box-shadow:0 40px 90px -30px rgba(0,0,0,.8);transform:perspective(1400px) rotateY(-8deg) rotateX(3deg);transition:.5s}
+  .mock:hover .app{transform:perspective(1400px) rotateY(-3deg) rotateX(1deg)}
+  .titlebar{display:flex;align-items:center;gap:7px;height:34px;padding:0 14px;background:var(--panel);border-bottom:1px solid var(--line)}
+  .tb-dot{width:11px;height:11px;border-radius:50%}
+  .tb-dot.r{background:#ff5f57}.tb-dot.y{background:#febc2e}.tb-dot.g{background:#28c840}
+  .tb-title{margin-left:12px;font-size:11.5px;color:var(--dim);font-weight:700;letter-spacing:.5px}
+  .app-body{display:grid;grid-template-columns:66px 1fr;height:330px}
+  .rail{background:var(--panel);border-right:1px solid var(--line);padding:10px 0;display:flex;flex-direction:column;gap:2px}
+  .rail .ri{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0;color:var(--dim);font-size:7.5px;font-weight:600}
+  .rail .ri svg{width:17px;height:17px;fill:currentColor}
+  .rail .ri.on{color:var(--txt)}
+  .rail .ri.on .pillbg{position:absolute;inset:2px 6px;background:var(--panel2);border-radius:8px;z-index:0}
+  .rail .ri{position:relative}
+  .rail .ri.on svg,.rail .ri.on span{position:relative;z-index:1;color:var(--accent);fill:var(--accent)}
+  .rail .ri.on span{color:var(--txt)}
+  .content{padding:14px 16px;overflow:hidden;background:linear-gradient(180deg,rgba(255,106,44,.06),transparent 40%)}
+  .c-hero{height:96px;border-radius:12px;position:relative;overflow:hidden;margin-bottom:14px;
+    background:linear-gradient(120deg,#20242f,#171a22)}
+  .c-hero::after{content:"";position:absolute;inset:0;background:radial-gradient(220px 120px at 78% 20%,rgba(255,106,44,.4),transparent)}
+  .c-hero .badge{position:absolute;top:10px;left:12px;font-size:8px;font-weight:800;color:#fff;background:var(--accent);padding:3px 7px;border-radius:5px;letter-spacing:.5px}
+  .c-hero .ct{position:absolute;left:12px;bottom:12px}
+  .c-hero .ct .t{font-size:14px;font-weight:800}
+  .c-hero .ct .s{font-size:8.5px;color:var(--muted);margin-top:2px}
+  .c-row-title{font-size:10px;font-weight:800;color:var(--muted);margin:0 0 8px}
+  .posters{display:flex;gap:9px}
+  .poster{flex:1;aspect-ratio:2/3;border-radius:8px;position:relative;overflow:hidden;border:1px solid var(--line)}
+  .poster i{position:absolute;inset:0;background:linear-gradient(160deg,#2a2f3c,#171a22)}
+  .poster.p1 i{background:linear-gradient(160deg,#3a2a44,#191722)}
+  .poster.p2 i{background:linear-gradient(160deg,#243447,#141a22)}
+  .poster.p3 i{background:linear-gradient(160deg,#37312a,#1a1712)}
+  .poster.p4 i{background:linear-gradient(160deg,#233a34,#12191a)}
+  .poster .bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(0,0,0,.5)}
+  .poster .bar b{display:block;height:100%;width:62%;background:var(--grad)}
+  .poster .pl{position:absolute;inset:0;display:grid;place-items:center}
+  .poster .pl svg{width:22px;height:22px;fill:rgba(255,255,255,.9);filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
+
+  /* ---------- Tech strip ---------- */
+  .strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg2)}
+  .strip-in{display:flex;flex-wrap:wrap;gap:14px 40px;justify-content:center;align-items:center;padding:22px 0}
+  .strip-in .it{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:13.5px;font-weight:700}
+  .strip-in .it svg{width:17px;height:17px;fill:var(--accent2)}
+
+  /* ---------- Sections ---------- */
+  section{padding:84px 0}
+  .eyebrow{color:var(--accent2);font-weight:800;font-size:13px;letter-spacing:2px;text-transform:uppercase}
+  .h2{font-size:clamp(28px,4vw,42px);font-weight:820;letter-spacing:-.5px;margin:12px 0 0}
+  .sub{color:var(--muted);font-size:17px;max-width:620px;margin:14px 0 0}
+  .center{text-align:center}.center .sub{margin-left:auto;margin-right:auto}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px}
+  @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){.grid{grid-template-columns:1fr}}
+  .card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);
+    border-radius:var(--radius);padding:24px;transition:.25s;position:relative;overflow:hidden}
+  .card::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:var(--grad);opacity:0;transition:.25s}
+  .card:hover{transform:translateY(-4px);border-color:#343a49;box-shadow:0 24px 50px -30px rgba(0,0,0,.9)}
+  .card:hover::before{opacity:1}
+  .ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;margin-bottom:16px;
+    background:rgba(255,106,44,.12);border:1px solid rgba(255,106,44,.22)}
+  .ic svg{width:23px;height:23px;fill:var(--accent2)}
+  .card h3{font-size:16.5px;font-weight:750}
+  .card p{color:var(--muted);font-size:14px;margin-top:7px}
+
+  /* ---------- Why (split) ---------- */
+  .why{background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .why-grid{display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:center}
+  @media(max-width:900px){.why-grid{grid-template-columns:1fr;gap:32px}}
+  .cmp{display:grid;gap:14px}
+  .cmp .box{border:1px solid var(--line);border-radius:14px;padding:18px 20px;background:var(--panel)}
+  .cmp .box .lbl{font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+  .cmp .bad .lbl{color:#ff6b6b}.cmp .good .lbl{color:#2fd47a}
+  .cmp .box p{color:var(--muted);font-size:14px}
+  .cmp .good{border-color:rgba(47,212,122,.3);background:linear-gradient(180deg,rgba(47,212,122,.06),var(--panel))}
+
+  /* ---------- Screens band ---------- */
+  .screens{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px}
+  @media(max-width:900px){.screens{grid-template-columns:1fr}}
+  .scard{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--panel)}
+  .scap{height:150px;position:relative;overflow:hidden;background:var(--bg2)}
+  .scap .tag{position:absolute;top:10px;left:10px;z-index:2;font-size:10px;font-weight:800;color:#fff;background:rgba(0,0,0,.45);border:1px solid var(--line);padding:4px 9px;border-radius:7px;backdrop-filter:blur(6px)}
+  /* screen 1 : EPG rows */
+  .s-epg{padding:16px 14px;display:flex;flex-direction:column;gap:8px}
+  .s-epg .r{display:flex;align-items:center;gap:8px}
+  .s-epg .logo{width:26px;height:18px;border-radius:4px;background:linear-gradient(120deg,#2b3040,#1a1e28);flex:none}
+  .s-epg .ln{height:7px;border-radius:4px;background:#2a2f3c}
+  .s-epg .r .now{background:linear-gradient(90deg,rgba(255,106,44,.7),rgba(255,180,90,.4))}
+  /* screen 2 : catchup day groups */
+  .s-cu{padding:14px;display:flex;flex-direction:column;gap:9px}
+  .s-cu .day{font-size:9px;font-weight:800;color:var(--accent2)}
+  .s-cu .item{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 8px}
+  .s-cu .item svg{width:13px;height:13px;fill:var(--accent)}
+  .s-cu .item .ln{height:6px;border-radius:3px;background:#333846;flex:1}
+  /* screen 3 : downloads */
+  .s-dl{padding:14px;display:flex;flex-direction:column;gap:9px}
+  .s-dl .item{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 9px}
+  .s-dl .item .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .s-dl .ln{height:6px;border-radius:3px;background:#333846;width:60%}
+  .s-dl .pct{font-size:8px;color:var(--muted);font-weight:700}
+  .s-dl .prog{height:4px;border-radius:3px;background:#20242f;overflow:hidden}
+  .s-dl .prog b{display:block;height:100%;background:var(--grad)}
+  .s-dl .done svg{width:14px;height:14px;fill:#2fd47a}
+  .s-dl .done .top{margin:0}
+  .scard .cap{padding:16px 18px}
+  .scard .cap h4{font-size:15px;font-weight:750}
+  .scard .cap p{color:var(--muted);font-size:13px;margin-top:5px}
+
+  /* ---------- Download band ---------- */
+  .band{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:26px;padding:56px 40px;text-align:center;
+    background:linear-gradient(135deg,rgba(255,106,44,.14),rgba(90,120,255,.08)),var(--panel)}
+  .band::before{content:"";position:absolute;inset:auto -10% -60% -10%;height:300px;background:radial-gradient(closest-side,rgba(255,106,44,.28),transparent)}
+  .band h2{position:relative;font-size:clamp(26px,4vw,38px);font-weight:820;letter-spacing:-.5px}
+  .band p{position:relative;color:var(--muted);margin:12px auto 0;max-width:520px}
+  .plats{position:relative;display:flex;gap:14px;justify-content:center;margin-top:28px;flex-wrap:wrap}
+
+  /* ---------- Footer ---------- */
+  footer{border-top:1px solid var(--line);padding:40px 0;color:var(--dim);font-size:13px}
+  .foot-in{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
+  .foot-in a{color:var(--muted);font-weight:600}
+  .foot-in a:hover{color:var(--txt)}
+
+  /* reveal */
+  .rv{opacity:0;transform:translateY(18px);transition:.6s cubic-bezier(.2,.7,.3,1)}
+  .rv.in{opacity:1;transform:none}
 </style>
 </head>
 <body>
-<header>
-  <div class="wrap">
-    <div class="logo"><div class="mark">▶</div><h1>KTV</h1></div>
-    <p class="lead">Lecteur <b>Xtream / IPTV</b> pour macOS &amp; Windows — Live TV, Films, Séries, Guide EPG, recommandations. Réécrit en <b>Flutter</b> avec le moteur <b>libmpv</b> : lecture native MKV/HEVC, seek instantané, pistes audio &amp; sous-titres.</p>
-    <div class="cta">
-      <a class="btn primary" href="https://github.com/khalilbenaz/ktv-flutter/releases/latest">Télécharger</a>
-      <a class="btn ghost" href="https://github.com/khalilbenaz/ktv-flutter">Code source</a>
-    </div>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top">
+      <span class="mk"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>KTV
+    </a>
+    <nav class="nav-links">
+      <a class="hide-sm" href="#features">Fonctionnalités</a>
+      <a class="hide-sm" href="#why">Pourquoi</a>
+      <a class="hide-sm" href="#screens">Aperçu</a>
+      <a class="ghost hide-sm" href="https://github.com/khalilbenaz/ktv-flutter" target="_blank" rel="noopener">GitHub</a>
+      <a class="dl" href="https://github.com/khalilbenaz/ktv-flutter/releases/latest">Télécharger</a>
+    </nav>
   </div>
 </header>
 
-<main class="wrap">
-  <div class="why">
-    <h2>Pourquoi une réécriture</h2>
-    <p>La version Electron s'appuyait sur le moteur vidéo de Chromium, incapable de lire les conteneurs MKV/HEVC multi-pistes de l'IPTV VOD — d'où un relais <code>ffmpeg</code> qui cassait la navigation, la durée, la reprise et le choix des pistes. <b>libmpv (media_kit)</b> lit tout nativement, avec un seek instantané. Cette famille de bugs disparaît.</p>
-  </div>
+<a id="top"></a>
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="pill"><span class="dot"></span> macOS &amp; Windows · Gratuit &amp; open source</span>
+      <h1>Votre IPTV,<br><span class="accent-txt">enfin fluide.</span></h1>
+      <p class="lead">Lecteur <b>Xtream / IPTV</b> desktop propulsé par <b>libmpv</b> : Live TV, Films, Séries, Guide EPG, catch-up et enregistrement — avec une lecture native MKV/HEVC et un seek instantané.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/khalilbenaz/ktv-flutter/releases/latest">
+          <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 3v10.6l3.3-3.3 1.4 1.4L12 17.4 6.3 11.7l1.4-1.4L11 13.6V3zM5 19h14v2H5z"/></svg>
+          Télécharger la dernière version
+        </a>
+        <a class="btn ghost" href="https://github.com/khalilbenaz/ktv-flutter" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2A10 10 0 0 0 8.8 21.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.4-1.1-1-1.4-1-1.4-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.3-1.1.6-1.4-2.2-.2-4.6-1.1-4.6-4.9 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.6 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.3.2 2.3.1 2.6.6.7 1 1.6 1 2.7 0 3.8-2.4 4.7-4.6 4.9.3.3.7 1 .7 2v3c0 .3.2.6.7.5A10 10 0 0 0 12 2z"/></svg>
+          Code source
+        </a>
+      </div>
+      <div class="hero-note">
+        <span><b>Natif</b> MKV · HEVC · 4K</span>
+        <span><b>Seek</b> instantané</span>
+        <span><b>Licence</b> MIT</span>
+      </div>
+    </div>
 
-  <div class="grid">
-    <div class="card"><h3>Accueil personnalisable</h3><p>Rangées <b>ou grille</b>, sections au choix, <b>recommandations</b> TMDB fondées sur ton catalogue, watchlist Trakt, derniers ajouts. Reprise avec <b>temps restant</b> ; cartes de chaînes avec <b>logo net</b> + <b>programme en cours</b>.</p></div>
-    <div class="card"><h3>Live TV + EPG enrichi</h3><p>Programme en cours (description, horaires), favoris, enregistrement, <b>recherche par programme</b>.</p></div>
-    <div class="card"><h3>Films &amp; Séries</h3><p>Fiches TMDB (affiche, synopsis, casting), <b>filtres &amp; tri</b> (note, 4K/HDR), téléchargement par épisode/saison, marquer vu (Trakt).</p></div>
-    <div class="card"><h3>Rediffusion (catch-up)</h3><p>Onglet dédié : par catégorie → chaîne → programmes des derniers jours <b>groupés par jour</b>, à <b>revoir</b> ou <b>télécharger</b>.</p></div>
-    <div class="card"><h3>Gestion des catégories</h3><p>Choisis les catégories du fournisseur à <b>afficher ou masquer</b>, séparément pour <b>Live · Films · Séries</b>.</p></div>
-    <div class="card"><h3>Guide TV → action</h3><p>Clic sur un programme : <b>catch-up</b> (revoir), regarder en direct, ou <b>programmer l'enregistrement</b> sur sa plage.</p></div>
-    <div class="card"><h3>Lecteur natif avancé</h3><p>MKV/HEVC, seek instantané, pistes audio/sous-titres mémorisées, <b>vitesse</b>, <b>boost audio</b>, <b>délai sous-titres</b>, <b>autoplay épisode suivant</b>, zapping.</p></div>
-    <div class="card"><h3>Enregistrement maîtrisé</h3><p>Sans couper la lecture, <b>heure de début précise</b>, qualité compact (720p) ou originale, indicateur REC, dossier configurable.</p></div>
-    <div class="card"><h3>Trakt &amp; Historique</h3><p>Scrobble auto, watchlist « à voir », historique complet rejouable, marquage films &amp; épisodes.</p></div>
-    <div class="card"><h3>Restream &amp; PiP</h3><p><b>Relais HLS partagé</b> (une seule connexion — ta lecture continue) sur le <b>réseau local</b> + <b>tunnel Cloudflare</b> (<code>cloudflared</code> embarqué, sans installation) pour un autre appareil. <b>Picture-in-Picture</b> flottant.</p></div>
-    <div class="card"><h3>Thèmes</h3><p>Mode <b>clair / sombre</b> et <b>accent personnalisable</b> (7 couleurs), appliqués à chaud. Catégorie <b>« Toutes »</b> et filtres masquables.</p></div>
-    <div class="card"><h3>Système</h3><p><b>Mise à jour in-app</b> (GitHub), rafraîchissement auto catalogue/EPG, <b>diagnostic réseau</b>, historique complet, dossiers d'enregistrement/téléchargement configurables.</p></div>
+    <div class="mock rv">
+      <div class="glow"></div>
+      <div class="app">
+        <div class="titlebar">
+          <span class="tb-dot r"></span><span class="tb-dot y"></span><span class="tb-dot g"></span>
+          <span class="tb-title">KTV</span>
+        </div>
+        <div class="app-body">
+          <div class="rail">
+            <div class="ri"><svg viewBox="0 0 24 24"><path d="M12 3 4 9v12h5v-7h6v7h5V9z"/></svg><span>Accueil</span></div>
+            <div class="ri on"><span class="pillbg"></span><svg viewBox="0 0 24 24"><path d="M4 6h16v10H4zm2 13h12v2H6z"/></svg><span>Live TV</span></div>
+            <div class="ri"><svg viewBox="0 0 24 24"><path d="M4 4h16v3H4zm0 5h16v11H4z"/></svg><span>Films</span></div>
+            <div class="ri"><svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z"/></svg><span>Séries</span></div>
+            <div class="ri"><svg viewBox="0 0 24 24"><path d="M4 5h16v3H4zm0 5h16v3H4zm0 5h10v3H4z"/></svg><span>Guide</span></div>
+            <div class="ri"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg><span>Redif.</span></div>
+          </div>
+          <div class="content">
+            <div class="c-hero">
+              <span class="badge">EN DIRECT</span>
+              <div class="ct"><div class="t">Le 20 Heures</div><div class="s">TF1 · 20:00 → 20:45</div></div>
+            </div>
+            <p class="c-row-title">Reprendre la lecture</p>
+            <div class="posters">
+              <div class="poster p1"><i></i><div class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="bar"><b></b></div></div>
+              <div class="poster p2"><i></i><div class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="bar"><b style="width:38%"></b></div></div>
+              <div class="poster p3"><i></i><div class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="bar"><b style="width:80%"></b></div></div>
+              <div class="poster p4"><i></i><div class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-</main>
+</section>
 
-<footer class="wrap">
-  KTV · Flutter + media_kit (libmpv) · macOS &amp; Windows · Licence MIT<br>
-  Version Electron précédente : <a href="https://github.com/khalilbenaz/ktv">khalilbenaz/ktv</a>
+<div class="strip">
+  <div class="wrap strip-in">
+    <span class="it"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Lecture native libmpv</span>
+    <span class="it"><svg viewBox="0 0 24 24"><path d="M4 4h16v12H4zm2 14h12v2H6z"/></svg> macOS &amp; Windows</span>
+    <span class="it"><svg viewBox="0 0 24 24"><path d="M12 2 3 7v10l9 5 9-5V7z"/></svg> Xtream Codes</span>
+    <span class="it"><svg viewBox="0 0 24 24"><path d="M5 3h14v18l-7-4-7 4z"/></svg> EPG XMLTV</span>
+    <span class="it"><svg viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 4 4 4 4 0 0 0-4-4zm0-6 2 3h-4z"/></svg> TMDB &amp; Trakt</span>
+    <span class="it"><svg viewBox="0 0 24 24"><path d="M12 3v10.6l3.3-3.3 1.4 1.4L12 17.4 6.3 11.7l1.4-1.4L11 13.6V3zM5 19h14v2H5z"/></svg> Mises à jour in-app</span>
+  </div>
+</div>
+
+<section id="features">
+  <div class="wrap center">
+    <div class="eyebrow">Fonctionnalités</div>
+    <h2 class="h2">Tout un salon TV, dans une seule app</h2>
+    <p class="sub">Une expérience streaming complète — de la Live TV au catch-up, en passant par l'enregistrement et le partage — pensée pour le desktop.</p>
+  </div>
+  <div class="wrap">
+    <div class="grid">
+      <div class="card rv"><div class="ic"><svg viewBox="0 0 24 24"><path d="M4 6h16v10H4zm2 13h12v2H6z"/></svg></div><h3>Live TV + EPG enrichi</h3><p>Chaînes avec logo et programme en cours (horaires, description), favoris, zapping, recherche par programme.</p></div>
+      <div class="card rv"><div class="ic"><svg viewBox="0 0 24 24"><path d="M4 4h16v3H4zm0 5h16v11H4z"/></svg></div><h3>Films &amp; Séries</h3><p>Fiches TMDB (affiche, synopsis, note, casting), filtres &amp; tri, téléchargement par épisode ou saison entière.</p></div>
+      <div class="card rv"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg></div><h3>Rediffusion (catch-up)</h3><p>Onglet dédié : par catégorie et chaîne, les programmes des derniers jours groupés par jour — à revoir ou télécharger.</p></div>
+      <div class="card rv"><div class="ic"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><h3>Lecteur natif avancé</h3><p>MKV/HEVC/4K, seek instantané, pistes audio &amp; sous-titres mémorisées, vitesse, boost audio, autoplay épisode suivant.</p></div>
+      <div class="card rv"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/></svg></div><h3>Enregistrement</h3><p>Sans couper la lecture, heure de début précise, qualité compacte (720p) ou originale, dossier configurable.</p></div>
+      <div class="card rv"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v10.6l3.3-3.3 1.4 1.4L12 17.4 6.3 11.7l1.4-1.4L11 13.6V3zM5 19h14v2H5z"/></svg></div><h3>Téléchargements</h3><p>File d'attente séquentielle avec progression, lecture hors-ligne locale des fichiers terminés, dossier configurable.</p></div>
+      <div class="card rv"><div class="ic"><svg viewBox="0 0 24 24"><path d="M5 4h14v3H5zm0 5h9v3H5zm0 5h14v3H5z"/></svg></div><h3>Gestion des catégories</h3><p>Afficher, masquer et réorganiser les catégories du fournisseur — séparément pour Live, Films et Séries.</p></div>
+      <div class="card rv"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 5h13v10H3zm15 3 3-2v8l-3-2z"/></svg></div><h3>Restream &amp; Cloudflare</h3><p>Relais HLS partagé (une seule connexion) sur le réseau local + tunnel Cloudflare embarqué pour un autre appareil.</p></div>
+      <div class="card rv"><div class="ic"><svg viewBox="0 0 24 24"><path d="M4 4h10v6H4zm12 4h4v12H8v-4h8z"/></svg></div><h3>Picture-in-Picture</h3><p>Fenêtre flottante toujours au premier plan pour garder un œil sur le match en travaillant.</p></div>
+      <div class="card rv"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg></div><h3>Thèmes clair / sombre</h3><p>Bascule instantanée et accent personnalisable (7 couleurs), appliqués à chaud à toute l'interface.</p></div>
+      <div class="card rv"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 4 4 4 4 0 0 0-4-4zm0-6 2 3h-4zm0 20-2-3h4z"/></svg></div><h3>TMDB &amp; Trakt</h3><p>Recommandations fondées sur votre catalogue, watchlist, scrobble et marquage automatique des films &amp; épisodes.</p></div>
+      <div class="card rv"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 11H7v-2h4V6h2z"/></svg></div><h3>Système</h3><p>Mise à jour in-app (GitHub), rafraîchissement auto catalogue/EPG, diagnostic réseau, historique complet.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="why" class="why">
+  <div class="wrap why-grid">
+    <div>
+      <div class="eyebrow">Pourquoi KTV</div>
+      <h2 class="h2">Le bon moteur vidéo change tout</h2>
+      <p class="sub">Beaucoup de lecteurs IPTV s'appuient sur le moteur vidéo d'un navigateur, incapable de lire nativement les conteneurs MKV/HEVC multi-pistes de la VOD — d'où des relais qui cassent tout. KTV utilise <b>libmpv</b>, le moteur de mpv.</p>
+    </div>
+    <div class="cmp">
+      <div class="box bad">
+        <div class="lbl">Approche navigateur</div>
+        <p>Relais ffmpeg en direct : seek cassé, durée fausse, reprise impossible, choix des pistes audio/sous-titres perdu, latence.</p>
+      </div>
+      <div class="box good">
+        <div class="lbl">KTV · libmpv</div>
+        <p>Lecture MKV/HEVC/4K native, seek instantané, durée exacte, reprise fiable, toutes les pistes audio &amp; sous-titres exposées.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap center">
+    <div class="eyebrow">Aperçu</div>
+    <h2 class="h2">Conçu pour être utilisé</h2>
+    <p class="sub">Une interface soignée façon streaming, mais taillée pour la Live TV et le VOD.</p>
+  </div>
+  <div class="wrap">
+    <div class="screens">
+      <div class="scard rv">
+        <div class="scap"><span class="tag">Guide TV</span>
+          <div class="s-epg">
+            <div class="r"><span class="logo"></span><span class="ln now" style="width:55%"></span></div>
+            <div class="r"><span class="logo"></span><span class="ln" style="width:70%"></span></div>
+            <div class="r"><span class="logo"></span><span class="ln now" style="width:45%"></span></div>
+            <div class="r"><span class="logo"></span><span class="ln" style="width:62%"></span></div>
+            <div class="r"><span class="logo"></span><span class="ln" style="width:50%"></span></div>
+          </div>
+        </div>
+        <div class="cap"><h4>Guide &amp; EPG</h4><p>Programme en cours et à venir par chaîne, cliquable pour regarder, revoir ou programmer.</p></div>
+      </div>
+      <div class="scard rv">
+        <div class="scap"><span class="tag">Rediffusion</span>
+          <div class="s-cu">
+            <span class="day">Aujourd'hui</span>
+            <div class="item"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg><span class="ln" style="max-width:60%"></span></div>
+            <div class="item"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg><span class="ln" style="max-width:75%"></span></div>
+            <span class="day">Hier</span>
+            <div class="item"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg><span class="ln" style="max-width:50%"></span></div>
+          </div>
+        </div>
+        <div class="cap"><h4>Catch-up dédié</h4><p>Les derniers jours groupés par jour, à revoir en un clic ou à télécharger.</p></div>
+      </div>
+      <div class="scard rv">
+        <div class="scap"><span class="tag">Téléchargements</span>
+          <div class="s-dl">
+            <div class="item"><div class="top"><span class="ln"></span><span class="pct">64%</span></div><div class="prog"><b style="width:64%"></b></div></div>
+            <div class="item"><div class="top"><span class="ln" style="width:45%"></span><span class="pct">en file</span></div><div class="prog"><b style="width:8%"></b></div></div>
+            <div class="item done"><div class="top"><span class="ln" style="width:55%"></span><svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></div></div>
+          </div>
+        </div>
+        <div class="cap"><h4>Téléchargements</h4><p>Suivi en direct des téléchargements et lecture locale des éléments terminés.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="band rv">
+      <h2>Prêt à regarder ?</h2>
+      <p>Téléchargez KTV pour macOS ou Windows. Gratuit, open source, sans télémétrie.</p>
+      <div class="plats">
+        <a class="btn primary" href="https://github.com/khalilbenaz/ktv-flutter/releases/latest">
+          <svg viewBox="0 0 24 24" fill="#fff"><path d="M16.4 12.9c0-2 1.6-3 1.7-3-1-1.4-2.4-1.6-2.9-1.6-1.2-.1-2.4.7-3 .7s-1.6-.7-2.6-.7A3.9 3.9 0 0 0 6.3 10c-1.5 2.6-.4 6.4 1 8.5.7 1 1.5 2.2 2.6 2.2s1.4-.7 2.7-.7 1.6.7 2.6.7 1.8-1 2.5-2a9 9 0 0 0 1.1-2.3 3.6 3.6 0 0 1-2-3.5zM14.6 6a3.5 3.5 0 0 0 .8-2.6 3.6 3.6 0 0 0-2.3 1.2 3.3 3.3 0 0 0-.8 2.5A3 3 0 0 0 14.6 6z"/></svg>
+          macOS
+        </a>
+        <a class="btn ghost" href="https://github.com/khalilbenaz/ktv-flutter/releases/latest">
+          <svg viewBox="0 0 24 24" fill="#fff"><path d="M3 5.6 10.5 4.6v6.9H3zM11.5 4.4 21 3v8.5h-9.5zM3 12.5h7.5v6.9L3 18.4zM11.5 12.5H21V21l-9.5-1.3z"/></svg>
+          Windows
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-in">
+    <div>KTV · Flutter + media_kit (libmpv) · Licence MIT</div>
+    <div style="display:flex;gap:20px">
+      <a href="https://github.com/khalilbenaz/ktv-flutter">GitHub</a>
+      <a href="https://github.com/khalilbenaz/ktv-flutter/releases/latest">Releases</a>
+      <a href="https://github.com/khalilbenaz/ktv">Version Electron</a>
+    </div>
+  </div>
 </footer>
+
+<script>
+  // Header shadow on scroll
+  var nav=document.getElementById('nav');
+  addEventListener('scroll',function(){nav.classList.toggle('scrolled',scrollY>10)});
+  // Reveal on scroll
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll('.rv').forEach(function(el){io.observe(el)});
+</script>
 </body>
 </html>
