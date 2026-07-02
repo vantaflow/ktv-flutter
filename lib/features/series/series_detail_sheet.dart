@@ -84,6 +84,21 @@ class _SeriesDetailState extends ConsumerState<SeriesDetail> {
                   ),
                 if (overview.isNotEmpty)
                   Padding(padding: const EdgeInsets.only(top: 10), child: Text(overview, style: TextStyle(color: KtvColors.muted, height: 1.4, fontSize: 12.5))),
+                const SizedBox(height: 12),
+                Builder(builder: (_) {
+                  ref.watch(recentTickProvider);
+                  final fav = ref.read(prefsProvider).isMediaFav('series', widget.series.seriesId);
+                  return OutlinedButton.icon(
+                    onPressed: () async {
+                      await ref.read(prefsProvider).toggleMediaFav(kind: 'series', id: widget.series.seriesId, name: widget.series.name, cover: widget.series.cover);
+                      ref.read(recentTickProvider.notifier).state++;
+                      if (mounted) setState(() {});
+                    },
+                    icon: Icon(fav ? Icons.favorite : Icons.favorite_border, color: fav ? KtvColors.accent : null, size: 18),
+                    label: Text(fav ? 'Favori' : 'Ajouter aux favoris'),
+                    style: fav ? OutlinedButton.styleFrom(foregroundColor: KtvColors.accent) : null,
+                  );
+                }),
               ],
             ),
           ),

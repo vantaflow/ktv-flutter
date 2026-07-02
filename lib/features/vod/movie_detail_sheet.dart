@@ -63,7 +63,9 @@ class _MovieDetailState extends ConsumerState<MovieDetail> {
   @override
   Widget build(BuildContext context) {
     final movie = widget.movie;
+    ref.watch(recentTickProvider);
     final watched = ref.watch(prefsProvider).isWatched('movie:${movie.streamId}');
+    final fav = ref.read(prefsProvider).isMediaFav('movie', movie.streamId);
     final tmdb = ref.watch(tmdbSearchProvider((type: 'movie', name: movie.name)));
     final d = tmdb.asData?.value;
     final backdrop = TmdbService.img(d?['backdrop_path'] as String?, size: 'w780');
@@ -118,6 +120,17 @@ class _MovieDetailState extends ConsumerState<MovieDetail> {
                   icon: Icon(watched ? Icons.check_circle : Icons.check_circle_outline, color: watched ? KtvColors.accent : null),
                   label: Text(watched ? 'Vu' : 'Marquer comme vu'),
                   style: watched ? OutlinedButton.styleFrom(foregroundColor: KtvColors.accent) : null,
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    await ref.read(prefsProvider).toggleMediaFav(kind: 'movie', id: movie.streamId, name: movie.name, cover: movie.cover, ext: movie.ext);
+                    ref.read(recentTickProvider.notifier).state++;
+                    if (mounted) setState(() {});
+                  },
+                  icon: Icon(fav ? Icons.favorite : Icons.favorite_border, color: fav ? KtvColors.accent : null),
+                  label: Text(fav ? 'Favori' : 'Ajouter aux favoris'),
+                  style: fav ? OutlinedButton.styleFrom(foregroundColor: KtvColors.accent) : null,
                 ),
               ],
             ),

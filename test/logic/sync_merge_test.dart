@@ -34,6 +34,22 @@ void main() {
     });
   });
 
+  group('mergeFavs médias (clé kind+id)', () {
+    String k(Map<String, dynamic> m) => '${m['kind']}:${m['id']}';
+    test('même id, kinds différents → gardés séparément', () {
+      final local = [{'kind': 'movie', 'id': '1', 'name': 'film'}];
+      final remote = [{'kind': 'series', 'id': '1', 'name': 'serie'}];
+      expect(mergeFavs(local, remote, keyOf: k).length, 2);
+    });
+    test('même kind+id → dédup', () {
+      final local = [{'kind': 'movie', 'id': '1', 'name': 'a'}];
+      final remote = [{'kind': 'movie', 'id': '1', 'name': 'b'}];
+      final m = mergeFavs(local, remote, keyOf: k);
+      expect(m.length, 1);
+      expect(m.first['name'], 'a'); // local prime
+    });
+  });
+
   group('mergeRecent', () {
     test('dédup par (kind,id) au at max, tri desc, cap 100', () {
       final local = [{'kind': 'movie', 'id': '1', 'at': 10}];

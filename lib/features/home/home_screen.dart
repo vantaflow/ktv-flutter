@@ -49,6 +49,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         .favChannels()
         .map((f) => RecentEntry(kind: MediaKind.live, id: '${f['id']}', name: '${f['name']}', cover: f['cover'] as String?, ext: 'ts', categoryId: f['category'] as String?, at: 0))
         .toList();
+    final mediaFavs = prefs.mediaFavs().map((f) {
+      final kind = f['kind'] == 'series' ? MediaKind.series : MediaKind.movie;
+      return RecentEntry(kind: kind, id: '${f['id']}', name: '${f['name']}', cover: f['cover'] as String?, ext: '${f['ext'] ?? 'mp4'}', at: 0);
+    }).toList();
 
     return SafeArea(
       child: CustomScrollView(
@@ -58,6 +62,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           if (prefs.settingBool('home_favs', true))
             SliverToBoxAdapter(
               child: MediaRail(title: 'Chaînes favorites', items: favs, grid: grid, onTap: (e) => PlayLauncher.recent(context, ref, e)),
+            ),
+          if (prefs.settingBool('home_mediafavs', true))
+            SliverToBoxAdapter(
+              child: MediaRail(
+                title: 'Films & séries favoris',
+                items: mediaFavs,
+                grid: grid,
+                onTap: (e) => e.kind == MediaKind.series
+                    ? showSeriesDetail(context, SeriesItem(seriesId: e.id, name: e.name, cover: e.cover, categoryId: ''))
+                    : showMovieDetail(context, VodItem(streamId: e.id, name: e.name, cover: e.cover, categoryId: '', ext: e.ext)),
+              ),
             ),
           if (prefs.settingBool('home_resume', true))
             SliverToBoxAdapter(

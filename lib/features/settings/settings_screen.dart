@@ -675,6 +675,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   List<Widget> _homeCategories(PrefsStore prefs) {
     const rails = [
       ('home_favs', 'Chaînes favorites'),
+      ('home_mediafavs', 'Films & séries favoris'),
       ('home_resume', 'Reprendre la lecture'),
       ('home_recent', 'Vu récemment'),
       ('home_watchlist', 'Ma liste (Trakt)'),

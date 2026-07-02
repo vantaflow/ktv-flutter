@@ -128,6 +128,31 @@ class PrefsStore {
     await _p.setString(_kFavs, jsonEncode(list));
   }
 
+  // Favoris Films/Séries : liste {kind,id,name,cover,ext} (kind = movie|series).
+  static const _kFavsMedia = 'iptv_favs_media';
+  List<Map<String, dynamic>> mediaFavs() {
+    final raw = _p.getString(_kFavsMedia);
+    if (raw == null) return [];
+    try {
+      return (jsonDecode(raw) as List).map((e) => Map<String, dynamic>.from(e)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  bool isMediaFav(String kind, String id) => mediaFavs().any((e) => e['kind'] == kind && '${e['id']}' == id);
+
+  Future<void> toggleMediaFav({required String kind, required String id, required String name, String? cover, String ext = 'mp4'}) async {
+    final list = mediaFavs();
+    final i = list.indexWhere((e) => e['kind'] == kind && '${e['id']}' == id);
+    if (i >= 0) {
+      list.removeAt(i);
+    } else {
+      list.insert(0, {'kind': kind, 'id': id, 'name': name, 'cover': cover, 'ext': ext});
+    }
+    await _p.setString(_kFavsMedia, jsonEncode(list));
+  }
+
   // Historique « récent » (rejouable), plafonné à 100, plus récent d'abord.
   static const _kRecent = 'iptv_recent';
   List<RecentEntry> recent() {
@@ -269,6 +294,7 @@ class PrefsStore {
     'ktv_resume',
     'iptv_watched',
     'iptv_favs_v2',
+    'iptv_favs_media',
     'iptv_recent',
     'ktv_settings',
     'category_visibility',

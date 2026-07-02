@@ -33,16 +33,14 @@ Map<String, dynamic> mergeWatched(Object? local, Object? remote) {
   return out;
 }
 
-/// Favoris : liste de {id,…} → union par id (l'entrée locale prime sur le doublon).
-List mergeFavs(Object? local, Object? remote) {
+/// Favoris : union par clé (l'entrée locale prime sur le doublon). [keyOf]
+/// permet de composer la clé (id seul pour le live, kind+id pour les médias).
+List mergeFavs(Object? local, Object? remote, {String Function(Map<String, dynamic>)? keyOf}) {
+  String k(Object? e) => (keyOf ?? (m) => '${m['id']}')(_asMap(e));
   final out = _asList(local);
-  final ids = {for (final e in out) '${_asMap(e)['id']}'};
+  final keys = {for (final e in out) k(e)};
   for (final e in _asList(remote)) {
-    final id = '${_asMap(e)['id']}';
-    if (!ids.contains(id)) {
-      out.add(e);
-      ids.add(id);
-    }
+    if (keys.add(k(e))) out.add(e);
   }
   return out;
 }
@@ -76,6 +74,7 @@ Map<String, dynamic> mergeBundle(Map<String, dynamic> local, Map<String, dynamic
   out['ktv_resume'] = mergeResume(local['ktv_resume'], remote['ktv_resume']);
   out['iptv_watched'] = mergeWatched(local['iptv_watched'], remote['iptv_watched']);
   out['iptv_favs_v2'] = mergeFavs(local['iptv_favs_v2'], remote['iptv_favs_v2']);
+  out['iptv_favs_media'] = mergeFavs(local['iptv_favs_media'], remote['iptv_favs_media'], keyOf: (m) => '${m['kind']}:${m['id']}');
   out['iptv_recent'] = mergeRecent(local['iptv_recent'], remote['iptv_recent']);
 
   // Groupes sans horodatage fin : dernier écrivain gagne.
