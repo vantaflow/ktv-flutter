@@ -88,6 +88,9 @@ class LiveChannel {
   final String? epgChannelId;
   final bool tvArchive; // catch-up disponible côté fournisseur
   final int tvArchiveDuration; // profondeur d'archive en jours (0 = inconnu)
+  final String sourceId; // multi-sources : source d'origine ('' = source active)
+  /// Sources de secours de la MÊME chaîne (dédoublonnage) pour le failover.
+  final List<({String sourceId, String streamId})> alts;
   const LiveChannel({
     required this.streamId,
     required this.name,
@@ -96,6 +99,8 @@ class LiveChannel {
     this.epgChannelId,
     this.tvArchive = false,
     this.tvArchiveDuration = 0,
+    this.sourceId = '',
+    this.alts = const [],
   });
   factory LiveChannel.fromJson(Map<String, dynamic> j) => LiveChannel(
         streamId: _s(j['stream_id']),
@@ -105,6 +110,18 @@ class LiveChannel {
         epgChannelId: _sn(j['epg_channel_id']),
         tvArchive: _s(j['tv_archive']) == '1',
         tvArchiveDuration: int.tryParse(_s(j['tv_archive_duration'])) ?? 0,
+      );
+
+  LiveChannel copyWith({String? categoryId, String? sourceId, List<({String sourceId, String streamId})>? alts}) => LiveChannel(
+        streamId: streamId,
+        name: name,
+        icon: icon,
+        categoryId: categoryId ?? this.categoryId,
+        epgChannelId: epgChannelId,
+        tvArchive: tvArchive,
+        tvArchiveDuration: tvArchiveDuration,
+        sourceId: sourceId ?? this.sourceId,
+        alts: alts ?? this.alts,
       );
 }
 
@@ -191,6 +208,7 @@ class RecentEntry {
   final String? resumeKey;
   final String? subtitle; // ex. « Saison 1 · Épisode 2 »
   final String? categoryId; // catégorie live (pour le zapping/restream depuis l'accueil)
+  final String sourceId; // multi-sources : source d'origine ('' = source active)
   final int at;
   const RecentEntry({
     required this.kind,
@@ -201,6 +219,7 @@ class RecentEntry {
     this.resumeKey,
     this.subtitle,
     this.categoryId,
+    this.sourceId = '',
     required this.at,
   });
 
@@ -213,6 +232,7 @@ class RecentEntry {
         'resumeKey': resumeKey,
         'subtitle': subtitle,
         'categoryId': categoryId,
+        if (sourceId.isNotEmpty) 'sourceId': sourceId,
         'at': at,
       };
   factory RecentEntry.fromJson(Map<String, dynamic> j) => RecentEntry(
@@ -224,6 +244,7 @@ class RecentEntry {
         resumeKey: _sn(j['resumeKey']),
         subtitle: _sn(j['subtitle']),
         categoryId: _sn(j['categoryId']),
+        sourceId: _s(j['sourceId']),
         at: int.tryParse(_s(j['at'])) ?? 0,
       );
 }

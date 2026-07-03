@@ -44,6 +44,21 @@ class PrefsStore {
     if (activeId() == id) await _p.remove(_kActive);
   }
 
+  // Sources ACTIVÉES simultanément (fusion multi-sources). Vide = seulement
+  // la source active (comportement historique).
+  static const _kEnabled = 'enabled_sources';
+  List<String> enabledSourceIds() {
+    final raw = _p.getString(_kEnabled);
+    if (raw == null) return const [];
+    try {
+      return (jsonDecode(raw) as List).map((e) => e.toString()).toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> setEnabledSourceIds(List<String> ids) => _p.setString(_kEnabled, jsonEncode(ids));
+
   String? activeId() => _p.getString(_kActive);
   Future<void> setActive(String? id) => id == null ? _p.remove(_kActive) : _p.setString(_kActive, id);
   XtreamProfile? activeProfile() {
@@ -117,13 +132,13 @@ class PrefsStore {
 
   bool isFav(String id) => favChannels().any((e) => e['id'] == id);
 
-  Future<void> toggleFav({required String id, required String name, String? cover, String? category}) async {
+  Future<void> toggleFav({required String id, required String name, String? cover, String? category, String sourceId = ''}) async {
     final list = favChannels();
     final i = list.indexWhere((e) => e['id'] == id);
     if (i >= 0) {
       list.removeAt(i);
     } else {
-      list.add({'id': id, 'name': name, 'cover': cover, 'category': category});
+      list.add({'id': id, 'name': name, 'cover': cover, 'category': category, if (sourceId.isNotEmpty) 'sourceId': sourceId});
     }
     await _p.setString(_kFavs, jsonEncode(list));
   }
@@ -364,6 +379,7 @@ class PrefsStore {
     'parental',
     'xtream_profiles',
     'xtream_active',
+    'enabled_sources',
   ];
 
   /// Lit/écrit une clé de préférence comme JSON décodé (usage synchro).

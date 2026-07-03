@@ -6,6 +6,7 @@ import '../../core/logic/duration_parse.dart';
 import '../../core/providers.dart';
 import '../auth/auth_controller.dart';
 import '../parental/parental.dart';
+import '../sources/sources_providers.dart';
 import 'player_screen.dart';
 
 /// Point d'entrée unique de la lecture : construit l'URL, historise (recent),
@@ -16,6 +17,16 @@ class PlayLauncher {
   static void _open(BuildContext context, WidgetRef ref, PlaybackRequest req) {
     ref.read(recentTickProvider.notifier).state++; // rafraîchit l'accueil
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => PlayerScreen(request: req)));
+  }
+
+  /// Résout l'URL live pour un couple (source, streamId) : source explicite si
+  /// activée, sinon la source active (comportement mono-source).
+  static String? _liveUrlFor(WidgetRef ref, String sourceId, String streamId) {
+    if (sourceId.isNotEmpty) {
+      final src = ref.read(sourceInstancesProvider)[sourceId];
+      if (src != null) return src.live(streamId);
+    }
+    return ref.read(xtreamUrlsProvider)?.live(streamId);
   }
 
   static Future<void> movie(BuildContext context, WidgetRef ref, VodItem m) async {
@@ -86,12 +97,16 @@ class PlayLauncher {
   }
 
   static Future<void> live(BuildContext context, WidgetRef ref, LiveChannel ch) async {
-    final urls = ref.read(xtreamUrlsProvider);
-    if (urls == null) return;
+    final url = _liveUrlFor(ref, ch.sourceId, ch.streamId);
+    if (url == null || url.isEmpty) return;
     final locked = ref.read(parentalConfigProvider).channelLocked(ch.streamId, catId: ch.categoryId, name: ch.name);
     if (!await parentalAllow(context, ref, locked: locked) || !context.mounted) return;
-    ref.read(prefsProvider).pushRecent(RecentEntry(kind: MediaKind.live, id: ch.streamId, name: ch.name, cover: ch.icon, ext: 'ts', categoryId: ch.categoryId, at: _now));
-    _open(context, ref, PlaybackRequest(url: urls.live(ch.streamId), title: ch.name, kind: MediaKind.live, liveStreamId: ch.streamId, liveCategoryId: ch.categoryId));
+    // Sources de secours (dédoublonnage) → failover du lecteur.
+    final fallbacks = <String>[
+      for (final a in ch.alts) ?_liveUrlFor(ref, a.sourceId, a.streamId),
+    ].where((u) => u.isNotEmpty).toList();
+    ref.read(prefsProvider).pushRecent(RecentEntry(kind: MediaKind.live, id: ch.streamId, name: ch.name, cover: ch.icon, ext: 'ts', categoryId: ch.categoryId, sourceId: ch.sourceId, at: _now));
+    _open(context, ref, PlaybackRequest(url: url, title: ch.name, kind: MediaKind.live, liveStreamId: ch.streamId, liveCategoryId: ch.categoryId, fallbacks: fallbacks));
   }
 
   /// Rejoue une entrée d'historique depuis l'accueil.
@@ -112,10 +127,10 @@ class PlayLauncher {
         url = urls.series(e.id, e.ext);
         break;
       case MediaKind.live:
-        url = urls.live(e.id);
+        url = _liveUrlFor(ref, e.sourceId, e.id) ?? urls.live(e.id);
         break;
     }
-    ref.read(prefsProvider).pushRecent(RecentEntry(kind: e.kind, id: e.id, name: e.name, cover: e.cover, ext: e.ext, resumeKey: e.resumeKey, subtitle: e.subtitle, categoryId: e.categoryId, at: _now));
+    ref.read(prefsProvider).pushRecent(RecentEntry(kind: e.kind, id: e.id, name: e.name, cover: e.cover, ext: e.ext, resumeKey: e.resumeKey, subtitle: e.subtitle, categoryId: e.categoryId, sourceId: e.sourceId, at: _now));
     _open(
       context,
       ref,

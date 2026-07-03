@@ -34,6 +34,9 @@ class PlaybackRequest {
   final String? liveCategoryId; // pour la sidebar de zapping (live)
   final List<PlaybackItem>? playlist; // épisodes de la saison (autoplay suivant)
   final int playlistIndex; // position courante dans la playlist
+  /// Live multi-sources : URLs de secours (mêmes chaîne, autres sources) pour le
+  /// failover — le lecteur bascule dessus si le flux principal s'interrompt.
+  final List<String> fallbacks;
 
   const PlaybackRequest({
     required this.url,
@@ -46,6 +49,7 @@ class PlaybackRequest {
     this.liveCategoryId,
     this.playlist,
     this.playlistIndex = 0,
+    this.fallbacks = const [],
   });
 
   bool get isLive => kind == MediaKind.live;

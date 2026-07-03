@@ -55,6 +55,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   late String? _resumeKey = widget.request.resumeKey;
   late int? _reqKnownDur = widget.request.knownDurationSec;
   late int _plIndex = widget.request.playlistIndex;
+  // Failover live : URLs candidates (primaire + sources de secours) rotées à
+  // chaque interruption. Une seule candidate en mono-source → rouvre à l'identique.
+  late final List<String> _liveCandidates = [widget.request.url, ...widget.request.fallbacks];
+  int _liveCandIndex = 0;
   bool _resumeApplied = false;
   bool _watchedMarked = false;
   bool _controlsVisible = true;
@@ -151,14 +155,14 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     // connexion fournisseur et couperait le restream.
     final rs = ref.read(restreamControllerProvider).status;
     if (rs == RestreamStatus.live || rs == RestreamStatus.starting) return;
-    final urls = ref.read(xtreamUrlsProvider);
-    if (urls == null || _liveId == null) return;
     _liveReconnects++;
+    // Multi-sources : bascule sur la source de secours suivante (failover).
+    if (_liveCandidates.length > 1) _liveCandIndex = (_liveCandIndex + 1) % _liveCandidates.length;
+    final next = _liveCandidates[_liveCandIndex];
     Future.delayed(const Duration(milliseconds: 1200), () {
-      if (mounted) {
-        _player.open(Media(urls.live(_liveId!, ext: 'ts')));
-        _applyTweaks();
-      }
+      if (!mounted || next.isEmpty) return;
+      _player.open(Media(next));
+      _applyTweaks();
     });
   }
 
