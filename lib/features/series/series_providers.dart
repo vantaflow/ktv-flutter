@@ -5,6 +5,7 @@ import '../../core/logic/text_utils.dart';
 import '../../core/providers.dart';
 import '../categories/category_prefs.dart';
 import '../auth/auth_controller.dart';
+import '../parental/parental.dart';
 
 /// Toutes les catégories Séries du fournisseur (brutes, pour l'écran de gestion).
 final seriesCategoriesAllProvider = FutureProvider<List<Category>>((ref) async {
@@ -22,7 +23,12 @@ final seriesCategoriesProvider = FutureProvider<List<Category>>((ref) async {
   final ov = prof == null ? const <String, bool>{} : prefs.categoryVisibility(prof.id, CatSection.series.key);
   final order = prof == null ? const <String>[] : prefs.categoryOrder(prof.id, CatSection.series.key);
   final visible = cats.where((cat) => categoryVisible(catId: cat.id, name: cat.name, overrides: ov, heuristic: frCategoryAllowed)).toList();
-  return orderCategories(visible, order);
+  final ordered = orderCategories(visible, order);
+  final cfg = ref.watch(parentalConfigProvider);
+  if (cfg.hideMode && !ref.watch(parentalUnlockedProvider)) {
+    return ordered.where((c) => !cfg.categoryLocked(CatSection.series.key, c.id, c.name)).toList();
+  }
+  return ordered;
 });
 
 final selectedSeriesCategoryProvider = StateProvider<String?>((ref) => null);

@@ -271,6 +271,68 @@ class PrefsStore {
     await _saveMap(_kCatOrder, all);
   }
 
+  // --- Contrôle parental (parental) ---
+  // Blob : { pinHash, salt, mode:'lock'|'hide', autoAdult:bool,
+  //          lockedCats:['<section>::<catId>'…], lockedChannels:['<streamId>'…] }.
+  static const _kParental = 'parental';
+  Map<String, dynamic> parental() => _map(_kParental);
+  Future<void> _saveParental(Map<String, dynamic> m) => _saveMap(_kParental, m);
+
+  bool get parentalPinSet => (parental()['pinHash'] ?? '').toString().isNotEmpty;
+  String? parentalPinHash() => parental()['pinHash']?.toString();
+  String? parentalSalt() => parental()['salt']?.toString();
+
+  /// Enregistre (ou efface si [pinHash] est null) le PIN haché + son sel.
+  Future<void> setParentalCredential(String? pinHash, String? salt) async {
+    final m = parental();
+    if (pinHash == null) {
+      m.remove('pinHash');
+      m.remove('salt');
+    } else {
+      m['pinHash'] = pinHash;
+      m['salt'] = salt;
+    }
+    await _saveParental(m);
+  }
+
+  /// Mode d'application : 'lock' (visible + cadenas + PIN) ou 'hide' (masqué).
+  String parentalMode() => parental()['mode']?.toString() == 'hide' ? 'hide' : 'lock';
+  Future<void> setParentalMode(String mode) async {
+    final m = parental()..['mode'] = mode == 'hide' ? 'hide' : 'lock';
+    await _saveParental(m);
+  }
+
+  /// Verrouillage auto des catégories/chaînes « adulte » (défaut activé).
+  bool parentalAutoAdult() => parental()['autoAdult'] != false;
+  Future<void> setParentalAutoAdult(bool v) async {
+    final m = parental()..['autoAdult'] = v;
+    await _saveParental(m);
+  }
+
+  Set<String> parentalLockedCats() =>
+      ((parental()['lockedCats'] as List?) ?? const []).map((e) => e.toString()).toSet();
+  Set<String> parentalLockedChannels() =>
+      ((parental()['lockedChannels'] as List?) ?? const []).map((e) => e.toString()).toSet();
+
+  bool isCategoryLockedManual(String section, String catId) =>
+      parentalLockedCats().contains('$section::$catId');
+  bool isChannelLockedManual(String channelId) => parentalLockedChannels().contains(channelId);
+
+  Future<void> setCategoryLocked(String section, String catId, bool locked) async {
+    final set = parentalLockedCats();
+    final key = '$section::$catId';
+    locked ? set.add(key) : set.remove(key);
+    final m = parental()..['lockedCats'] = set.toList();
+    await _saveParental(m);
+  }
+
+  Future<void> setChannelLocked(String channelId, bool locked) async {
+    final set = parentalLockedChannels();
+    locked ? set.add(channelId) : set.remove(channelId);
+    final m = parental()..['lockedChannels'] = set.toList();
+    await _saveParental(m);
+  }
+
   // Jeton Trakt (ktv_trakt).
   Map<String, dynamic>? traktToken() {
     final m = _map('ktv_trakt');
@@ -299,6 +361,7 @@ class PrefsStore {
     'ktv_settings',
     'category_visibility',
     'category_order',
+    'parental',
     'xtream_profiles',
     'xtream_active',
   ];

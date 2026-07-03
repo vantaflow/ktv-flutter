@@ -257,6 +257,9 @@ class LEn extends L {
   String get tabProfiles => 'Profiles';
 
   @override
+  String get tabParental => 'Parental control';
+
+  @override
   String get tabApp => 'Application';
 
   @override

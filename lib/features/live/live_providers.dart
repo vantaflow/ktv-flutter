@@ -5,6 +5,7 @@ import '../../core/logic/text_utils.dart';
 import '../../core/providers.dart';
 import '../categories/category_prefs.dart';
 import '../auth/auth_controller.dart';
+import '../parental/parental.dart';
 
 /// Toutes les catégories LIVE du fournisseur (brutes, pour l'écran de gestion).
 final liveCategoriesAllProvider = FutureProvider<List<Category>>((ref) async {
@@ -22,7 +23,13 @@ final liveCategoriesProvider = FutureProvider<List<Category>>((ref) async {
   final ov = prof == null ? const <String, bool>{} : prefs.categoryVisibility(prof.id, CatSection.live.key);
   final order = prof == null ? const <String>[] : prefs.categoryOrder(prof.id, CatSection.live.key);
   final visible = cats.where((cat) => categoryVisible(catId: cat.id, name: cat.name, overrides: ov, heuristic: categoryAllowed)).toList();
-  return orderCategories(visible, order);
+  final ordered = orderCategories(visible, order);
+  // Mode « masquer » : retire les catégories verrouillées tant que non déverrouillé.
+  final cfg = ref.watch(parentalConfigProvider);
+  if (cfg.hideMode && !ref.watch(parentalUnlockedProvider)) {
+    return ordered.where((c) => !cfg.categoryLocked(CatSection.live.key, c.id, c.name)).toList();
+  }
+  return ordered;
 });
 
 final selectedLiveCategoryProvider = StateProvider<String?>((ref) => null);
@@ -32,7 +39,9 @@ final liveStreamsProvider = FutureProvider<List<LiveChannel>>((ref) async {
   final cat = ref.watch(selectedLiveCategoryProvider);
   if (c == null || cat == null) return [];
   final list = await c.liveStreams(cat);
-  return list.where((ch) => !isJunkChannel(ch.name)).toList();
+  final cfg = ref.watch(parentalConfigProvider);
+  final hide = cfg.hideMode && !ref.watch(parentalUnlockedProvider);
+  return list.where((ch) => !isJunkChannel(ch.name) && !(hide && cfg.channelLocked(ch.streamId, catId: ch.categoryId, name: ch.name))).toList();
 });
 
 /// Toutes les chaînes qui exposent une archive (tv_archive) — pour la Rediffusion.
@@ -41,7 +50,9 @@ final archiveChannelsProvider = FutureProvider<List<LiveChannel>>((ref) async {
   final c = ref.watch(xtreamClientProvider);
   if (c == null) return const [];
   final all = await c.liveStreams();
-  return all.where((ch) => ch.tvArchive && !isJunkChannel(ch.name)).toList();
+  final cfg = ref.watch(parentalConfigProvider);
+  final hide = cfg.hideMode && !ref.watch(parentalUnlockedProvider);
+  return all.where((ch) => ch.tvArchive && !isJunkChannel(ch.name) && !(hide && cfg.channelLocked(ch.streamId, catId: ch.categoryId, name: ch.name))).toList();
 });
 
 /// Chaînes d'une catégorie donnée (pour le Guide TV), sans junk.
@@ -49,7 +60,9 @@ final channelsByCategoryProvider = FutureProvider.family<List<LiveChannel>, Stri
   final c = ref.watch(xtreamClientProvider);
   if (c == null) return const [];
   final list = await c.liveStreams(categoryId);
-  return list.where((ch) => !isJunkChannel(ch.name)).toList();
+  final cfg = ref.watch(parentalConfigProvider);
+  final hide = cfg.hideMode && !ref.watch(parentalUnlockedProvider);
+  return list.where((ch) => !isJunkChannel(ch.name) && !(hide && cfg.channelLocked(ch.streamId, catId: ch.categoryId, name: ch.name))).toList();
 });
 
 /// EPG now/next d'une chaîne (chargé à la demande par carte, mis en cache Riverpod).

@@ -258,6 +258,9 @@ class LFr extends L {
   String get tabProfiles => 'Profils';
 
   @override
+  String get tabParental => 'Contrôle parental';
+
+  @override
   String get tabApp => 'Application';
 
   @override

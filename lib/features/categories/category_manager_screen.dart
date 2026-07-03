@@ -10,6 +10,7 @@ import '../auth/auth_controller.dart';
 import '../live/live_providers.dart';
 import '../vod/vod_providers.dart';
 import '../series/series_providers.dart';
+import '../parental/parental.dart';
 import 'category_prefs.dart';
 
 /// Écran « Gérer les catégories » pour une section (Live / Films / Séries).
@@ -25,7 +26,7 @@ class CategoryManagerScreen extends ConsumerStatefulWidget {
 
 class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
   String _query = '';
-  int _mode = 0; // 0 = visibilité, 1 = ordre
+  int _mode = 0; // 0 = visibilité, 1 = ordre, 2 = verrou parental
 
   FutureProvider<List<Category>> get _allProvider => switch (widget.section) {
         CatSection.live => liveCategoriesAllProvider,
@@ -117,12 +118,13 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
                 segments: const [
                   ButtonSegment(value: 0, icon: Icon(Icons.visibility_outlined, size: 18), label: Text('Visibilité')),
                   ButtonSegment(value: 1, icon: Icon(Icons.swap_vert, size: 18), label: Text('Ordre')),
+                  ButtonSegment(value: 2, icon: Icon(Icons.lock_outline, size: 18), label: Text('Verrou')),
                 ],
                 selected: {_mode},
                 onSelectionChanged: (s) => setState(() => _mode = s.first),
               ),
             ),
-            Expanded(child: _mode == 0 ? _visibilityView(all) : _orderView(all)),
+            Expanded(child: switch (_mode) { 1 => _orderView(all), 2 => _lockView(all), _ => _visibilityView(all) }),
           ],
         ),
       ),
@@ -225,6 +227,74 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
                   title: Text(c.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13.5)),
                   trailing: Icon(Icons.drag_handle, color: KtvColors.muted),
                 ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- Mode Verrou : marquer les catégories protégées par le code parental ---
+  Widget _lockView(List<Category> all) {
+    ref.watch(parentalTickProvider);
+    final cfg = ref.read(parentalConfigProvider);
+    final prefs = ref.read(prefsProvider);
+    final section = widget.section.key;
+    final q = removeDiacritics(_query.toLowerCase()).trim();
+    final filtered = q.isEmpty ? all : all.where((c) => removeDiacritics(c.name.toLowerCase()).contains(q)).toList();
+
+    return Column(
+      children: [
+        if (!cfg.pinSet)
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: KtvColors.panel,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: KtvColors.line),
+            ),
+            child: Text(
+              "Aucun code parental défini. Le verrouillage prendra effet une fois le code créé dans "
+              "Réglages → Contrôle parental.",
+              style: TextStyle(color: KtvColors.muted, fontSize: 12.5, height: 1.4),
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          child: TextField(
+            onChanged: (v) => setState(() => _query = v),
+            decoration: InputDecoration(
+              hintText: 'Filtrer les catégories…',
+              prefixIcon: Icon(Icons.search, size: 20, color: KtvColors.muted),
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
+            ),
+          ),
+        ),
+        Divider(height: 1, color: KtvColors.line),
+        Expanded(
+          child: ListView.builder(
+            itemCount: filtered.length,
+            itemBuilder: (_, i) {
+              final c = filtered[i];
+              final auto = cfg.autoAdult && isAdultCategory(c.name);
+              final manual = prefs.isCategoryLockedManual(section, c.id);
+              return SwitchListTile(
+                dense: true,
+                value: manual || auto,
+                onChanged: auto
+                    ? null
+                    : (v) async {
+                        await prefs.setCategoryLocked(section, c.id, v);
+                        ref.read(parentalTickProvider.notifier).state++;
+                        setState(() {});
+                      },
+                secondary: auto ? Icon(Icons.auto_awesome, size: 18, color: KtvColors.accent) : Icon(Icons.lock_outline, size: 18, color: KtvColors.muted),
+                title: Text(c.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13.5)),
+                subtitle: auto ? Text('Détecté « adulte » — verrouillé automatiquement', style: TextStyle(color: KtvColors.muted, fontSize: 11.5)) : null,
               );
             },
           ),
