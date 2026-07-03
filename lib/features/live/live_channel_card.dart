@@ -31,8 +31,8 @@ class LiveChannelCard extends ConsumerWidget {
     final autoLocked = locked && !prefs.isChannelLockedManual(channel.streamId);
 
     return GestureDetector(
-      onSecondaryTapDown: cfg.pinSet ? (d) => _lockMenu(context, ref, prefs, d.globalPosition, autoLocked) : null,
-      onLongPress: cfg.pinSet ? () => _lockMenu(context, ref, prefs, null, autoLocked) : null,
+      onSecondaryTapDown: (_) => _toggleChannelLock(context, ref, prefs, autoLocked),
+      onLongPress: () => _toggleChannelLock(context, ref, prefs, autoLocked),
       child: TvFocusable(
       onTap: onTap,
       child: Column(
@@ -69,28 +69,18 @@ class LiveChannelCard extends ConsumerWidget {
                       },
                     ),
                   ),
-                  // Verrou parental (visible quand un code est défini) — toggle direct.
-                  if (cfg.pinSet)
-                    Positioned(
-                      top: 36,
-                      right: 2,
-                      child: IconButton(
-                        iconSize: 18,
-                        visualDensity: VisualDensity.compact,
-                        tooltip: locked ? 'Déverrouiller' : 'Verrouiller',
-                        icon: Icon(locked ? Icons.lock : Icons.lock_open_outlined, color: locked ? KtvColors.accent : Colors.white70),
-                        onPressed: () async {
-                          if (autoLocked) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Verrouillée via sa catégorie ou la détection « adulte ».')),
-                            );
-                            return;
-                          }
-                          await prefs.setChannelLocked(channel.streamId, !prefs.isChannelLockedManual(channel.streamId));
-                          ref.read(parentalTickProvider.notifier).state++;
-                        },
-                      ),
+                  // Verrou parental — toujours disponible ; crée le code au besoin.
+                  Positioned(
+                    top: 36,
+                    right: 2,
+                    child: IconButton(
+                      iconSize: 18,
+                      visualDensity: VisualDensity.compact,
+                      tooltip: locked ? 'Déverrouiller' : 'Verrouiller',
+                      icon: Icon(locked ? Icons.lock : Icons.lock_open_outlined, color: locked ? KtvColors.accent : Colors.white70),
+                      onPressed: () => _toggleChannelLock(context, ref, prefs, autoLocked),
                     ),
+                  ),
                   if (kDesktop) Positioned(
                     top: 2,
                     left: 2,
@@ -169,34 +159,27 @@ class LiveChannelCard extends ConsumerWidget {
     );
   }
 
-  /// Menu contextuel (clic droit / appui long) pour (dé)verrouiller la chaîne.
-  Future<void> _lockMenu(BuildContext context, WidgetRef ref, PrefsStore prefs, Offset? pos, bool autoLocked) async {
-    final manual = prefs.isChannelLockedManual(channel.streamId);
+  /// (Dé)verrouille la chaîne. Si aucun code parental n'existe encore, propose de
+  /// le créer d'abord (sinon le verrou n'aurait aucun effet).
+  Future<void> _toggleChannelLock(BuildContext context, WidgetRef ref, PrefsStore prefs, bool autoLocked) async {
     if (autoLocked) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Verrouillée via sa catégorie ou la détection « adulte ».')),
       );
       return;
     }
-    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-    final at = pos ?? overlay.localToGlobal(overlay.size.center(Offset.zero));
-    final choice = await showMenu<bool>(
-      context: context,
-      position: RelativeRect.fromRect(at & const Size(1, 1), Offset.zero & overlay.size),
-      items: [
-        PopupMenuItem(
-          value: !manual,
-          child: Row(children: [
-            Icon(manual ? Icons.lock_open_rounded : Icons.lock_rounded, size: 18, color: KtvColors.accent),
-            const SizedBox(width: 10),
-            Text(manual ? 'Déverrouiller cette chaîne' : 'Verrouiller cette chaîne'),
-          ]),
-        ),
-      ],
-    );
-    if (choice == null) return;
-    await prefs.setChannelLocked(channel.streamId, choice);
+    if (!ref.read(parentalConfigProvider).pinSet) {
+      await promptSetParentalPin(context, ref);
+      if (!context.mounted || !ref.read(parentalConfigProvider).pinSet) return; // création annulée
+    }
+    final willLock = !prefs.isChannelLockedManual(channel.streamId);
+    await prefs.setChannelLocked(channel.streamId, willLock);
     ref.read(parentalTickProvider.notifier).state++;
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(willLock ? '🔒 ${channel.name} verrouillée' : '${channel.name} déverrouillée'), duration: const Duration(seconds: 2)),
+      );
+    }
   }
 }
 
