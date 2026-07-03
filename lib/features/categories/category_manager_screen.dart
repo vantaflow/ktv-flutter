@@ -34,8 +34,11 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
         CatSection.series => seriesCategoriesAllProvider,
       };
 
-  bool Function(String?) get _heuristic =>
-      widget.section == CatSection.live ? categoryAllowed : frCategoryAllowed;
+  bool Function(String?) get _heuristic {
+    // M3U : playlist curatée → tout visible par défaut.
+    if (ref.read(authControllerProvider)?.isM3u ?? false) return (_) => true;
+    return widget.section == CatSection.live ? categoryAllowed : frCategoryAllowed;
+  }
 
   Map<String, bool> _overrides() {
     final prof = ref.read(authControllerProvider);

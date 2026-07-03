@@ -6,21 +6,71 @@ String? _sn(dynamic v) => v?.toString();
 
 enum MediaKind { live, movie, series }
 
+/// Type de source du catalogue : compte Xtream (player_api) ou playlist M3U/M3U8.
+enum SourceKind { xtream, m3u }
+
 class XtreamProfile {
-  final String id; // srv|usr
+  final String id; // xtream: "srv|usr" · m3u: "m3u|url"
   final String label;
   final String srv;
   final String usr;
   final String pwd;
-  const XtreamProfile({required this.id, required this.label, required this.srv, required this.usr, required this.pwd});
+  final SourceKind kind; // défaut xtream (rétrocompat)
+  final String m3uUrl; // playlist M3U (kind == m3u)
+  final String epgUrl; // XMLTV externe optionnel (kind == m3u)
+  const XtreamProfile({
+    required this.id,
+    required this.label,
+    required this.srv,
+    required this.usr,
+    required this.pwd,
+    this.kind = SourceKind.xtream,
+    this.m3uUrl = '',
+    this.epgUrl = '',
+  });
+
+  bool get isM3u => kind == SourceKind.m3u;
 
   factory XtreamProfile.create(String srv, String usr, String pwd, {String? label}) {
     final s = srv.replaceAll(RegExp(r'/+$'), '');
     return XtreamProfile(id: '$s|$usr', label: label ?? Uri.tryParse(s)?.host ?? s, srv: s, usr: usr, pwd: pwd);
   }
-  Map<String, dynamic> toJson() => {'id': id, 'label': label, 'srv': srv, 'usr': usr, 'pwd': pwd};
-  factory XtreamProfile.fromJson(Map<String, dynamic> j) =>
-      XtreamProfile(id: _s(j['id']), label: _s(j['label']), srv: _s(j['srv']), usr: _s(j['usr']), pwd: _s(j['pwd']));
+
+  /// Source M3U/M3U8 (chaînes live uniquement). L'id dérive de l'URL (stable).
+  factory XtreamProfile.createM3u(String url, {String? label, String epgUrl = ''}) {
+    final u = url.trim();
+    return XtreamProfile(
+      id: 'm3u|$u',
+      label: label ?? Uri.tryParse(u)?.host ?? 'Playlist M3U',
+      srv: '',
+      usr: '',
+      pwd: '',
+      kind: SourceKind.m3u,
+      m3uUrl: u,
+      epgUrl: epgUrl.trim(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'label': label,
+        'srv': srv,
+        'usr': usr,
+        'pwd': pwd,
+        if (kind == SourceKind.m3u) 'kind': 'm3u',
+        if (m3uUrl.isNotEmpty) 'm3uUrl': m3uUrl,
+        if (epgUrl.isNotEmpty) 'epgUrl': epgUrl,
+      };
+  factory XtreamProfile.fromJson(Map<String, dynamic> j) => XtreamProfile(
+        id: _s(j['id']),
+        label: _s(j['label']),
+        srv: _s(j['srv']),
+        usr: _s(j['usr']),
+        pwd: _s(j['pwd']),
+        kind: _s(j['kind']) == 'm3u' ? SourceKind.m3u : SourceKind.xtream,
+        m3uUrl: _s(j['m3uUrl']),
+        epgUrl: _s(j['epgUrl']),
+      );
 }
 
 class Category {

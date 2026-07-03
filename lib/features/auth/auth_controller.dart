@@ -2,9 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../core/models/models.dart';
 import '../../core/xtream/xtream_client.dart';
-import '../../core/xtream/xtream_urls.dart';
+import '../../core/source/catalog_source.dart';
+import '../../core/source/xtream_source.dart';
+import '../../core/source/m3u_source.dart';
 
-/// État d'authentification : profil Xtream actif (null = déconnecté).
+/// État d'authentification : profil (source) actif (null = déconnecté).
 final authControllerProvider =
     NotifierProvider<AuthController, XtreamProfile?>(AuthController.new);
 
@@ -12,7 +14,7 @@ class AuthController extends Notifier<XtreamProfile?> {
   @override
   XtreamProfile? build() => ref.read(prefsProvider).activeProfile();
 
-  /// Valide les identifiants, enregistre le profil et le rend actif.
+  /// Valide les identifiants Xtream, enregistre le profil et le rend actif.
   Future<UserInfo> login(String srv, String usr, String pwd) async {
     final prof = XtreamProfile.create(srv, usr, pwd);
     final client = XtreamClient(prof);
@@ -28,6 +30,24 @@ class AuthController extends Notifier<XtreamProfile?> {
       return info;
     } finally {
       client.close();
+    }
+  }
+
+  /// Valide une playlist M3U (télécharge + parse), l'enregistre et l'active.
+  Future<void> loginM3u(String url, {String? label, String epgUrl = ''}) async {
+    final prof = XtreamProfile.createM3u(url, label: label, epgUrl: epgUrl);
+    final src = M3uSource(prof);
+    try {
+      final chans = await src.liveStreams();
+      if (chans.isEmpty) {
+        throw Exception('Playlist vide ou illisible.');
+      }
+      final prefs = ref.read(prefsProvider);
+      await prefs.upsertProfile(prof);
+      await prefs.setActive(prof.id);
+      state = prof;
+    } finally {
+      src.close();
     }
   }
 
@@ -47,20 +67,23 @@ class AuthController extends Notifier<XtreamProfile?> {
   }
 }
 
-/// Client Xtream lié au profil actif (recréé au changement de profil).
-final xtreamClientProvider = Provider<XtreamClient?>((ref) {
+/// Construit la source de catalogue du profil actif (Xtream ou M3U).
+CatalogSource _buildSource(XtreamProfile prof) =>
+    prof.isM3u ? M3uSource(prof) : XtreamSource(prof);
+
+/// Source de catalogue liée au profil actif (recréée au changement de profil).
+/// Historiquement nommé `xtreamClientProvider` — désormais une `CatalogSource`
+/// (les noms de méthodes sont identiques, donc les consommateurs sont inchangés).
+final xtreamClientProvider = Provider<CatalogSource?>((ref) {
   final prof = ref.watch(authControllerProvider);
   if (prof == null) return null;
-  final client = XtreamClient(prof);
-  ref.onDispose(client.close);
-  return client;
+  final src = _buildSource(prof);
+  ref.onDispose(src.close);
+  return src;
 });
 
-/// Constructeur d'URLs de flux du profil actif.
-final xtreamUrlsProvider = Provider<XtreamUrls?>((ref) {
-  final prof = ref.watch(authControllerProvider);
-  return prof == null ? null : XtreamUrls.of(prof);
-});
+/// Constructeur d'URLs de flux du profil actif = la même source (compat).
+final xtreamUrlsProvider = Provider<CatalogSource?>((ref) => ref.watch(xtreamClientProvider));
 
 /// Infos d'abonnement (statut, expiration, connexions…) du profil actif.
 final userInfoProvider = FutureProvider<UserInfo?>((ref) async {
