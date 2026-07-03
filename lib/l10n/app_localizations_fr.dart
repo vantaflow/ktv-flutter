@@ -748,5 +748,8 @@ class LFr extends L {
   String get updDownloading => 'Téléchargement de la mise à jour…';
 
   @override
+  String get updInstalling => 'Installation… l\'application va redémarrer.';
+
+  @override
   String get updCheckAtStart => 'Vérifier les mises à jour au démarrage';
 }

@@ -740,5 +740,8 @@ class LAr extends L {
   String get updDownloading => 'جارٍ تنزيل التحديث…';
 
   @override
+  String get updInstalling => 'جارٍ التثبيت… سيُعاد تشغيل التطبيق.';
+
+  @override
   String get updCheckAtStart => 'التحقق من التحديثات عند البدء';
 }

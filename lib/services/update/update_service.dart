@@ -77,20 +77,95 @@ class UpdateService {
   }
 
   /// Android : télécharge l'APK puis ouvre l'installateur système.
-  /// Desktop : télécharge l'archive et la révèle dans le Finder/Explorateur.
   Future<String?> downloadAndInstall(UpdateInfo info, {void Function(double)? onProgress}) async {
     final path = await download(info, onProgress: onProgress);
     if (path == null) return null;
     try {
-      if (Platform.isAndroid) {
-        await OpenFilex.open(path); // → installateur de paquets Android
-      } else if (Platform.isMacOS) {
+      if (Platform.isAndroid) await OpenFilex.open(path);
+    } catch (_) {}
+    return path;
+  }
+
+  /// Révèle l'archive dans le Finder/Explorateur (repli si l'auto-install échoue).
+  Future<void> reveal(String path) async {
+    try {
+      if (Platform.isMacOS) {
         await Process.run('open', ['-R', path]);
       } else if (Platform.isWindows) {
         await Process.run('explorer', ['/select,', path]);
       }
     } catch (_) {}
-    return path;
+  }
+
+  /// Installe la MAJ desktop : extrait l'archive, remplace le bundle/dossier de
+  /// l'app en cours puis la relance — via un script détaché qui attend d'abord
+  /// la fermeture de l'app (on ne peut pas écraser un binaire en cours d'exécution).
+  /// Renvoie true si le script a été lancé : l'app DOIT alors se fermer (exit).
+  Future<bool> installUpdate(String archivePath) async {
+    try {
+      if (Platform.isMacOS) return await _installMacOS(archivePath);
+      if (Platform.isWindows) return await _installWindows(archivePath);
+    } catch (_) {}
+    return false;
+  }
+
+  Future<bool> _installMacOS(String zipPath) async {
+    final exe = Platform.resolvedExecutable; // …/KTV.app/Contents/MacOS/KTV
+    const marker = '.app/';
+    final i = exe.indexOf(marker);
+    if (i < 0) return false;
+    final bundle = exe.substring(0, i + marker.length - 1); // …/KTV.app
+    final tmp = await Directory.systemTemp.createTemp('ktv_upd');
+    // ditto : gère les archives produites par `ditto -c -k --keepParent` (CI).
+    final ex = await Process.run('ditto', ['-x', '-k', zipPath, tmp.path]);
+    if (ex.exitCode != 0) return false;
+    String? newApp;
+    for (final e in tmp.listSync()) {
+      if (e.path.endsWith('.app')) {
+        newApp = e.path;
+        break;
+      }
+    }
+    if (newApp == null) return false;
+    final sh = '''#!/bin/bash
+while pgrep -f "$bundle/Contents/MacOS/" >/dev/null 2>&1; do sleep 0.4; done
+rm -rf "$bundle"
+cp -R "$newApp" "$bundle"
+xattr -dr com.apple.quarantine "$bundle" 2>/dev/null || true
+codesign --force --deep -s - "$bundle" 2>/dev/null || true
+sleep 0.4
+open "$bundle"
+rm -rf "${tmp.path}" 2>/dev/null || true
+''';
+    final sp = '${tmp.path}/ktv_install.sh';
+    await File(sp).writeAsString(sh);
+    await Process.run('chmod', ['+x', sp]);
+    await Process.start('/bin/bash', [sp], mode: ProcessStartMode.detached);
+    return true;
+  }
+
+  Future<bool> _installWindows(String zipPath) async {
+    final exe = Platform.resolvedExecutable; // install\KTV.exe
+    final appDir = File(exe).parent.path;
+    final tmp = await Directory.systemTemp.createTemp('ktv_upd');
+    final ex = await Process.run('powershell', [
+      '-NoProfile',
+      '-Command',
+      'Expand-Archive -Force -LiteralPath "$zipPath" -DestinationPath "${tmp.path}"',
+    ]);
+    if (ex.exitCode != 0) return false;
+    final bat = '''@echo off
+:wait
+tasklist /FI "IMAGENAME eq KTV.exe" 2>nul | find /I "KTV.exe" >nul && (timeout /t 1 /nobreak >nul & goto wait)
+xcopy /E /I /Y "${tmp.path}\\*" "$appDir" >nul
+start "" "$appDir\\KTV.exe"
+rmdir /S /Q "${tmp.path}"
+del "%~f0"
+''';
+    final bp = '${tmp.path}\\ktv_install.bat';
+    await File(bp).writeAsString(bat);
+    await Process.start('cmd', ['/c', bp], mode: ProcessStartMode.detached);
+    return true;
   }
 }
 

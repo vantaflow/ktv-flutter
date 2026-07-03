@@ -279,5 +279,6 @@
   "updNow": "Update",
   "updLater": "Later",
   "updDownloading": "Downloading update…",
+  "updInstalling": "Installing… the app will restart.",
   "updCheckAtStart": "Check for updates on startup"
 }

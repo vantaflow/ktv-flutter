@@ -279,5 +279,6 @@
   "updNow": "Mettre à jour",
   "updLater": "Plus tard",
   "updDownloading": "Téléchargement de la mise à jour…",
+  "updInstalling": "Installation… l'application va redémarrer.",
   "updCheckAtStart": "Vérifier les mises à jour au démarrage"
 }

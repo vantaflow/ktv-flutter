@@ -1497,6 +1497,12 @@ abstract class L {
   /// **'Téléchargement de la mise à jour…'**
   String get updDownloading;
 
+  /// No description provided for @updInstalling.
+  ///
+  /// In fr, this message translates to:
+  /// **'Installation… l\'application va redémarrer.'**
+  String get updInstalling;
+
   /// No description provided for @updCheckAtStart.
   ///
   /// In fr, this message translates to:

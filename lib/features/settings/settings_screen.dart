@@ -1012,20 +1012,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final u = _update;
     if (u == null) return;
     setState(() => _dlProgress = 0);
-    final path = await ref.read(updateServiceProvider).download(u, onProgress: (p) { if (mounted) setState(() => _dlProgress = p); });
+    final svc = ref.read(updateServiceProvider);
+    final path = await svc.download(u, onProgress: (p) { if (mounted) setState(() => _dlProgress = p); });
     if (!mounted) return;
     setState(() => _dlProgress = 1);
-    if (path != null) {
-      try {
-        if (Platform.isMacOS) {
-          await Process.run('open', ['-R', path]); // révèle dans le Finder
-        } else if (Platform.isWindows) {
-          await Process.run('explorer', ['/select,', path]);
-        }
-      } catch (_) {}
-      _toast('Téléchargé : $path');
-    } else {
+    if (path == null) {
       _toast(L.of(context)!.sDownloadErr);
+      return;
+    }
+    // Installe automatiquement (swap + relance) ; repli sur « révéler » si échec.
+    final ok = await svc.installUpdate(path);
+    if (!mounted) return;
+    if (ok) {
+      _toast(L.of(context)!.updInstalling);
+      await Future.delayed(const Duration(milliseconds: 500));
+      exit(0);
+    } else {
+      await svc.reveal(path);
+      if (mounted) _toast('Téléchargé : $path');
     }
   }
 

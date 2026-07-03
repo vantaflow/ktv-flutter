@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
@@ -44,6 +45,27 @@ Future<void> checkAndPromptUpdate(BuildContext context, WidgetRef ref) async {
   );
   if (go != true || !context.mounted) return;
 
+  final svc = ref.read(updateServiceProvider);
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.updDownloading)));
-  await ref.read(updateServiceProvider).downloadAndInstall(info);
+
+  // Android : télécharge l'APK + ouvre l'installateur système.
+  if (Platform.isAndroid) {
+    await svc.downloadAndInstall(info);
+    return;
+  }
+
+  // Desktop : télécharge puis installe automatiquement (swap + relance).
+  final path = await svc.download(info);
+  if (path == null) {
+    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.sDownloadErr)));
+    return;
+  }
+  final ok = await svc.installUpdate(path);
+  if (ok) {
+    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.updInstalling)));
+    await Future.delayed(const Duration(milliseconds: 500));
+    exit(0); // le script détaché attend cette fermeture, remplace l'app puis relance
+  } else {
+    await svc.reveal(path); // repli : révéler l'archive
+  }
 }

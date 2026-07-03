@@ -743,5 +743,8 @@ class LEn extends L {
   String get updDownloading => 'Downloading update…';
 
   @override
+  String get updInstalling => 'Installing… the app will restart.';
+
+  @override
   String get updCheckAtStart => 'Check for updates on startup';
 }
