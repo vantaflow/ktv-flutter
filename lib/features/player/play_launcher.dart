@@ -5,6 +5,7 @@ import '../../core/models/playback.dart';
 import '../../core/logic/duration_parse.dart';
 import '../../core/providers.dart';
 import '../auth/auth_controller.dart';
+import '../parental/parental.dart';
 import 'player_screen.dart';
 
 /// Point d'entrée unique de la lecture : construit l'URL, historise (recent),
@@ -17,17 +18,21 @@ class PlayLauncher {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => PlayerScreen(request: req)));
   }
 
-  static void movie(BuildContext context, WidgetRef ref, VodItem m) {
+  static Future<void> movie(BuildContext context, WidgetRef ref, VodItem m) async {
     final urls = ref.read(xtreamUrlsProvider);
     if (urls == null) return;
+    final locked = ref.read(parentalConfigProvider).channelLocked(m.streamId, section: 'vod', catId: m.categoryId, name: m.name);
+    if (!await parentalAllow(context, ref, locked: locked) || !context.mounted) return;
     final key = 'movie:${m.streamId}';
     ref.read(prefsProvider).pushRecent(RecentEntry(kind: MediaKind.movie, id: m.streamId, name: m.name, cover: m.cover, ext: m.ext, resumeKey: key, at: _now));
     _open(context, ref, PlaybackRequest(url: urls.movie(m.streamId, m.ext), title: m.name, kind: MediaKind.movie, resumeKey: key));
   }
 
-  static void episode(BuildContext context, WidgetRef ref, SeriesItem s, Episode ep, {int? durationSec, List<Episode>? seasonEps}) {
+  static Future<void> episode(BuildContext context, WidgetRef ref, SeriesItem s, Episode ep, {int? durationSec, List<Episode>? seasonEps}) async {
     final urls = ref.read(xtreamUrlsProvider);
     if (urls == null) return;
+    final locked = ref.read(parentalConfigProvider).channelLocked(ep.id, section: 'series', catId: s.categoryId, name: s.name);
+    if (!await parentalAllow(context, ref, locked: locked) || !context.mounted) return;
     final key = 'series:${ep.id}';
     final sub = 'Saison ${ep.season} · Épisode ${ep.episodeNum}';
     ref.read(prefsProvider).pushRecent(RecentEntry(kind: MediaKind.series, id: ep.id, name: s.name, cover: s.cover, ext: ep.ext, resumeKey: key, subtitle: sub, at: _now));
@@ -80,17 +85,24 @@ class PlayLauncher {
     _open(context, ref, PlaybackRequest(url: path, title: name, subtitle: subtitle, kind: MediaKind.movie));
   }
 
-  static void live(BuildContext context, WidgetRef ref, LiveChannel ch) {
+  static Future<void> live(BuildContext context, WidgetRef ref, LiveChannel ch) async {
     final urls = ref.read(xtreamUrlsProvider);
     if (urls == null) return;
+    final locked = ref.read(parentalConfigProvider).channelLocked(ch.streamId, catId: ch.categoryId, name: ch.name);
+    if (!await parentalAllow(context, ref, locked: locked) || !context.mounted) return;
     ref.read(prefsProvider).pushRecent(RecentEntry(kind: MediaKind.live, id: ch.streamId, name: ch.name, cover: ch.icon, ext: 'ts', categoryId: ch.categoryId, at: _now));
     _open(context, ref, PlaybackRequest(url: urls.live(ch.streamId), title: ch.name, kind: MediaKind.live, liveStreamId: ch.streamId, liveCategoryId: ch.categoryId));
   }
 
   /// Rejoue une entrée d'historique depuis l'accueil.
-  static void recent(BuildContext context, WidgetRef ref, RecentEntry e) {
+  static Future<void> recent(BuildContext context, WidgetRef ref, RecentEntry e) async {
     final urls = ref.read(xtreamUrlsProvider);
     if (urls == null) return;
+    final cfg = ref.read(parentalConfigProvider);
+    final locked = e.kind == MediaKind.live
+        ? cfg.channelLocked(e.id, catId: e.categoryId, name: e.name)
+        : cfg.channelLocked(e.id, section: 'vod', name: e.name);
+    if (!await parentalAllow(context, ref, locked: locked) || !context.mounted) return;
     final String url;
     switch (e.kind) {
       case MediaKind.movie:

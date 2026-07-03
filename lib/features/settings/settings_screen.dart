@@ -22,6 +22,7 @@ import '../home/home_providers.dart';
 import '../auth/auth_controller.dart';
 import '../categories/category_prefs.dart';
 import '../categories/category_manager_screen.dart';
+import '../parental/parental.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Section sélectionnée dans les Réglages (layout 2 colonnes façon ancienne KTV).
@@ -61,13 +62,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     Icons.event_note_rounded, Icons.movie_filter_rounded, Icons.category_rounded, Icons.theaters_rounded,
     Icons.sync_rounded, Icons.cloud_sync_rounded, Icons.autorenew_rounded, Icons.fiber_manual_record,
     Icons.download_rounded, Icons.history_rounded, Icons.speed_rounded, Icons.switch_account_rounded,
-    Icons.info_outline_rounded,
+    Icons.lock_outline_rounded, Icons.info_outline_rounded,
   ];
 
   static String _tabName(L l, int i) => [
         l.tabAccount, l.tabPlayback, l.tabTheme, l.tabHome, l.tabEpg, l.tabCatalog, l.tabCategories,
         l.tabTmdb, l.tabTrakt, l.tabSync, l.tabAutoUpdate, l.tabRecordings, l.tabDownloads, l.tabHistory,
-        l.tabDiagnostic, l.tabProfiles, l.tabApp,
+        l.tabDiagnostic, l.tabProfiles, l.tabParental, l.tabApp,
       ][i];
 
   @override
@@ -122,6 +123,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   13 => _history(),
                   14 => _diagnostic(),
                   15 => _profiles(),
+                  16 => _parental(),
                   _ => _app(),
                 },
               ],
@@ -604,6 +606,136 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         const SizedBox(height: 12),
         FilledButton.tonalIcon(onPressed: () => ref.read(authControllerProvider.notifier).logout(), icon: Icon(Icons.logout), label: Text(L.of(context)!.sLogout)),
+      ]),
+    ];
+  }
+
+  // --- 🔒 Contrôle parental ---
+  List<Widget> _parental() {
+    final prefs = ref.read(prefsProvider);
+    final cfg = ref.watch(parentalConfigProvider);
+
+    Widget catRow(CatSection section, IconData icon) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(children: [
+            Icon(icon, color: KtvColors.accent, size: 22),
+            const SizedBox(width: 12),
+            Expanded(child: Text(section.label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600))),
+            FilledButton.tonalIcon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => CategoryManagerScreen(section: section)),
+              ),
+              icon: const Icon(Icons.lock_outline, size: 18),
+              label: const Text('Verrouiller'),
+            ),
+          ]),
+        );
+
+    if (!cfg.pinSet) {
+      return [
+        _card([
+          Row(children: [
+            Icon(Icons.shield_outlined, color: KtvColors.accent, size: 22),
+            const SizedBox(width: 10),
+            const Expanded(child: Text('Aucun code parental défini', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))),
+          ]),
+          const SizedBox(height: 8),
+          Text(
+            "Définissez un code à 4-8 chiffres pour verrouiller des catégories ou des chaînes. "
+            "Une fois activé, les contenus « adulte » (XXX, 18+…) sont détectés automatiquement.",
+            style: TextStyle(color: KtvColors.muted, fontSize: 12.5, height: 1.4),
+          ),
+          const SizedBox(height: 14),
+          FilledButton.icon(
+            onPressed: () async {
+              await promptSetParentalPin(context, ref);
+              if (mounted) setState(() {});
+            },
+            icon: const Icon(Icons.lock_outline, size: 18),
+            label: const Text('Définir un code parental'),
+          ),
+        ]),
+      ];
+    }
+
+    return [
+      _card([
+        Row(children: [
+          Icon(Icons.verified_user_outlined, color: KtvColors.accent, size: 22),
+          const SizedBox(width: 10),
+          const Expanded(child: Text('Code parental actif', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))),
+        ]),
+        const SizedBox(height: 12),
+        Row(children: [
+          FilledButton.tonalIcon(
+            onPressed: () async {
+              await promptSetParentalPin(context, ref);
+              if (mounted) setState(() {});
+            },
+            icon: const Icon(Icons.password_rounded, size: 18),
+            label: const Text('Changer le code'),
+          ),
+          const SizedBox(width: 10),
+          TextButton.icon(
+            onPressed: () async {
+              await removeParentalPin(ref);
+              if (mounted) setState(() {});
+            },
+            icon: Icon(Icons.lock_open_rounded, size: 18, color: KtvColors.rec),
+            label: Text('Supprimer', style: TextStyle(color: KtvColors.rec)),
+          ),
+        ]),
+      ]),
+      const SizedBox(height: 14),
+      _card([
+        const Text('Comportement des contenus verrouillés', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+        const SizedBox(height: 10),
+        SegmentedButton<String>(
+          showSelectedIcon: false,
+          segments: const [
+            ButtonSegment(value: 'lock', icon: Icon(Icons.lock_outline, size: 16), label: Text('Verrouiller')),
+            ButtonSegment(value: 'hide', icon: Icon(Icons.visibility_off_outlined, size: 16), label: Text('Masquer')),
+          ],
+          selected: {cfg.mode},
+          onSelectionChanged: (s) async {
+            await prefs.setParentalMode(s.first);
+            ref.read(parentalTickProvider.notifier).state++;
+            setState(() {});
+          },
+        ),
+        const SizedBox(height: 8),
+        Text(
+          cfg.hideMode
+              ? "Masqué : les catégories/chaînes verrouillées disparaissent des listes jusqu'à saisie du code."
+              : "Verrouillé : les contenus restent visibles avec un cadenas ; le code est demandé à l'ouverture.",
+          style: TextStyle(color: KtvColors.muted, fontSize: 12),
+        ),
+        Divider(height: 24, color: KtvColors.line),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          dense: true,
+          value: cfg.autoAdult,
+          onChanged: (v) async {
+            await prefs.setParentalAutoAdult(v);
+            ref.read(parentalTickProvider.notifier).state++;
+            setState(() {});
+          },
+          title: const Text('Verrouiller automatiquement les contenus adulte', style: TextStyle(fontSize: 13.5)),
+          subtitle: Text('Détecte XXX, Adult, 18+, Porn… dans les noms de catégories et chaînes.', style: TextStyle(color: KtvColors.muted, fontSize: 12)),
+        ),
+      ]),
+      const SizedBox(height: 14),
+      _card([
+        const Text('Catégories à verrouiller', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+        const SizedBox(height: 4),
+        Text('Ouvrez une section pour marquer les catégories (onglet « Verrou »). Les chaînes se verrouillent une à une depuis le Live (clic droit / menu).',
+            style: TextStyle(color: KtvColors.muted, fontSize: 12, height: 1.4)),
+        const SizedBox(height: 12),
+        catRow(CatSection.live, Icons.live_tv_rounded),
+        Divider(height: 16, color: KtvColors.line),
+        catRow(CatSection.vod, Icons.movie_rounded),
+        Divider(height: 16, color: KtvColors.line),
+        catRow(CatSection.series, Icons.grid_view_rounded),
       ]),
     ];
   }

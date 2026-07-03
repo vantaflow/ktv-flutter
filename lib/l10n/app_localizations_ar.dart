@@ -257,6 +257,9 @@ class LAr extends L {
   String get tabProfiles => 'الملفات الشخصية';
 
   @override
+  String get tabParental => 'الرقابة الأبوية';
+
+  @override
   String get tabApp => 'التطبيق';
 
   @override

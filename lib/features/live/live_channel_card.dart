@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/models.dart';
 import '../../core/providers.dart';
+import '../../core/storage/prefs_store.dart';
 import '../../core/platform.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/tv_focusable.dart';
 import '../auth/auth_controller.dart';
+import '../parental/parental.dart';
 import '../../services/recording/recording_service.dart';
 import '../../services/epg/epg_providers.dart';
 import '../guide/epg_dialog.dart';
@@ -23,8 +25,15 @@ class LiveChannelCard extends ConsumerWidget {
     final index = ref.watch(epgIndexProvider).asData?.value;
     final (now, next) = index?.nowNext(channel) ?? (null, null);
     final recording = ref.watch(recordingControllerProvider).any((r) => r.status == RecStatus.recording);
+    final cfg = ref.watch(parentalConfigProvider);
+    final locked = cfg.channelLocked(channel.streamId, catId: channel.categoryId, name: channel.name);
+    // Verrouillée sans marquage manuel = via sa catégorie ou la détection adulte.
+    final autoLocked = locked && !prefs.isChannelLockedManual(channel.streamId);
 
-    return TvFocusable(
+    return GestureDetector(
+      onSecondaryTapDown: cfg.pinSet ? (d) => _lockMenu(context, ref, prefs, d.globalPosition, autoLocked) : null,
+      onLongPress: cfg.pinSet ? () => _lockMenu(context, ref, prefs, null, autoLocked) : null,
+      child: TvFocusable(
       onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,6 +95,16 @@ class LiveChannelCard extends ConsumerWidget {
                       },
                     ),
                   ),
+                  if (locked)
+                    Positioned(
+                      bottom: 4,
+                      left: 4,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(7)),
+                        child: Icon(autoLocked ? Icons.shield_rounded : Icons.lock_rounded, size: 14, color: Colors.white),
+                      ),
+                    ),
                   if (now != null)
                     Positioned(
                       left: 0,
@@ -108,7 +127,38 @@ class LiveChannelCard extends ConsumerWidget {
             Text('Puis ${epgTime(next.start)} · ${next.title}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: KtvColors.muted)),
         ],
       ),
+      ),
     );
+  }
+
+  /// Menu contextuel (clic droit / appui long) pour (dé)verrouiller la chaîne.
+  Future<void> _lockMenu(BuildContext context, WidgetRef ref, PrefsStore prefs, Offset? pos, bool autoLocked) async {
+    final manual = prefs.isChannelLockedManual(channel.streamId);
+    if (autoLocked) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Verrouillée via sa catégorie ou la détection « adulte ».')),
+      );
+      return;
+    }
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final at = pos ?? overlay.localToGlobal(overlay.size.center(Offset.zero));
+    final choice = await showMenu<bool>(
+      context: context,
+      position: RelativeRect.fromRect(at & const Size(1, 1), Offset.zero & overlay.size),
+      items: [
+        PopupMenuItem(
+          value: !manual,
+          child: Row(children: [
+            Icon(manual ? Icons.lock_open_rounded : Icons.lock_rounded, size: 18, color: KtvColors.accent),
+            const SizedBox(width: 10),
+            Text(manual ? 'Déverrouiller cette chaîne' : 'Verrouiller cette chaîne'),
+          ]),
+        ),
+      ],
+    );
+    if (choice == null) return;
+    await prefs.setChannelLocked(channel.streamId, choice);
+    ref.read(parentalTickProvider.notifier).state++;
   }
 }
 

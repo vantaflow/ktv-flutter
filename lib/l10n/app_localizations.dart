@@ -579,6 +579,12 @@ abstract class L {
   /// **'Profils'**
   String get tabProfiles;
 
+  /// No description provided for @tabParental.
+  ///
+  /// In fr, this message translates to:
+  /// **'Contrôle parental'**
+  String get tabParental;
+
   /// No description provided for @tabApp.
   ///
   /// In fr, this message translates to:

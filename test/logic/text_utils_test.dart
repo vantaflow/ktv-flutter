@@ -52,4 +52,21 @@ void main() {
     test('accents/case/punctuation', () => expect(ktvNormTitle('Café de Paris!'), 'cafe de paris'));
     test('empty', () => expect(ktvNormTitle(''), ''));
   });
+
+  group('isAdultCategory', () {
+    test('detects explicit adult markers', () {
+      expect(isAdultCategory('XXX FR'), isTrue);
+      expect(isAdultCategory('FR | ADULTES 18+'), isTrue);
+      expect(isAdultCategory('Porn HD'), isTrue);
+      expect(isAdultCategory('Érotique'), isTrue); // accents ignorés
+      expect(isAdultCategory('Brazzers'), isTrue);
+    });
+    test('rejects normal categories', () {
+      expect(isAdultCategory('FR| TF1'), isFalse);
+      expect(isAdultCategory('Documentaires'), isFalse);
+      expect(isAdultCategory('Sports'), isFalse);
+      expect(isAdultCategory(null), isFalse);
+      expect(isAdultCategory(''), isFalse);
+    });
+  });
 }

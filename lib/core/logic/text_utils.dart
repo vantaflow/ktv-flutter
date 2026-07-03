@@ -34,6 +34,21 @@ bool frCategoryAllowed(String? name) {
       n.contains('TRUEFRENCH');
 }
 
+/// Détecte une catégorie/chaîne « adulte » d'après son nom (contrôle parental).
+/// Volontairement large : couvre FR/EN et les marqueurs usuels des fournisseurs.
+bool isAdultCategory(String? name) {
+  final n = removeDiacritics((name ?? '').toLowerCase());
+  const tokens = [
+    'xxx', 'adult', 'adulte', 'porn', 'porno', '18+', '+18', '(18)', 'x-rated',
+    'erotic', 'erotik', 'erotique', 'hentai', 'nsfw', 'sex', 'sexe', 'sexy',
+    'brazzers', 'playboy', 'hustler', 'onlyfans', 'jav', 'red light',
+  ];
+  for (final t in tokens) {
+    if (n.contains(t)) return true;
+  }
+  return false;
+}
+
 /// Détecte les fausses entrées (séparateurs "###", symboles seuls…).
 bool isJunkChannel(String? name) {
   final n = (name ?? '').trim();
