@@ -33,13 +33,6 @@ Le moteur `<video>` de Chromium (Electron) ne lit pas les MKV/HEVC/multi-pistes 
 - **Système** : **mise à jour in-app** (GitHub), **rafraîchissement automatique** catalogue/EPG, **diagnostic réseau**, **historique complet**, dossiers configurables
 - Démarrage agrandi · fenêtre centrée
 
-### Feuille de route (à venir)
-- **Multi-sources M3U/Xtream fusionnées** (plusieurs abonnements + playlists `.m3u` dans un catalogue unifié)
-- **Contrôle parental** (verrou PIN sur les catégories)
-- **Version iOS**
-
-_Livré récemment : synchro inter-appareils chiffrée · favoris Films & Séries · interface multilingue FR/EN/AR (RTL) · gestion & réorganisation des catégories · catch-up dédié._
-
 ## Développement
 
 ```bash
