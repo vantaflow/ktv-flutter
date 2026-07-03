@@ -23,6 +23,8 @@ import '../auth/auth_controller.dart';
 import '../categories/category_prefs.dart';
 import '../categories/category_manager_screen.dart';
 import '../parental/parental.dart';
+import '../sources/sources_providers.dart';
+import '../live/live_providers.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Section sélectionnée dans les Réglages (layout 2 colonnes façon ancienne KTV).
@@ -586,20 +588,54 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     ];
   }
 
-  // --- 👥 Profils ---
+  // --- 👥 Profils & sources ---
+  Future<void> _toggleEnabled(String id, bool on) async {
+    final prefs = ref.read(prefsProvider);
+    final set = prefs.enabledSourceIds().toSet();
+    on ? set.add(id) : set.remove(id);
+    final active = ref.read(authControllerProvider)?.id;
+    if (active != null) set.add(active); // la source active est toujours incluse
+    await prefs.setEnabledSourceIds(set.toList());
+    ref.read(sourcesTickProvider.notifier).state++;
+    ref.invalidate(mergedLiveProvider);
+    ref.invalidate(liveCategoriesProvider);
+    ref.invalidate(liveStreamsProvider);
+    if (mounted) setState(() {});
+  }
+
   List<Widget> _profiles() {
     final prefs = ref.read(prefsProvider);
     final prof = ref.watch(authControllerProvider);
     final profiles = prefs.profiles();
+    final enabled = prefs.enabledSourceIds().toSet();
+    bool isEnabled(XtreamProfile p) => p.id == prof?.id || enabled.contains(p.id);
     return [
       _card([
+        Text('Fusionnez plusieurs sources : activez-en plusieurs pour un catalogue Live unifié et dédoublonné (bascule automatique si une source tombe). Le compte actif fournit Films & Séries.',
+            style: TextStyle(color: KtvColors.muted, fontSize: 12.5, height: 1.4)),
+        const SizedBox(height: 8),
         for (final p in profiles)
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text(p.label),
-            subtitle: Text(p.srv, style: TextStyle(color: KtvColors.muted, fontSize: 12)),
+            leading: Icon(p.isM3u ? Icons.playlist_play_rounded : Icons.dns_rounded, color: KtvColors.accent2, size: 22),
+            title: Row(children: [
+              Flexible(child: Text(p.label, overflow: TextOverflow.ellipsis)),
+              if (p.id == prof?.id) ...[
+                const SizedBox(width: 8),
+                Icon(Icons.check_circle, color: KtvColors.accent, size: 16),
+              ],
+            ]),
+            subtitle: Text(p.isM3u ? (p.m3uUrl.isEmpty ? 'Playlist M3U' : p.m3uUrl) : p.srv,
+                maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: KtvColors.muted, fontSize: 12)),
             trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-              if (p.id == prof?.id) Icon(Icons.check_circle, color: KtvColors.accent, size: 18),
+              // Inclure dans la fusion Live (source active = toujours incluse).
+              Tooltip(
+                message: 'Inclure dans le Live fusionné',
+                child: Switch(
+                  value: isEnabled(p),
+                  onChanged: p.id == prof?.id ? null : (v) => _toggleEnabled(p.id, v),
+                ),
+              ),
               if (p.id != prof?.id) TextButton(onPressed: () => ref.read(authControllerProvider.notifier).switchTo(p), child: Text(L.of(context)!.sActivate)),
               IconButton(icon: Icon(Icons.delete_outline, color: KtvColors.muted), onPressed: () => ref.read(authControllerProvider.notifier).deleteProfile(p.id)),
             ]),

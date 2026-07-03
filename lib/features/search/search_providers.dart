@@ -5,9 +5,14 @@ import '../../core/logic/text_utils.dart';
 import '../auth/auth_controller.dart';
 import '../live/live_providers.dart';
 import '../parental/parental.dart';
+import '../sources/sources_providers.dart';
 
 /// Toutes les chaînes live (catégories FR, sans junk) — pour la recherche globale.
+/// Multi-sources : renvoie le catalogue Live fusionné (déjà dédoublonné/filtré).
 final allLiveProvider = FutureProvider<List<LiveChannel>>((ref) async {
+  if (ref.watch(multiSourceActiveProvider)) {
+    return (await ref.watch(mergedLiveProvider.future)).channels;
+  }
   final c = ref.watch(xtreamClientProvider);
   if (c == null) return [];
   final cats = await ref.watch(liveCategoriesProvider.future);

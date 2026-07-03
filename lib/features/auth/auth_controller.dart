@@ -67,8 +67,8 @@ class AuthController extends Notifier<XtreamProfile?> {
   }
 }
 
-/// Construit la source de catalogue du profil actif (Xtream ou M3U).
-CatalogSource _buildSource(XtreamProfile prof) =>
+/// Construit la source de catalogue d'un profil (Xtream ou M3U).
+CatalogSource buildCatalogSource(XtreamProfile prof) =>
     prof.isM3u ? M3uSource(prof) : XtreamSource(prof);
 
 /// Source de catalogue liée au profil actif (recréée au changement de profil).
@@ -77,7 +77,7 @@ CatalogSource _buildSource(XtreamProfile prof) =>
 final xtreamClientProvider = Provider<CatalogSource?>((ref) {
   final prof = ref.watch(authControllerProvider);
   if (prof == null) return null;
-  final src = _buildSource(prof);
+  final src = buildCatalogSource(prof);
   ref.onDispose(src.close);
   return src;
 });

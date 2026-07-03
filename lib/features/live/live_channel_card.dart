@@ -63,7 +63,7 @@ class LiveChannelCard extends ConsumerWidget {
                       icon: Icon(prefs.isFav(channel.streamId) ? Icons.favorite : Icons.favorite_border,
                           color: prefs.isFav(channel.streamId) ? KtvColors.accent : Colors.white70),
                       onPressed: () async {
-                        await prefs.toggleFav(id: channel.streamId, name: channel.name, cover: channel.icon, category: channel.categoryId);
+                        await prefs.toggleFav(id: channel.streamId, name: channel.name, cover: channel.icon, category: channel.categoryId, sourceId: channel.sourceId);
                         ref.read(recentTickProvider.notifier).state++;
                         (context as Element).markNeedsBuild();
                       },

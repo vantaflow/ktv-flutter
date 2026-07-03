@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/legacy.dart';
 import '../../core/models/models.dart';
 import '../../core/logic/text_utils.dart';
 import '../../core/providers.dart';
+import '../../core/logic/merge_live.dart';
 import '../categories/category_prefs.dart';
 import '../auth/auth_controller.dart';
 import '../parental/parental.dart';
+import '../sources/sources_providers.dart';
 
 /// Toutes les catégories LIVE du fournisseur (brutes, pour l'écran de gestion).
 final liveCategoriesAllProvider = FutureProvider<List<Category>>((ref) async {
@@ -14,8 +16,51 @@ final liveCategoriesAllProvider = FutureProvider<List<Category>>((ref) async {
   return c.liveCategories();
 });
 
+/// Catalogue Live FUSIONNÉ de toutes les sources activées (≥2), dédoublonné.
+/// Chaque source contribue ses chaînes visibles (visibilité + junk par source) ;
+/// les doublons (tvg-id sinon nom normalisé) sont regroupés avec des `alts`
+/// (sources de secours). Le parental (mode masquer) est appliqué ici.
+final mergedLiveProvider = FutureProvider<MergedLive>((ref) async {
+  ref.watch(categoryVisibilityTickProvider);
+  final profs = ref.watch(enabledProfilesProvider);
+  final instances = ref.watch(sourceInstancesProvider);
+  final prefs = ref.read(prefsProvider);
+  final items = <SourcedChannel>[];
+  await Future.wait(profs.map((prof) async {
+    final src = instances[prof.id];
+    if (src == null) return;
+    try {
+      final cats = await src.liveCategories();
+      final catName = {for (final c in cats) c.id: c.name};
+      final ov = prefs.categoryVisibility(prof.id, CatSection.live.key);
+      bool heur(String? n) => prof.isM3u ? true : categoryAllowed(n);
+      for (final ch in await src.liveStreams()) {
+        if (isJunkChannel(ch.name)) continue;
+        final cn = catName[ch.categoryId] ?? '';
+        if (!categoryVisible(catId: ch.categoryId, name: cn, overrides: ov, heuristic: heur)) continue;
+        items.add((sourceId: prof.id, ch: ch, catName: cn));
+      }
+    } catch (_) {
+      // Source injoignable → ignorée (les autres continuent).
+    }
+  }));
+  final merged = mergeLive(items);
+  final cfg = ref.watch(parentalConfigProvider);
+  if (cfg.hideMode && !ref.watch(parentalUnlockedProvider)) {
+    return MergedLive(
+      merged.channels.where((c) => !cfg.channelLocked(c.streamId, catId: c.categoryId, name: c.name)).toList(),
+      merged.categories.where((c) => !cfg.categoryLocked(CatSection.live.key, c.id, c.name)).toList(),
+    );
+  }
+  return merged;
+});
+
 /// Catégories LIVE visibles : override utilisateur sinon heuristique FR/Maroc/beIN.
+/// En mode multi-sources (≥2), renvoie les catégories fusionnées.
 final liveCategoriesProvider = FutureProvider<List<Category>>((ref) async {
+  if (ref.watch(multiSourceActiveProvider)) {
+    return (await ref.watch(mergedLiveProvider.future)).categories;
+  }
   ref.watch(categoryVisibilityTickProvider);
   final cats = await ref.watch(liveCategoriesAllProvider.future);
   final prof = ref.watch(authControllerProvider);
@@ -37,9 +82,15 @@ final liveCategoriesProvider = FutureProvider<List<Category>>((ref) async {
 final selectedLiveCategoryProvider = StateProvider<String?>((ref) => null);
 
 final liveStreamsProvider = FutureProvider<List<LiveChannel>>((ref) async {
-  final c = ref.watch(xtreamClientProvider);
   final cat = ref.watch(selectedLiveCategoryProvider);
-  if (c == null || cat == null) return [];
+  if (cat == null) return [];
+  // Multi-sources : chaînes fusionnées de la catégorie (filtres déjà appliqués).
+  if (ref.watch(multiSourceActiveProvider)) {
+    final m = await ref.watch(mergedLiveProvider.future);
+    return m.channels.where((c) => c.categoryId == cat).toList();
+  }
+  final c = ref.watch(xtreamClientProvider);
+  if (c == null) return [];
   final list = await c.liveStreams(cat);
   final cfg = ref.watch(parentalConfigProvider);
   final hide = cfg.hideMode && !ref.watch(parentalUnlockedProvider);
@@ -49,6 +100,10 @@ final liveStreamsProvider = FutureProvider<List<LiveChannel>>((ref) async {
 /// Toutes les chaînes qui exposent une archive (tv_archive) — pour la Rediffusion.
 /// Indépendant du filtre de langue : le catch-up dépend de l'archive, pas de la langue.
 final archiveChannelsProvider = FutureProvider<List<LiveChannel>>((ref) async {
+  if (ref.watch(multiSourceActiveProvider)) {
+    final m = await ref.watch(mergedLiveProvider.future);
+    return m.channels.where((ch) => ch.tvArchive).toList();
+  }
   final c = ref.watch(xtreamClientProvider);
   if (c == null) return const [];
   final all = await c.liveStreams();
@@ -59,6 +114,10 @@ final archiveChannelsProvider = FutureProvider<List<LiveChannel>>((ref) async {
 
 /// Chaînes d'une catégorie donnée (pour le Guide TV), sans junk.
 final channelsByCategoryProvider = FutureProvider.family<List<LiveChannel>, String>((ref, categoryId) async {
+  if (ref.watch(multiSourceActiveProvider)) {
+    final m = await ref.watch(mergedLiveProvider.future);
+    return m.channels.where((ch) => ch.categoryId == categoryId).toList();
+  }
   final c = ref.watch(xtreamClientProvider);
   if (c == null) return const [];
   final list = await c.liveStreams(categoryId);
