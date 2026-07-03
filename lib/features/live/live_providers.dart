@@ -22,7 +22,9 @@ final liveCategoriesProvider = FutureProvider<List<Category>>((ref) async {
   final prefs = ref.read(prefsProvider);
   final ov = prof == null ? const <String, bool>{} : prefs.categoryVisibility(prof.id, CatSection.live.key);
   final order = prof == null ? const <String>[] : prefs.categoryOrder(prof.id, CatSection.live.key);
-  final visible = cats.where((cat) => categoryVisible(catId: cat.id, name: cat.name, overrides: ov, heuristic: categoryAllowed)).toList();
+  // M3U : playlist déjà curatée → tout afficher par défaut (pas de filtre FR/Maroc/beIN).
+  final heuristic = (prof?.isM3u ?? false) ? (String? _) => true : categoryAllowed;
+  final visible = cats.where((cat) => categoryVisible(catId: cat.id, name: cat.name, overrides: ov, heuristic: heuristic)).toList();
   final ordered = orderCategories(visible, order);
   // Mode « masquer » : retire les catégories verrouillées tant que non déverrouillé.
   final cfg = ref.watch(parentalConfigProvider);

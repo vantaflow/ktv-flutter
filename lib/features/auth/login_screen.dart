@@ -61,6 +61,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  // --- Ajout d'une source playlist M3U/M3U8 (chaînes Live) ---
+  Future<void> _addM3u() async {
+    final urlC = TextEditingController();
+    final labelC = TextEditingController();
+    final epgC = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: KtvColors.panel,
+        title: const Text('Ajouter une playlist M3U'),
+        content: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            TextField(controller: urlC, autofocus: true, decoration: const InputDecoration(hintText: 'URL M3U / M3U8 (http…)')),
+            const SizedBox(height: 12),
+            TextField(controller: labelC, decoration: const InputDecoration(hintText: 'Nom (optionnel)')),
+            const SizedBox(height: 12),
+            TextField(controller: epgC, decoration: const InputDecoration(hintText: 'URL EPG XMLTV (optionnel)')),
+            const SizedBox(height: 8),
+            Text('Une playlist M3U ne fournit que des chaînes Live.', style: TextStyle(color: KtvColors.muted, fontSize: 11.5)),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(L.of(context)!.downloadsCancel)),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Ajouter')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    final url = urlC.text.trim();
+    if (url.isEmpty) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await ref.read(authControllerProvider.notifier).loginM3u(
+            url,
+            label: labelC.text.trim().isEmpty ? null : labelC.text.trim(),
+            epgUrl: epgC.text.trim(),
+          );
+    } catch (e) {
+      setState(() => _error = 'Échec M3U : ${e.toString().replaceAll('Exception: ', '')}');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   Future<void> _useProfile(XtreamProfile p) async {
     setState(() => _loading = true);
     try {
@@ -272,6 +319,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: _loading
                               ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                               : Text(L.of(context)!.loginConnect),
+                        ),
+                        const SizedBox(height: 6),
+                        TextButton.icon(
+                          onPressed: _loading ? null : _addM3u,
+                          icon: const Icon(Icons.playlist_add, size: 18),
+                          label: const Text('Ajouter une playlist M3U'),
                         ),
                       ],
                     ),
