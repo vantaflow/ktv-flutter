@@ -27,6 +27,28 @@ final enabledProfilesProvider = Provider<List<XtreamProfile>>((ref) {
 /// Fusion active = au moins 2 sources activées.
 final multiSourceActiveProvider = Provider<bool>((ref) => ref.watch(enabledProfilesProvider).length > 1);
 
+/// Profil Xtream « principal » pour Films/Séries/abonnement : la source active si
+/// c'est un compte Xtream, sinon la 1re source Xtream activée. (Un M3U n'a pas de
+/// VOD/Séries — sans ça, activer une playlist M3U viderait Films & Séries.)
+final vodSourceProfileProvider = Provider<XtreamProfile?>((ref) {
+  final active = ref.watch(authControllerProvider);
+  if (active != null && !active.isM3u) return active;
+  for (final p in ref.watch(enabledProfilesProvider)) {
+    if (!p.isM3u) return p;
+  }
+  return null;
+});
+
+/// Source de catalogue Xtream principale (Films/Séries), = source active si
+/// Xtream, sinon la 1re source Xtream activée.
+final vodSourceProvider = Provider<CatalogSource?>((ref) {
+  final active = ref.watch(authControllerProvider);
+  if (active != null && !active.isM3u) return ref.watch(xtreamClientProvider);
+  final prof = ref.watch(vodSourceProfileProvider);
+  if (prof == null) return null;
+  return ref.watch(sourceInstancesProvider)[prof.id];
+});
+
 /// Instances `CatalogSource` des sources activées (fermées à la disposition).
 final sourceInstancesProvider = Provider<Map<String, CatalogSource>>((ref) {
   final profs = ref.watch(enabledProfilesProvider);

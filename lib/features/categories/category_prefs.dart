@@ -1,6 +1,11 @@
 import 'package:flutter_riverpod/legacy.dart';
 import '../../core/models/models.dart';
 
+/// Id de « profil » synthétique pour les prefs de catégories du catalogue Live
+/// FUSIONNÉ (visibilité/ordre/verrou portent sur les catégories fusionnées, pas
+/// sur une source précise).
+const kMergedProfileId = '__merged__';
+
 /// Section de catalogue dont on gère les catégories.
 enum CatSection { live, vod, series }
 

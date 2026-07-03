@@ -55,11 +55,24 @@ final mergedLiveProvider = FutureProvider<MergedLive>((ref) async {
   return merged;
 });
 
+/// Toutes les catégories LIVE fusionnées (brutes, pour l'écran de gestion en
+/// mode multi-sources).
+final mergedLiveCategoriesAllProvider = FutureProvider<List<Category>>((ref) async {
+  return (await ref.watch(mergedLiveProvider.future)).categories;
+});
+
 /// Catégories LIVE visibles : override utilisateur sinon heuristique FR/Maroc/beIN.
-/// En mode multi-sources (≥2), renvoie les catégories fusionnées.
+/// En mode multi-sources (≥2), renvoie les catégories fusionnées (visibilité +
+/// ordre gérés au niveau fusionné via kMergedProfileId).
 final liveCategoriesProvider = FutureProvider<List<Category>>((ref) async {
   if (ref.watch(multiSourceActiveProvider)) {
-    return (await ref.watch(mergedLiveProvider.future)).categories;
+    ref.watch(categoryVisibilityTickProvider);
+    final cats = (await ref.watch(mergedLiveProvider.future)).categories;
+    final prefs = ref.read(prefsProvider);
+    final ov = prefs.categoryVisibility(kMergedProfileId, CatSection.live.key);
+    final order = prefs.categoryOrder(kMergedProfileId, CatSection.live.key);
+    final visible = cats.where((c) => ov[c.id] ?? true).toList();
+    return orderCategories(visible, order);
   }
   ref.watch(categoryVisibilityTickProvider);
   final cats = await ref.watch(liveCategoriesAllProvider.future);

@@ -69,6 +69,28 @@ class LiveChannelCard extends ConsumerWidget {
                       },
                     ),
                   ),
+                  // Verrou parental (visible quand un code est défini) — toggle direct.
+                  if (cfg.pinSet)
+                    Positioned(
+                      top: 36,
+                      right: 2,
+                      child: IconButton(
+                        iconSize: 18,
+                        visualDensity: VisualDensity.compact,
+                        tooltip: locked ? 'Déverrouiller' : 'Verrouiller',
+                        icon: Icon(locked ? Icons.lock : Icons.lock_open_outlined, color: locked ? KtvColors.accent : Colors.white70),
+                        onPressed: () async {
+                          if (autoLocked) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Verrouillée via sa catégorie ou la détection « adulte ».')),
+                            );
+                            return;
+                          }
+                          await prefs.setChannelLocked(channel.streamId, !prefs.isChannelLockedManual(channel.streamId));
+                          ref.read(parentalTickProvider.notifier).state++;
+                        },
+                      ),
+                    ),
                   if (kDesktop) Positioned(
                     top: 2,
                     left: 2,

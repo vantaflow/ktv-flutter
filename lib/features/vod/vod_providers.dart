@@ -4,12 +4,12 @@ import '../../core/models/models.dart';
 import '../../core/logic/text_utils.dart';
 import '../../core/providers.dart';
 import '../categories/category_prefs.dart';
-import '../auth/auth_controller.dart';
 import '../parental/parental.dart';
+import '../sources/sources_providers.dart';
 
 /// Toutes les catégories VOD du fournisseur (brutes, pour l'écran de gestion).
 final vodCategoriesAllProvider = FutureProvider<List<Category>>((ref) async {
-  final c = ref.watch(xtreamClientProvider);
+  final c = ref.watch(vodSourceProvider);
   if (c == null) return [];
   return c.vodCategories();
 });
@@ -18,7 +18,7 @@ final vodCategoriesAllProvider = FutureProvider<List<Category>>((ref) async {
 final vodCategoriesProvider = FutureProvider<List<Category>>((ref) async {
   ref.watch(categoryVisibilityTickProvider);
   final cats = await ref.watch(vodCategoriesAllProvider.future);
-  final prof = ref.watch(authControllerProvider);
+  final prof = ref.watch(vodSourceProfileProvider);
   final prefs = ref.read(prefsProvider);
   final ov = prof == null ? const <String, bool>{} : prefs.categoryVisibility(prof.id, CatSection.vod.key);
   final order = prof == null ? const <String>[] : prefs.categoryOrder(prof.id, CatSection.vod.key);
@@ -36,7 +36,7 @@ final selectedVodCategoryProvider = StateProvider<String?>((ref) => null);
 
 /// Films de la catégorie sélectionnée.
 final vodStreamsProvider = FutureProvider<List<VodItem>>((ref) async {
-  final c = ref.watch(xtreamClientProvider);
+  final c = ref.watch(vodSourceProvider);
   final cat = ref.watch(selectedVodCategoryProvider);
   if (c == null || cat == null) return [];
   return c.vodStreams(cat);

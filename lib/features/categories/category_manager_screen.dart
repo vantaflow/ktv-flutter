@@ -11,6 +11,7 @@ import '../live/live_providers.dart';
 import '../vod/vod_providers.dart';
 import '../series/series_providers.dart';
 import '../parental/parental.dart';
+import '../sources/sources_providers.dart';
 import 'category_prefs.dart';
 
 /// Écran « Gérer les catégories » pour une section (Live / Films / Séries).
@@ -28,28 +29,45 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
   String _query = '';
   int _mode = 0; // 0 = visibilité, 1 = ordre, 2 = verrou parental
 
-  FutureProvider<List<Category>> get _allProvider => switch (widget.section) {
-        CatSection.live => liveCategoriesAllProvider,
-        CatSection.vod => vodCategoriesAllProvider,
-        CatSection.series => seriesCategoriesAllProvider,
-      };
+  /// Fusion active pour la section Live (≥2 sources) → on gère les catégories
+  /// FUSIONNÉES au lieu de celles de la source active.
+  bool get _merged => widget.section == CatSection.live && ref.read(multiSourceActiveProvider);
+
+  FutureProvider<List<Category>> get _allProvider {
+    if (_merged) return mergedLiveCategoriesAllProvider;
+    return switch (widget.section) {
+      CatSection.live => liveCategoriesAllProvider,
+      CatSection.vod => vodCategoriesAllProvider,
+      CatSection.series => seriesCategoriesAllProvider,
+    };
+  }
+
+  /// Profil sous lequel sont stockées les prefs de catégories :
+  /// - Live fusionné → id synthétique `__merged__` ;
+  /// - Live mono-source → source active ;
+  /// - Films/Séries → Xtream principal (jamais un M3U).
+  String? get _profileId {
+    if (_merged) return kMergedProfileId;
+    if (widget.section == CatSection.live) return ref.read(authControllerProvider)?.id;
+    return ref.read(vodSourceProfileProvider)?.id;
+  }
 
   bool Function(String?) get _heuristic {
-    // M3U : playlist curatée → tout visible par défaut.
-    if (ref.read(authControllerProvider)?.isM3u ?? false) return (_) => true;
+    // Fusion Live ou source M3U : tout visible par défaut (déjà filtré en amont).
+    if (_merged || (ref.read(authControllerProvider)?.isM3u ?? false)) return (_) => true;
     return widget.section == CatSection.live ? categoryAllowed : frCategoryAllowed;
   }
 
   Map<String, bool> _overrides() {
-    final prof = ref.read(authControllerProvider);
-    if (prof == null) return {};
-    return ref.read(prefsProvider).categoryVisibility(prof.id, widget.section.key);
+    final id = _profileId;
+    if (id == null) return {};
+    return ref.read(prefsProvider).categoryVisibility(id, widget.section.key);
   }
 
   List<String> _order() {
-    final prof = ref.read(authControllerProvider);
-    if (prof == null) return const [];
-    return ref.read(prefsProvider).categoryOrder(prof.id, widget.section.key);
+    final id = _profileId;
+    if (id == null) return const [];
+    return ref.read(prefsProvider).categoryOrder(id, widget.section.key);
   }
 
   bool _visible(Category c, Map<String, bool> ov) =>
@@ -63,33 +81,33 @@ class _CategoryManagerScreenState extends ConsumerState<CategoryManagerScreen> {
   }
 
   Future<void> _toggle(Category c, bool value) async {
-    final prof = ref.read(authControllerProvider);
-    if (prof == null) return;
-    await ref.read(prefsProvider).setCategoryVisible(prof.id, widget.section.key, c.id, value);
+    final id = _profileId;
+    if (id == null) return;
+    await ref.read(prefsProvider).setCategoryVisible(id, widget.section.key, c.id, value);
     _bump();
   }
 
   Future<void> _setAll(List<Category> cats, bool value) async {
-    final prof = ref.read(authControllerProvider);
-    if (prof == null) return;
+    final id = _profileId;
+    if (id == null) return;
     final merged = Map<String, bool>.from(_overrides())..addAll({for (final c in cats) c.id: value});
-    await ref.read(prefsProvider).setCategoryVisibilityBulk(prof.id, widget.section.key, merged);
+    await ref.read(prefsProvider).setCategoryVisibilityBulk(id, widget.section.key, merged);
     _bump();
   }
 
   Future<void> _saveOrder(List<Category> active) async {
-    final prof = ref.read(authControllerProvider);
-    if (prof == null) return;
-    await ref.read(prefsProvider).setCategoryOrder(prof.id, widget.section.key, [for (final c in active) c.id]);
+    final id = _profileId;
+    if (id == null) return;
+    await ref.read(prefsProvider).setCategoryOrder(id, widget.section.key, [for (final c in active) c.id]);
     _bump();
   }
 
   Future<void> _reset() async {
-    final prof = ref.read(authControllerProvider);
-    if (prof == null) return;
+    final id = _profileId;
+    if (id == null) return;
     final prefs = ref.read(prefsProvider);
-    await prefs.clearCategoryVisibility(prof.id, widget.section.key);
-    await prefs.clearCategoryOrder(prof.id, widget.section.key);
+    await prefs.clearCategoryVisibility(id, widget.section.key);
+    await prefs.clearCategoryOrder(id, widget.section.key);
     _bump();
   }
 

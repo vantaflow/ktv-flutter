@@ -5,6 +5,7 @@ import '../../core/models/models.dart';
 import '../../core/logic/recommendations_match.dart';
 import '../../core/providers.dart';
 import '../auth/auth_controller.dart';
+import '../sources/sources_providers.dart';
 import '../vod/vod_providers.dart';
 import '../series/series_providers.dart';
 import '../../services/tmdb/tmdb_providers.dart';
@@ -48,7 +49,7 @@ final autoRefreshControllerProvider = NotifierProvider<AutoRefreshController, in
 
 /// Catalogue VOD complet, filtré aux catégories FR (chargé une fois, mis en cache).
 final allVodProvider = FutureProvider<List<VodItem>>((ref) async {
-  final c = ref.watch(xtreamClientProvider);
+  final c = ref.watch(vodSourceProvider);
   if (c == null) return [];
   final cats = await ref.watch(vodCategoriesProvider.future);
   final ids = cats.map((e) => e.id).toSet();
@@ -60,7 +61,7 @@ final allVodProvider = FutureProvider<List<VodItem>>((ref) async {
 });
 
 final allSeriesProvider = FutureProvider<List<SeriesItem>>((ref) async {
-  final c = ref.watch(xtreamClientProvider);
+  final c = ref.watch(vodSourceProvider);
   if (c == null) return [];
   final cats = await ref.watch(seriesCategoriesProvider.future);
   final ids = cats.map((e) => e.id).toSet();
