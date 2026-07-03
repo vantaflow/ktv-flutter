@@ -348,6 +348,20 @@ class PrefsStore {
     await _saveParental(m);
   }
 
+  // --- Cache des rails d'accueil (affichage instantané au démarrage) ---
+  // { key: [ {name,cover,rating,id,ext,kind}, … ] }. Rafraîchi en arrière-plan.
+  static const _kRails = 'home_rails';
+  List<Map<String, dynamic>> railCache(String key) {
+    final v = _map(_kRails)[key];
+    return v is List ? v.map((e) => Map<String, dynamic>.from(e)).toList() : const [];
+  }
+
+  Future<void> setRailCache(String key, List<Map<String, dynamic>> items) async {
+    final m = _map(_kRails);
+    m[key] = items;
+    await _saveMap(_kRails, m);
+  }
+
   // Jeton Trakt (ktv_trakt).
   Map<String, dynamic>? traktToken() {
     final m = _map('ktv_trakt');

@@ -661,9 +661,81 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ]),
           ),
         const SizedBox(height: 12),
+        Wrap(spacing: 10, runSpacing: 8, children: [
+          OutlinedButton.icon(onPressed: _addXtreamSource, icon: const Icon(Icons.add, size: 18), label: const Text('Ajouter un compte Xtream')),
+          OutlinedButton.icon(onPressed: _addM3uSource, icon: const Icon(Icons.playlist_add, size: 18), label: const Text('Ajouter une playlist M3U')),
+        ]),
+        const SizedBox(height: 12),
         FilledButton.tonalIcon(onPressed: () => ref.read(authControllerProvider.notifier).logout(), icon: Icon(Icons.logout), label: Text(L.of(context)!.sLogout)),
       ]),
     ];
+  }
+
+  Future<void> _addXtreamSource() async {
+    final srvC = TextEditingController(), usrC = TextEditingController(), pwdC = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: KtvColors.panel,
+        title: const Text('Ajouter un compte Xtream'),
+        content: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            TextField(controller: srvC, autofocus: true, decoration: const InputDecoration(hintText: 'Serveur (http://…)')),
+            const SizedBox(height: 10),
+            TextField(controller: usrC, decoration: const InputDecoration(hintText: 'Utilisateur')),
+            const SizedBox(height: 10),
+            TextField(controller: pwdC, obscureText: true, decoration: const InputDecoration(hintText: 'Mot de passe')),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(L.of(context)!.downloadsCancel)),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Ajouter')),
+        ],
+      ),
+    );
+    if (ok != true || srvC.text.trim().isEmpty) return;
+    try {
+      await ref.read(authControllerProvider.notifier).addXtreamSource(srvC.text.trim(), usrC.text.trim(), pwdC.text.trim());
+      await _toggleEnabled(XtreamProfile.create(srvC.text.trim(), usrC.text.trim(), pwdC.text.trim()).id, true);
+      if (mounted) _toast('Source ajoutée et incluse dans la fusion.');
+    } catch (e) {
+      if (mounted) _toast('Échec : ${e.toString().replaceAll('Exception: ', '')}');
+    }
+  }
+
+  Future<void> _addM3uSource() async {
+    final urlC = TextEditingController(), labelC = TextEditingController(), epgC = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: KtvColors.panel,
+        title: const Text('Ajouter une playlist M3U'),
+        content: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            TextField(controller: urlC, autofocus: true, decoration: const InputDecoration(hintText: 'URL M3U / M3U8 (http…)')),
+            const SizedBox(height: 10),
+            TextField(controller: labelC, decoration: const InputDecoration(hintText: 'Nom (optionnel)')),
+            const SizedBox(height: 10),
+            TextField(controller: epgC, decoration: const InputDecoration(hintText: 'URL EPG XMLTV (optionnel)')),
+            const SizedBox(height: 8),
+            Text('Une playlist M3U ne fournit que des chaînes Live.', style: TextStyle(color: KtvColors.muted, fontSize: 11.5)),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(L.of(context)!.downloadsCancel)),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Ajouter')),
+        ],
+      ),
+    );
+    if (ok != true || urlC.text.trim().isEmpty) return;
+    final url = urlC.text.trim();
+    try {
+      await ref.read(authControllerProvider.notifier).addM3uSource(url, label: labelC.text.trim().isEmpty ? null : labelC.text.trim(), epgUrl: epgC.text.trim());
+      await _toggleEnabled('m3u|$url', true);
+      if (mounted) _toast('Playlist ajoutée et incluse dans la fusion.');
+    } catch (e) {
+      if (mounted) _toast('Échec : ${e.toString().replaceAll('Exception: ', '')}');
+    }
   }
 
   // --- 🔒 Contrôle parental ---

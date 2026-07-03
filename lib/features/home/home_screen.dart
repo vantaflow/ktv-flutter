@@ -30,6 +30,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final recent = prefs.recent();
     final grid = prefs.settingBool('homeGridView', false); // rangées vs grille multi-lignes
 
+    // Persiste les rails « catalogue » dès que les données fraîches arrivent →
+    // affichage instantané depuis le cache disque au prochain démarrage.
+    // (Desktop uniquement : sur mobile ces providers ne sont pas activés — OOM.)
+    if (kDesktop) {
+      ref.listen(latestVodProvider, (_, n) { final d = n.asData?.value; if (d != null) prefs.setRailCache('latestVod', d.map(_projVod).toList()); });
+      ref.listen(latestSeriesProvider, (_, n) { final d = n.asData?.value; if (d != null) prefs.setRailCache('latestSeries', d.map(_projSeries).toList()); });
+      ref.listen(movieRecommendationsProvider, (_, n) { final d = n.asData?.value; if (d != null) prefs.setRailCache('recoMovies', d.map(_projVod).toList()); });
+      ref.listen(seriesRecommendationsProvider, (_, n) { final d = n.asData?.value; if (d != null) prefs.setRailCache('recoSeries', d.map(_projSeries).toList()); });
+      ref.listen(traktWatchlistProvider, (_, n) { final d = n.asData?.value; if (d != null) prefs.setRailCache('watchlist', d.map(_projVod).toList()); });
+    }
+
     double progressOf(RecentEntry e) {
       if (e.resumeKey == null) return 0;
       final r = prefs.resume(e.resumeKey!);
@@ -110,50 +121,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return const _EmptyHome();
   }
 
-  Widget _watchlistRail(bool grid) {
-    final list = ref.watch(traktWatchlistProvider).asData?.value ?? const [];
-    return PosterRail(
-      title: L.of(context)!.railWatchlist,
-      grid: grid,
-      items: list.map((m) => PosterRailItem(title: m.name, cover: m.cover, rating: m.rating, onTap: () => _openMovie(m))).toList(),
-    );
+  // --- Cache disque des rails : affichage instantané puis rafraîchi ---
+  static Map<String, dynamic> _projVod(VodItem m) => {'name': m.name, 'cover': m.cover, 'rating': m.rating, 'id': m.streamId, 'ext': m.ext, 'kind': 'movie'};
+  static Map<String, dynamic> _projSeries(SeriesItem s) => {'name': s.name, 'cover': s.cover, 'rating': s.rating, 'id': s.seriesId, 'kind': 'series'};
+
+  PosterRailItem _itemFromProj(Map<String, dynamic> p) {
+    final rating = (p['rating'] as num?)?.toDouble();
+    if (p['kind'] == 'series') {
+      final s = SeriesItem(seriesId: '${p['id']}', name: '${p['name']}', cover: p['cover'] as String?, categoryId: '', rating: rating ?? 0);
+      return PosterRailItem(title: s.name, cover: s.cover, rating: rating, onTap: () => _openSeries(s));
+    }
+    final m = VodItem(streamId: '${p['id']}', name: '${p['name']}', cover: p['cover'] as String?, categoryId: '', ext: '${p['ext'] ?? 'mp4'}', rating: rating ?? 0);
+    return PosterRailItem(title: m.name, cover: m.cover, rating: rating, onTap: () => _openMovie(m));
   }
 
-  Widget _recoRail(bool grid) {
-    final recos = ref.watch(movieRecommendationsProvider).asData?.value ?? const [];
-    return PosterRail(
-      title: L.of(context)!.railRecoMovies,
-      grid: grid,
-      items: recos.map((m) => PosterRailItem(title: m.name, cover: m.cover, rating: m.rating, onTap: () => _openMovie(m))).toList(),
-    );
+  /// Rail « catalogue » : rend les données fraîches si dispo, sinon le cache
+  /// disque (affichage instantané au démarrage), puis persiste le frais.
+  Widget _cachedRail<T>(String title, bool grid, String cacheKey, List<T>? live, Map<String, dynamic> Function(T) proj) {
+    final prefs = ref.read(prefsProvider);
+    final items = live != null ? live.map(proj).toList() : prefs.railCache(cacheKey);
+    return PosterRail(title: title, grid: grid, items: items.map(_itemFromProj).toList());
   }
 
-  Widget _recoSeriesRail(bool grid) {
-    final recos = ref.watch(seriesRecommendationsProvider).asData?.value ?? const [];
-    return PosterRail(
-      title: L.of(context)!.railRecoSeries,
-      grid: grid,
-      items: recos.map((s) => PosterRailItem(title: s.name, cover: s.cover, rating: s.rating, onTap: () => _openSeries(s))).toList(),
-    );
-  }
-
-  Widget _latestVodRail(bool grid) {
-    final list = ref.watch(latestVodProvider).asData?.value ?? const [];
-    return PosterRail(
-      title: L.of(context)!.railLatestMovies,
-      grid: grid,
-      items: list.map((m) => PosterRailItem(title: m.name, cover: m.cover, rating: m.rating, onTap: () => _openMovie(m))).toList(),
-    );
-  }
-
-  Widget _latestSeriesRail(bool grid) {
-    final list = ref.watch(latestSeriesProvider).asData?.value ?? const [];
-    return PosterRail(
-      title: L.of(context)!.railLatestSeries,
-      grid: grid,
-      items: list.map((s) => PosterRailItem(title: s.name, cover: s.cover, rating: s.rating, onTap: () => _openSeries(s))).toList(),
-    );
-  }
+  Widget _watchlistRail(bool grid) =>
+      _cachedRail(L.of(context)!.railWatchlist, grid, 'watchlist', ref.watch(traktWatchlistProvider).asData?.value, _projVod);
+  Widget _recoRail(bool grid) =>
+      _cachedRail(L.of(context)!.railRecoMovies, grid, 'recoMovies', ref.watch(movieRecommendationsProvider).asData?.value, _projVod);
+  Widget _recoSeriesRail(bool grid) =>
+      _cachedRail(L.of(context)!.railRecoSeries, grid, 'recoSeries', ref.watch(seriesRecommendationsProvider).asData?.value, _projSeries);
+  Widget _latestVodRail(bool grid) =>
+      _cachedRail(L.of(context)!.railLatestMovies, grid, 'latestVod', ref.watch(latestVodProvider).asData?.value, _projVod);
+  Widget _latestSeriesRail(bool grid) =>
+      _cachedRail(L.of(context)!.railLatestSeries, grid, 'latestSeries', ref.watch(latestSeriesProvider).asData?.value, _projSeries);
 
   void _openMovie(VodItem m) => showMovieDetail(context, m);
   void _openSeries(SeriesItem s) => showSeriesDetail(context, s);

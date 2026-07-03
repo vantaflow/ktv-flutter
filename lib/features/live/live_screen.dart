@@ -53,9 +53,9 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
               padding: const EdgeInsets.all(16),
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: 210,
-                childAspectRatio: 0.78,
+                childAspectRatio: 0.86,
                 crossAxisSpacing: 14,
-                mainAxisSpacing: 18,
+                mainAxisSpacing: 12,
               ),
               itemCount: channels.length,
               itemBuilder: (_, i) {

@@ -51,6 +51,32 @@ class AuthController extends Notifier<XtreamProfile?> {
     }
   }
 
+  /// Ajoute un compte Xtream (validé) SANS changer la source active
+  /// (pour la fusion multi-sources depuis les Réglages).
+  Future<void> addXtreamSource(String srv, String usr, String pwd) async {
+    final prof = XtreamProfile.create(srv, usr, pwd);
+    final client = XtreamClient(prof);
+    try {
+      final info = await client.authenticate();
+      if (!info.authOk) throw Exception('Identifiants refusés par le fournisseur.');
+      await ref.read(prefsProvider).upsertProfile(prof);
+    } finally {
+      client.close();
+    }
+  }
+
+  /// Ajoute une playlist M3U (validée) SANS changer la source active.
+  Future<void> addM3uSource(String url, {String? label, String epgUrl = ''}) async {
+    final prof = XtreamProfile.createM3u(url, label: label, epgUrl: epgUrl);
+    final src = M3uSource(prof);
+    try {
+      if ((await src.liveStreams()).isEmpty) throw Exception('Playlist vide ou illisible.');
+      await ref.read(prefsProvider).upsertProfile(prof);
+    } finally {
+      src.close();
+    }
+  }
+
   Future<void> switchTo(XtreamProfile prof) async {
     await ref.read(prefsProvider).setActive(prof.id);
     state = prof;

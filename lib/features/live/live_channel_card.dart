@@ -136,10 +136,8 @@ class LiveChannelCard extends ConsumerWidget {
             ),
             Padding(
               padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                next != null ? 'jusqu\'à ${epgTime(now.stop)} · puis ${next.title}' : 'jusqu\'à ${epgTime(now.stop)}',
-                maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10.5, color: KtvColors.muted),
-              ),
+              child: Text('jusqu\'à ${epgTime(now.stop)}',
+                  maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10.5, color: KtvColors.muted)),
             ),
           ] else if (next != null)
             Text('Puis ${epgTime(next.start)} · ${next.title}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: KtvColors.muted)),
