@@ -46,6 +46,10 @@ class SyncController extends Notifier<SyncState> {
   bool get hasPassphrase => (_prefs.syncLocal()['passphrase'] ?? '').toString().isNotEmpty;
   String get _passphrase => (_prefs.syncLocal()['passphrase'] ?? '').toString();
 
+  /// Phrase secrète en clair (stockée localement, jamais envoyée au serveur) —
+  /// pour l'afficher/rappeler à l'utilisateur dans les réglages.
+  String get passphrase => _passphrase;
+
   Future<void> _patchLocal(Map<String, dynamic> patch) async {
     final l = _prefs.syncLocal()..addAll(patch);
     await _prefs.setSyncLocal(l);

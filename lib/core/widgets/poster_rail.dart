@@ -34,7 +34,7 @@ class PosterRail extends StatelessWidget {
             child: GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 160, mainAxisSpacing: 16, crossAxisSpacing: 14, childAspectRatio: 0.5),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 160, mainAxisSpacing: 12, crossAxisSpacing: 14, childAspectRatio: 0.56),
               itemCount: items.length,
               itemBuilder: (_, i) {
                 final it = items[i];

@@ -117,13 +117,31 @@ class LiveChannelCard extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Text(channel.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-          if (now != null)
+          Text(channel.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+          if (now != null) ...[
+            const SizedBox(height: 3),
             InkWell(
               onTap: () => showEpgProgram(context, ref, channel, now),
-              child: Text('🔴 ${now.title}  ·  jusqu\'à ${epgTime(now.stop)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11.5, color: KtvColors.accent2)),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(margin: const EdgeInsets.only(top: 4), width: 6, height: 6, decoration: const BoxDecoration(color: KtvColors.rec, shape: BoxShape.circle)),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(now.title, maxLines: 2, overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 11.5, height: 1.15, color: KtvColors.accent2, fontWeight: FontWeight.w600)),
+                  ),
+                ],
+              ),
             ),
-          if (next != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                next != null ? 'jusqu\'à ${epgTime(now.stop)} · puis ${next.title}' : 'jusqu\'à ${epgTime(now.stop)}',
+                maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10.5, color: KtvColors.muted),
+              ),
+            ),
+          ] else if (next != null)
             Text('Puis ${epgTime(next.start)} · ${next.title}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: KtvColors.muted)),
         ],
       ),

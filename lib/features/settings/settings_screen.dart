@@ -395,6 +395,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             controller: _syncPassCtrl,
             decoration: InputDecoration(hintText: enabled ? L.of(context)!.sPassphraseSet : L.of(context)!.sPassphraseChoose),
           ),
+          if (enabled && ctrl.hasPassphrase)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => showDialog(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    backgroundColor: KtvColors.panel,
+                    title: const Text('Ta phrase secrète'),
+                    content: SelectableText(
+                      ctrl.passphrase.isEmpty ? '(aucune)' : ctrl.passphrase,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+                    ),
+                    actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Fermer'))],
+                  ),
+                ),
+                icon: const Icon(Icons.visibility, size: 18),
+                label: const Text('Afficher ma phrase secrète'),
+              ),
+            ),
           const SizedBox(height: 12),
           Wrap(spacing: 10, runSpacing: 10, children: [
             if (!enabled)

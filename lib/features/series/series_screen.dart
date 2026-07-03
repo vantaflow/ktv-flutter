@@ -79,9 +79,9 @@ class _SeriesScreenState extends ConsumerState<SeriesScreen> {
                 padding: const EdgeInsets.all(16),
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: 170,
-                  childAspectRatio: 0.52,
+                  childAspectRatio: 0.56,
                   crossAxisSpacing: 14,
-                  mainAxisSpacing: 18,
+                  mainAxisSpacing: 12,
                 ),
                 itemCount: series.length,
                 itemBuilder: (_, i) {
