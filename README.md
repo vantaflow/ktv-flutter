@@ -12,7 +12,8 @@ Le moteur `<video>` de Chromium (Electron) ne lit pas les MKV/HEVC/multi-pistes 
 
 ## Fonctionnalités
 
-- **Connexion Xtream** multi-profils (bascule + infos abonnement)
+- **Sources multiples** : comptes **Xtream** ET playlists **M3U/M3U8**, avec bascule. **Fusion multi-sources** du Live : active plusieurs sources → catalogue unifié **dédoublonné** (par tvg-id/nom), avec **bascule automatique** sur une source de secours si l'une tombe (Réglages → Profils)
+- **Contrôle parental** : code PIN, verrou **par catégorie ou par chaîne**, modes **verrouiller** (cadenas + PIN) ou **masquer**, **détection automatique des contenus adulte** (XXX, 18+, …)
 - **Accueil personnalisable** : affichage **rangées ou grille**, choix des sections affichées · Reprendre (avec **temps restant** ⏳) · Vu récemment · Favoris · **Recommandé pour vous** (TMDB fondé sur ton catalogue) · **Ma liste (Trakt)** · Derniers ajouts. Les **cartes de chaînes live** montrent le **logo tel quel** + le **programme EPG en cours**.
 - **Live TV** : EPG en cours (description + horaires), favoris, enregistrement, **recherche par programme en cours**
 - **Films / Séries** : fiches TMDB (affiche, backdrop, synopsis, note, casting), **filtres & tri** (note, 4K/HDR), **favoris**, **téléchargement par épisode, par saison ou série complète**, **marquer vu** (Trakt)
@@ -30,7 +31,7 @@ Le moteur `<video>` de Chromium (Electron) ne lit pas les MKV/HEVC/multi-pistes 
 - **Thèmes** : **clair / sombre** + **accent personnalisable** (7 couleurs)
 - **Catalogue** : catégorie **« Toutes »** (agrège toutes les catégories), **filtres masquables**
 - **Multilingue** : **Français · English · العربية** (avec mise en page **RTL** en arabe), bascule à chaud
-- **Système** : **mise à jour in-app** (GitHub), **rafraîchissement automatique** catalogue/EPG, **diagnostic réseau**, **historique complet**, dossiers configurables
+- **Système** : **mise à jour in-app auto-installée** (télécharge, remplace l'app et relance), **rafraîchissement automatique** catalogue/EPG, **diagnostic réseau**, **historique complet**, dossiers configurables
 - Démarrage agrandi · fenêtre centrée
 
 ## Développement
