@@ -30,7 +30,20 @@ class AutoRefreshController extends Notifier<int> {
     _schedule(m);
   }
 
+  /// Purge tout le cache catalogue et le relit depuis le fournisseur.
+  ///
+  /// Les catégories sont invalidées elles aussi : `allVod`/`allSeries` filtrent
+  /// sur la liste de catégories mise en cache, donc si le fournisseur a répondu
+  /// une liste vide au premier chargement, ne réinvalider que les listes les
+  /// laisse vides indéfiniment. Idem pour `userInfo`, jamais rafraîchi jusqu'ici.
   void refreshNow() {
+    ref.invalidate(userInfoProvider);
+    ref.invalidate(vodCategoriesAllProvider);
+    ref.invalidate(vodCategoriesProvider);
+    ref.invalidate(vodStreamsProvider);
+    ref.invalidate(seriesCategoriesAllProvider);
+    ref.invalidate(seriesCategoriesProvider);
+    ref.invalidate(seriesListProvider);
     ref.invalidate(allVodProvider);
     ref.invalidate(allSeriesProvider);
     ref.invalidate(latestVodProvider);

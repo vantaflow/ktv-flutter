@@ -112,12 +112,16 @@ final xtreamClientProvider = Provider<CatalogSource?>((ref) {
 final xtreamUrlsProvider = Provider<CatalogSource?>((ref) => ref.watch(xtreamClientProvider));
 
 /// Infos d'abonnement (statut, expiration, connexions…) du profil actif.
-final userInfoProvider = FutureProvider<UserInfo?>((ref) async {
+///
+/// `autoDispose` : le cache est relâché dès que plus personne n'écoute (sortie
+/// des Réglages), donc un échec réseau ponctuel ne fige plus « Non connecté »
+/// pour toute la durée de vie de l'app.
+///
+/// L'erreur est propagée telle quelle au lieu d'être écrasée en `null` : sinon
+/// une panne transitoire est indiscernable d'une vraie déconnexion et l'UI ne
+/// peut ni l'expliquer ni proposer un rechargement.
+final userInfoProvider = FutureProvider.autoDispose<UserInfo?>((ref) async {
   final c = ref.watch(xtreamClientProvider);
   if (c == null) return null;
-  try {
-    return await c.authenticate();
-  } catch (_) {
-    return null;
-  }
+  return c.authenticate();
 });

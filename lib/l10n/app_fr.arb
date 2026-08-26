@@ -131,6 +131,8 @@
   "nextEpisode": "Épisode suivant",
   "sAccErr": "Impossible de récupérer les infos d'abonnement.",
   "sNotConnected": "Non connecté.",
+  "sReload": "Recharger",
+  "sCacheCleared": "Cache vidé, rechargement…",
   "sStatus": "Statut",
   "sExpiration": "Expiration",
   "sConnections": "Connexions",

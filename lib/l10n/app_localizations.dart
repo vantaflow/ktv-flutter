@@ -795,6 +795,18 @@ abstract class L {
   /// **'Non connecté.'**
   String get sNotConnected;
 
+  /// No description provided for @sReload.
+  ///
+  /// In fr, this message translates to:
+  /// **'Recharger'**
+  String get sReload;
+
+  /// No description provided for @sCacheCleared.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cache vidé, rechargement…'**
+  String get sCacheCleared;
+
   /// No description provided for @sStatus.
   ///
   /// In fr, this message translates to:

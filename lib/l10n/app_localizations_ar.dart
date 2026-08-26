@@ -365,6 +365,12 @@ class LAr extends L {
   String get sNotConnected => 'غير متصل.';
 
   @override
+  String get sReload => 'إعادة التحميل';
+
+  @override
+  String get sCacheCleared => 'تم إفراغ الذاكرة المؤقتة، جارٍ إعادة التحميل…';
+
+  @override
   String get sStatus => 'الحالة';
 
   @override

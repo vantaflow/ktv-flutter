@@ -365,6 +365,12 @@ class LEn extends L {
   String get sNotConnected => 'Not connected.';
 
   @override
+  String get sReload => 'Reload';
+
+  @override
+  String get sCacheCleared => 'Cache cleared, reloading…';
+
+  @override
   String get sStatus => 'Status';
 
   @override

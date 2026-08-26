@@ -131,6 +131,8 @@
   "nextEpisode": "Next episode",
   "sAccErr": "Couldn't fetch subscription info.",
   "sNotConnected": "Not connected.",
+  "sReload": "Reload",
+  "sCacheCleared": "Cache cleared, reloading…",
   "sStatus": "Status",
   "sExpiration": "Expiration",
   "sConnections": "Connections",

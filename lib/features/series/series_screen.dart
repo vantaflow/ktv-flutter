@@ -71,7 +71,24 @@ class _SeriesScreenState extends ConsumerState<SeriesScreen> {
         Expanded(
           child: AsyncView(
             value: isAll ? ref.watch(allSeriesProvider) : ref.watch(seriesListProvider),
-            emptyBuilder: () => Center(child: Text(L.of(context)!.emptyNoSeries, style: TextStyle(color: Colors.white38))),
+            // Idem films : un cache vide se recharge sans redémarrer l'app.
+            emptyBuilder: () => Center(
+              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Text(L.of(context)!.emptyNoSeries, style: TextStyle(color: Colors.white38)),
+                const SizedBox(height: 14),
+                FilledButton.tonalIcon(
+                  onPressed: () {
+                    ref.invalidate(seriesCategoriesAllProvider);
+                    ref.invalidate(seriesCategoriesProvider);
+                    ref.invalidate(seriesListProvider);
+                    ref.invalidate(allSeriesProvider);
+                    ref.invalidate(latestSeriesProvider);
+                  },
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: Text(L.of(context)!.sReload),
+                ),
+              ]),
+            ),
             data: (List<SeriesItem> all) {
               final series = applyCatalogFilter(all, _filter, nameOf: (s) => s.name, ratingOf: (s) => s.rating, addedOf: (s) => s.lastModified);
               if (series.isEmpty) return Center(child: Text(L.of(context)!.emptyNoSeriesFilter, style: TextStyle(color: Colors.white38)));

@@ -25,6 +25,8 @@ import '../categories/category_manager_screen.dart';
 import '../parental/parental.dart';
 import '../sources/sources_providers.dart';
 import '../live/live_providers.dart';
+import '../vod/vod_providers.dart';
+import '../series/series_providers.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Section sélectionnée dans les Réglages (layout 2 colonnes façon ancienne KTV).
@@ -143,9 +145,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return [
       info.when(
         loading: () => Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator(color: KtvColors.accent))),
-        error: (_, _) => Text(L.of(context)!.sAccErr, style: TextStyle(color: KtvColors.muted)),
+        // Un échec de `authenticate()` n'est pas une déconnexion : on le dit, et on
+        // offre le rechargement au lieu de laisser le panneau bloqué.
+        error: (e, _) => _card([
+          Text(L.of(context)!.sAccErr, style: TextStyle(color: KtvColors.muted)),
+          const SizedBox(height: 6),
+          Text('$e', style: TextStyle(color: KtvColors.muted, fontSize: 12)),
+          const SizedBox(height: 12),
+          _reloadAccountButton(),
+        ]),
         data: (ui) {
-          if (ui == null) return Text(L.of(context)!.sNotConnected, style: TextStyle(color: KtvColors.muted));
+          if (ui == null) {
+            return _card([
+              Text(L.of(context)!.sNotConnected, style: TextStyle(color: KtvColors.muted)),
+              const SizedBox(height: 12),
+              _reloadAccountButton(),
+            ]);
+          }
           return _card([
             Wrap(
               spacing: 14,
@@ -166,11 +182,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               const SizedBox(height: 14),
               Text(ui.message, style: TextStyle(color: KtvColors.accent2, fontSize: 12.5)),
             ],
+            const SizedBox(height: 14),
+            _reloadAccountButton(),
           ]);
         },
       ),
     ];
   }
+
+  /// Relit les infos d'abonnement en vidant leur cache Riverpod.
+  Widget _reloadAccountButton() => FilledButton.tonalIcon(
+        onPressed: () {
+          ref.invalidate(userInfoProvider);
+          _toast(L.of(context)!.sCacheCleared);
+        },
+        icon: const Icon(Icons.refresh_rounded),
+        label: Text(L.of(context)!.sReload),
+      );
 
   // --- ▶️ Lecture & tampon ---
   List<Widget> _playback(PrefsStore prefs) {
@@ -248,8 +276,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         Text(L.of(context)!.sCatalogHint, style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
         const SizedBox(height: 12),
         Wrap(spacing: 10, runSpacing: 10, children: [
-          FilledButton.tonalIcon(onPressed: () { ref.invalidate(allVodProvider); ref.invalidate(latestVodProvider); _toast(L.of(context)!.sMoviesRefreshed); }, icon: Icon(Icons.movie_rounded), label: Text(L.of(context)!.sRefreshMovies)),
-          FilledButton.tonalIcon(onPressed: () { ref.invalidate(allSeriesProvider); ref.invalidate(latestSeriesProvider); _toast(L.of(context)!.sSeriesRefreshed); }, icon: Icon(Icons.grid_view_rounded), label: Text(L.of(context)!.sRefreshSeries)),
+          FilledButton.tonalIcon(onPressed: () { ref.invalidate(vodCategoriesAllProvider); ref.invalidate(vodCategoriesProvider); ref.invalidate(vodStreamsProvider); ref.invalidate(allVodProvider); ref.invalidate(latestVodProvider); _toast(L.of(context)!.sMoviesRefreshed); }, icon: Icon(Icons.movie_rounded), label: Text(L.of(context)!.sRefreshMovies)),
+          FilledButton.tonalIcon(onPressed: () { ref.invalidate(seriesCategoriesAllProvider); ref.invalidate(seriesCategoriesProvider); ref.invalidate(seriesListProvider); ref.invalidate(allSeriesProvider); ref.invalidate(latestSeriesProvider); _toast(L.of(context)!.sSeriesRefreshed); }, icon: Icon(Icons.grid_view_rounded), label: Text(L.of(context)!.sRefreshSeries)),
           FilledButton.icon(onPressed: () { ref.read(autoRefreshControllerProvider.notifier).refreshNow(); _toast(L.of(context)!.sCatalogRefreshed); }, icon: Icon(Icons.refresh), label: Text(L.of(context)!.sRefreshAll)),
         ]),
       ]),

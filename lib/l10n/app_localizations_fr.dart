@@ -367,6 +367,12 @@ class LFr extends L {
   String get sNotConnected => 'Non connecté.';
 
   @override
+  String get sReload => 'Recharger';
+
+  @override
+  String get sCacheCleared => 'Cache vidé, rechargement…';
+
+  @override
   String get sStatus => 'Statut';
 
   @override

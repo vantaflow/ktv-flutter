@@ -73,7 +73,26 @@ class _VodScreenState extends ConsumerState<VodScreen> {
         Expanded(
           child: AsyncView(
             value: isAll ? ref.watch(allVodProvider) : ref.watch(vodStreamsProvider),
-            emptyBuilder: () => Center(child: Text(L.of(context)!.emptyNoMovie, style: TextStyle(color: Colors.white38))),
+            // Catalogue vide = souvent un cache figé sur une réponse vide du
+            // fournisseur : on propose de le vider plutôt que d'exiger un
+            // redémarrage de l'app.
+            emptyBuilder: () => Center(
+              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Text(L.of(context)!.emptyNoMovie, style: TextStyle(color: Colors.white38)),
+                const SizedBox(height: 14),
+                FilledButton.tonalIcon(
+                  onPressed: () {
+                    ref.invalidate(vodCategoriesAllProvider);
+                    ref.invalidate(vodCategoriesProvider);
+                    ref.invalidate(vodStreamsProvider);
+                    ref.invalidate(allVodProvider);
+                    ref.invalidate(latestVodProvider);
+                  },
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: Text(L.of(context)!.sReload),
+                ),
+              ]),
+            ),
             data: (List<VodItem> all) {
               final movies = applyCatalogFilter(all, _filter, nameOf: (m) => m.name, ratingOf: (m) => m.rating, addedOf: (m) => m.added);
               if (movies.isEmpty) return Center(child: Text(L.of(context)!.emptyNoMovieFilter, style: TextStyle(color: Colors.white38)));
