@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../services/log/remote_log.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import '../../core/models/models.dart';
 import '../../core/logic/text_utils.dart';
@@ -22,7 +23,10 @@ final vodCategoriesProvider = FutureProvider<List<Category>>((ref) async {
   final prefs = ref.read(prefsProvider);
   final ov = prof == null ? const <String, bool>{} : prefs.categoryVisibility(prof.id, CatSection.vod.key);
   final order = prof == null ? const <String>[] : prefs.categoryOrder(prof.id, CatSection.vod.key);
-  final visible = cats.where((cat) => categoryVisible(catId: cat.id, name: cat.name, overrides: ov, heuristic: frCategoryAllowed)).toList();
+  final visible = visibleCategories(cats: cats, overrides: ov, heuristic: frCategoryAllowed);
+  if (cats.isNotEmpty && visible.length == cats.length && !ov.containsValue(true)) {
+    RemoteLog.log('categories: heuristique 0/${cats.length} → repli sur tout le catalogue');
+  }
   final ordered = orderCategories(visible, order);
   final cfg = ref.watch(parentalConfigProvider);
   if (cfg.hideMode && !ref.watch(parentalUnlockedProvider)) {

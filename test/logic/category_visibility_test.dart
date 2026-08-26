@@ -59,4 +59,43 @@ void main() {
       expect(CatSection.series.label, 'Séries');
     });
   });
+
+  group('visibleCategories — garde-fou anti-écran-vide', () {
+    final cats = [
+      Category('1', 'ARABIC MOVIES'),
+      Category('2', 'TOP MOVIES 4K'),
+      Category('3', 'ASIA MOVIES'),
+    ];
+
+    test('heuristique qui ne matche rien → tout le catalogue est renvoyé', () {
+      // Sans ce repli, allVod/allSeries filtrent sur un set vide et jettent
+      // 100 % du catalogue : écran Films/Séries vide alors que le réseau a
+      // ramené 76 000 films (cas réel, provider cf.youripitv-pro.site).
+      expect(visibleCategories(cats: cats, overrides: const {}, heuristic: heuristic).length, 3);
+    });
+
+    test('un choix explicite visible → le choix utilisateur prime', () {
+      final out = visibleCategories(cats: cats, overrides: const {'2': true}, heuristic: heuristic);
+      expect(out.map((c) => c.id), ['2']);
+    });
+
+    test('overrides tous à false et heuristique muette → repli, jamais d\'écran vide', () {
+      final out = visibleCategories(
+        cats: cats,
+        overrides: const {'1': false, '2': false, '3': false},
+        heuristic: heuristic,
+      );
+      expect(out.length, 3);
+    });
+
+    test('heuristique qui matche → filtrage normal, pas de repli', () {
+      final mixed = [...cats, Category('4', 'FR| ACTION')];
+      final out = visibleCategories(cats: mixed, overrides: const {}, heuristic: heuristic);
+      expect(out.map((c) => c.id), ['4']);
+    });
+
+    test('catalogue vide → liste vide (pas de repli fantôme)', () {
+      expect(visibleCategories(cats: const [], overrides: const {}, heuristic: heuristic), isEmpty);
+    });
+  });
 }
