@@ -199,6 +199,7 @@
   "sEvery6h": "Toutes les 6 h",
   "sRefreshNow": "Actualiser maintenant",
   "sRefreshed": "Actualisé",
+  "sRefreshing": "Actualisation…",
   "sNoRecording": "Aucun enregistrement.",
   "sStop": "Arrêter",
   "sInProgress": "En cours…",

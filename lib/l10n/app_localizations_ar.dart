@@ -577,6 +577,9 @@ class LAr extends L {
   String get sRefreshed => 'تم التحديث';
 
   @override
+  String get sRefreshing => 'جارٍ التحديث…';
+
+  @override
   String get sNoRecording => 'لا توجد تسجيلات.';
 
   @override

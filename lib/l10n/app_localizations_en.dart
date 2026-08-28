@@ -579,6 +579,9 @@ class LEn extends L {
   String get sRefreshed => 'Refreshed';
 
   @override
+  String get sRefreshing => 'Refreshing…';
+
+  @override
   String get sNoRecording => 'No recording.';
 
   @override

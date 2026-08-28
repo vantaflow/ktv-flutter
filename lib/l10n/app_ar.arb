@@ -199,6 +199,7 @@
   "sEvery6h": "كل 6 ساعات",
   "sRefreshNow": "حدّث الآن",
   "sRefreshed": "تم التحديث",
+  "sRefreshing": "جارٍ التحديث…",
   "sNoRecording": "لا توجد تسجيلات.",
   "sStop": "إيقاف",
   "sInProgress": "قيد التنفيذ…",

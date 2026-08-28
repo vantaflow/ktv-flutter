@@ -582,6 +582,9 @@ class LFr extends L {
   String get sRefreshed => 'Actualisé';
 
   @override
+  String get sRefreshing => 'Actualisation…';
+
+  @override
   String get sNoRecording => 'Aucun enregistrement.';
 
   @override

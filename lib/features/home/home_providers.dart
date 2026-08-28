@@ -1,6 +1,7 @@
 import '../../services/log/remote_log.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import '../../core/models/models.dart';
 import '../../core/logic/recommendations_match.dart';
 import '../../core/providers.dart';
@@ -8,9 +9,15 @@ import '../auth/auth_controller.dart';
 import '../sources/sources_providers.dart';
 import '../vod/vod_providers.dart';
 import '../series/series_providers.dart';
+import '../live/live_providers.dart';
 import '../../services/tmdb/tmdb_providers.dart';
 import '../../services/trakt/trakt_providers.dart';
 import '../../services/epg/epg_providers.dart';
+
+/// Vrai tant qu'un rafraîchissement (manuel ou périodique) est en cours →
+/// permet au bouton « Actualiser » d'afficher une progression réelle plutôt que
+/// de rendre la main instantanément.
+final refreshBusyProvider = StateProvider<bool>((ref) => false);
 
 /// Rafraîchissement périodique en arrière-plan (catalogue + EPG) selon le réglage
 /// `autoRefreshMin`. L'état = minutes courantes (0 = désactivé).
@@ -36,20 +43,65 @@ class AutoRefreshController extends Notifier<int> {
   /// sur la liste de catégories mise en cache, donc si le fournisseur a répondu
   /// une liste vide au premier chargement, ne réinvalider que les listes les
   /// laisse vides indéfiniment. Idem pour `userInfo`, jamais rafraîchi jusqu'ici.
-  void refreshNow() {
-    ref.invalidate(userInfoProvider);
-    ref.invalidate(vodCategoriesAllProvider);
-    ref.invalidate(vodCategoriesProvider);
-    ref.invalidate(vodStreamsProvider);
-    ref.invalidate(seriesCategoriesAllProvider);
-    ref.invalidate(seriesCategoriesProvider);
-    ref.invalidate(seriesListProvider);
-    ref.invalidate(allVodProvider);
-    ref.invalidate(allSeriesProvider);
-    ref.invalidate(latestVodProvider);
-    ref.invalidate(latestSeriesProvider);
-    ref.invalidate(epgIndexProvider);
-    ref.read(prefsProvider).setSetting('lastRefresh', DateTime.now().millisecondsSinceEpoch);
+  ///
+  /// Le futur ne se termine qu'une fois les données réellement retéléchargées :
+  /// `ref.invalidate` est PARESSEUX (il jette le cache, la requête ne part qu'au
+  /// prochain `watch`), donc sans le `await` ci-dessous le bouton rendait la main
+  /// en quelques millisecondes sans qu'aucun appel réseau ait eu lieu.
+  Future<void> refreshNow() async {
+    if (ref.read(refreshBusyProvider)) return; // rafraîchissement déjà en cours
+    ref.read(refreshBusyProvider.notifier).state = true;
+    try {
+      // Recréer les sources : `M3uSource` mémoïse la playlist pour la vie de
+      // l'instance (`_loading ??= _load()`), donc sans ça un M3U ne se recharge
+      // jamais, quel que soit le nombre de providers invalidés.
+      ref.invalidate(xtreamClientProvider);
+      ref.invalidate(sourceInstancesProvider);
+
+      // Live — absent jusqu'ici alors que le réglage annonce « chaînes ».
+      ref.invalidate(liveCategoriesAllProvider);
+      ref.invalidate(liveCategoriesProvider);
+      ref.invalidate(liveStreamsProvider);
+      ref.invalidate(mergedLiveProvider);
+      ref.invalidate(mergedLiveCategoriesAllProvider);
+      ref.invalidate(archiveChannelsProvider);
+      ref.invalidate(channelsByCategoryProvider);
+      ref.invalidate(shortEpgProvider);
+
+      ref.invalidate(userInfoProvider);
+      ref.invalidate(vodCategoriesAllProvider);
+      ref.invalidate(vodCategoriesProvider);
+      ref.invalidate(vodStreamsProvider);
+      ref.invalidate(seriesCategoriesAllProvider);
+      ref.invalidate(seriesCategoriesProvider);
+      ref.invalidate(seriesListProvider);
+      ref.invalidate(allVodProvider);
+      ref.invalidate(allSeriesProvider);
+      ref.invalidate(latestVodProvider);
+      ref.invalidate(latestSeriesProvider);
+      ref.invalidate(epgIndexProvider);
+
+      // Une source injoignable ne doit pas annuler le rafraîchissement des
+      // autres : chaque attente absorbe son erreur.
+      Future<void> pull(Future<Object?> f, String what) async {
+        try {
+          await f;
+        } catch (e) {
+          RemoteLog.log('refresh: $what KO ($e)');
+        }
+      }
+
+      await Future.wait([
+        pull(ref.read(userInfoProvider.future), 'userInfo'),
+        pull(ref.read(liveCategoriesProvider.future), 'liveCategories'),
+        pull(ref.read(allVodProvider.future), 'films'),
+        pull(ref.read(allSeriesProvider.future), 'series'),
+        pull(ref.read(epgIndexProvider.future), 'epg'),
+      ]);
+      await ref.read(prefsProvider).setSetting('lastRefresh', DateTime.now().millisecondsSinceEpoch);
+    } finally {
+      ref.read(refreshBusyProvider.notifier).state = false;
+    }
   }
 
   void _schedule(int m) {

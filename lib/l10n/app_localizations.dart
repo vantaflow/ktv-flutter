@@ -1203,6 +1203,12 @@ abstract class L {
   /// **'Actualisé'**
   String get sRefreshed;
 
+  /// No description provided for @sRefreshing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Actualisation…'**
+  String get sRefreshing;
+
   /// No description provided for @sNoRecording.
   ///
   /// In fr, this message translates to:

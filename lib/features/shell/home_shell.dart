@@ -91,6 +91,15 @@ class _HomeShellState extends ConsumerState<HomeShell> {
             onChanged: _onSearch,
             onClear: _clearSearch,
             recordingCount: ref.watch(recordingControllerProvider).where((r) => r.status == RecStatus.recording).length,
+            refreshing: ref.watch(refreshBusyProvider),
+            refreshTooltip: ref.watch(refreshBusyProvider) ? l.sRefreshing : l.sRefreshNow,
+            onRefresh: () async {
+              await ref.read(autoRefreshControllerProvider.notifier).refreshNow();
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l.sRefreshed), duration: const Duration(seconds: 2)),
+              );
+            },
             onRecTap: () {
               _clearSearch();
               setState(() => _index = 7); // Réglages → section Enregistrements
@@ -139,7 +148,10 @@ class _TopBar extends StatelessWidget {
   final VoidCallback onClear;
   final int recordingCount;
   final VoidCallback onRecTap;
-  const _TopBar({required this.controller, required this.hint, required this.onChanged, required this.onClear, this.recordingCount = 0, required this.onRecTap});
+  final bool refreshing;
+  final String refreshTooltip;
+  final Future<void> Function() onRefresh;
+  const _TopBar({required this.controller, required this.hint, required this.onChanged, required this.onClear, this.recordingCount = 0, required this.onRecTap, required this.refreshing, required this.refreshTooltip, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -176,6 +188,19 @@ class _TopBar extends StatelessWidget {
             ),
           ),
           const Spacer(),
+          // Rafraîchissement manuel du catalogue, en plus du timer automatique
+          // des Réglages : accessible depuis n'importe quel onglet.
+          IconButton(
+            tooltip: refreshTooltip,
+            onPressed: refreshing ? null : onRefresh,
+            icon: refreshing
+                ? SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: KtvColors.accent),
+                  )
+                : Icon(Icons.refresh_rounded, size: 20, color: KtvColors.muted),
+          ),
           if (recordingCount > 0)
             Padding(
               padding: const EdgeInsets.only(left: 8),

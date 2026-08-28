@@ -533,7 +533,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ]),
         const SizedBox(height: 10),
-        FilledButton.tonalIcon(onPressed: () { ref.read(autoRefreshControllerProvider.notifier).refreshNow(); setState(() {}); _toast(L.of(context)!.sRefreshed); }, icon: Icon(Icons.refresh), label: Text(L.of(context)!.sRefreshNow)),
+        Builder(builder: (_) {
+          final busy = ref.watch(refreshBusyProvider);
+          return FilledButton.tonalIcon(
+            // Désactivé pendant l'opération : le rafraîchissement est maintenant
+            // attendu jusqu'au bout, l'utilisateur voit donc sa vraie durée.
+            onPressed: busy
+                ? null
+                : () async {
+                    await ref.read(autoRefreshControllerProvider.notifier).refreshNow();
+                    if (!mounted) return;
+                    setState(() {});
+                    _toast(L.of(context)!.sRefreshed);
+                  },
+            icon: busy
+                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.refresh),
+            label: Text(busy ? L.of(context)!.sRefreshing : L.of(context)!.sRefreshNow),
+          );
+        }),
         if (last > 0) Padding(padding: const EdgeInsets.only(top: 8), child: Text('Dernière actualisation : ${_dateTime(last)}', style: TextStyle(color: KtvColors.muted, fontSize: 11.5))),
       ]),
     ];
