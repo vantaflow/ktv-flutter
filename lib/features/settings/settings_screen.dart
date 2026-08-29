@@ -19,12 +19,12 @@ import '../../services/downloads/download_service.dart';
 import '../../services/recording/recording_service.dart';
 import '../../services/epg/epg_providers.dart';
 import '../home/home_providers.dart';
+import '../../services/tmdb/tmdb_providers.dart';
 import '../auth/auth_controller.dart';
 import '../categories/category_prefs.dart';
 import '../categories/category_manager_screen.dart';
 import '../parental/parental.dart';
 import '../sources/sources_providers.dart';
-import '../live/live_providers.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Section sélectionnée dans les Réglages (layout 2 colonnes façon ancienne KTV).
@@ -44,18 +44,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String? _diagText;
   final _syncPassCtrl = TextEditingController();
   final _syncEndpointCtrl = TextEditingController();
+  // Contrôleur persistant : un `TextEditingController` recréé dans `build()`
+  // remettait le curseur au début à chaque frappe.
+  final _tmdbKeyCtrl = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     final ctrl = ref.read(syncControllerProvider.notifier);
     _syncEndpointCtrl.text = ctrl.endpoint;
+    _tmdbKeyCtrl.text = ref.read(prefsProvider).settingStr('tmdbKey');
   }
 
   @override
   void dispose() {
     _syncPassCtrl.dispose();
     _syncEndpointCtrl.dispose();
+    _tmdbKeyCtrl.dispose();
     super.dispose();
   }
 
@@ -342,7 +347,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           activeThumbColor: KtvColors.accent,
           title: Text(L.of(context)!.sTmdbEnable),
           value: enabled,
-          onChanged: (v) async { await prefs.setSetting('tmdbEnabled', v); setState(() {}); },
+          onChanged: (v) async { await prefs.setSetting('tmdbEnabled', v); await _tmdbChanged(); },
         ),
         Row(children: [
           const SizedBox(width: 4),
@@ -357,7 +362,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               DropdownMenuItem(value: 'en-US', child: Text('English')),
               DropdownMenuItem(value: 'ar', child: Text('العربية')),
             ],
-            onChanged: (v) async { if (v != null) { await prefs.setSetting('tmdbLang', v); setState(() {}); } },
+            onChanged: (v) async { if (v != null) { await prefs.setSetting('tmdbLang', v); await _tmdbChanged(); } },
           ),
         ]),
         const SizedBox(height: 10),
@@ -366,8 +371,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         TextField(
           obscureText: true,
           decoration: InputDecoration(hintText: L.of(context)!.sTmdbKey),
-          controller: TextEditingController(text: prefs.settingStr('tmdbKey')),
-          onChanged: (v) => prefs.setSetting('tmdbKey', v.trim()),
+          controller: _tmdbKeyCtrl,
+          // À la validation seulement : reconstruire le service à chaque frappe
+          // relancerait des requêtes avec une clé incomplète.
+          onSubmitted: (v) async { await prefs.setSetting('tmdbKey', v.trim()); await _tmdbChanged(); },
+          onEditingComplete: () async { await prefs.setSetting('tmdbKey', _tmdbKeyCtrl.text.trim()); await _tmdbChanged(); },
         ),
       ]),
     ];
@@ -669,10 +677,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (active != null) set.add(active); // la source active est toujours incluse
     await prefs.setEnabledSourceIds(set.toList());
     ref.read(sourcesTickProvider.notifier).state++;
-    ref.invalidate(mergedLiveProvider);
-    ref.invalidate(liveCategoriesProvider);
-    ref.invalidate(liveStreamsProvider);
     if (mounted) setState(() {});
+    // Activer/désactiver une source change le catalogue Live fusionné : on le
+    // recharge pour de vrai (les `invalidate` posés ici ne partaient qu'à la
+    // prochaine visite de l'onglet Chaînes).
+    final ok = await ref.read(autoRefreshControllerProvider.notifier).refresh(RefreshScope.live);
+    if (!mounted) return;
+    setState(() {});
+    if (!ok) _toast(L.of(context)!.sRefreshFailed);
   }
 
   List<Widget> _profiles() {
@@ -1215,6 +1227,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   // ---------- helpers ----------
   void _toast(String m) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+
+  /// Un réglage TMDB a changé : reconstruire le service et jeter les résultats
+  /// déjà mémoïsés, sinon l'affichage garde la langue (ou l'absence de clé)
+  /// précédente jusqu'au prochain démarrage.
+  Future<void> _tmdbChanged() async {
+    ref.read(tmdbSettingsTickProvider.notifier).state++;
+    ref.invalidate(tmdbServiceProvider);
+    ref.invalidate(tmdbSearchProvider);
+    ref.invalidate(tmdbDetailsProvider);
+    ref.invalidate(movieRecommendationsProvider);
+    ref.invalidate(seriesRecommendationsProvider);
+    if (mounted) setState(() {});
+  }
 
   /// Ligne « Dossier … » + boutons Changer / Réinitialiser / Ouvrir.
   Widget _folderRow(String key, String defLabel) {
