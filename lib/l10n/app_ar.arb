@@ -283,5 +283,8 @@
   "updLater": "لاحقًا",
   "updDownloading": "جارٍ تنزيل التحديث…",
   "updInstalling": "جارٍ التثبيت… سيُعاد تشغيل التطبيق.",
-  "updCheckAtStart": "التحقق من التحديثات عند البدء"
+  "updCheckAtStart": "التحقق من التحديثات عند البدء",
+  "sRefreshFailed": "فشل التحديث",
+  "sLastRefresh": "آخر تحديث",
+  "sNextRefresh": "التحديث القادم"
 }

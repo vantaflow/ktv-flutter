@@ -756,4 +756,13 @@ class LEn extends L {
 
   @override
   String get updCheckAtStart => 'Check for updates on startup';
+
+  @override
+  String get sRefreshFailed => 'Refresh failed';
+
+  @override
+  String get sLastRefresh => 'Last refresh';
+
+  @override
+  String get sNextRefresh => 'Next refresh';
 }

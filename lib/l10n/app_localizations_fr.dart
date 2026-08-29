@@ -761,4 +761,13 @@ class LFr extends L {
 
   @override
   String get updCheckAtStart => 'Vérifier les mises à jour au démarrage';
+
+  @override
+  String get sRefreshFailed => 'Échec de l\'actualisation';
+
+  @override
+  String get sLastRefresh => 'Dernière actualisation';
+
+  @override
+  String get sNextRefresh => 'Prochaine actualisation';
 }

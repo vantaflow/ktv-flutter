@@ -15,19 +15,46 @@ import '../../services/trakt/trakt_providers.dart';
 import '../../services/epg/epg_providers.dart';
 
 /// Vrai tant qu'un rafraîchissement (manuel ou périodique) est en cours →
-/// permet au bouton « Actualiser » d'afficher une progression réelle plutôt que
-/// de rendre la main instantanément.
+/// permet aux boutons « Actualiser » d'afficher une progression réelle plutôt
+/// que de rendre la main instantanément.
 final refreshBusyProvider = StateProvider<bool>((ref) => false);
+
+/// Horodatage (epoch ms) du dernier rafraîchissement complet réussi.
+///
+/// Double le réglage persistant `lastRefresh` : les Réglages lisaient la valeur
+/// une seule fois dans `build()`, donc un rafraîchissement automatique terminé
+/// en arrière-plan ne mettait jamais l'étiquette à jour.
+final lastRefreshProvider = StateProvider<int>(
+    (ref) => int.tryParse(ref.read(prefsProvider).settingStr('lastRefresh', '0')) ?? 0);
+
+/// Ce qu'un rafraîchissement doit recharger. Les boutons des Réglages passent
+/// par le même moteur que le bouton global : ils attendent réellement la
+/// réponse du fournisseur au lieu de se contenter d'un `invalidate` paresseux.
+enum RefreshScope { all, account, live, movies, series, epg }
 
 /// Rafraîchissement périodique en arrière-plan (catalogue + EPG) selon le réglage
 /// `autoRefreshMin`. L'état = minutes courantes (0 = désactivé).
 class AutoRefreshController extends Notifier<int> {
-  Timer? _timer;
+  Timer? _tick;
+  Timer? _boot;
+
   @override
   int build() {
-    final m = int.tryParse(ref.read(prefsProvider).settingStr('autoRefreshMin', '0')) ?? 0;
+    final prefs = ref.read(prefsProvider);
+    final m = int.tryParse(prefs.settingStr('autoRefreshMin', '0')) ?? 0;
+    // Premier lancement : le catalogue vient d'être chargé, donc les données
+    // sont fraîches. Sans ce marquage, l'échéance tombait dans le passé et un
+    // rafraîchissement complet repartait 10 s après le démarrage pour rien.
+    if (ref.read(lastRefreshProvider) == 0) {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      ref.read(lastRefreshProvider.notifier).state = now;
+      prefs.setSetting('lastRefresh', now);
+    }
     _schedule(m);
-    ref.onDispose(() => _timer?.cancel());
+    ref.onDispose(() {
+      _tick?.cancel();
+      _boot?.cancel();
+    });
     return m;
   }
 
@@ -37,49 +64,61 @@ class AutoRefreshController extends Notifier<int> {
     _schedule(m);
   }
 
-  /// Purge tout le cache catalogue et le relit depuis le fournisseur.
+  /// Prochaine échéance automatique (epoch ms), 0 si la fréquence est « jamais ».
+  int get nextDueMs => state <= 0 ? 0 : ref.read(lastRefreshProvider) + state * 60000;
+
+  /// Purge le cache demandé et le relit **réellement** depuis le fournisseur.
   ///
-  /// Les catégories sont invalidées elles aussi : `allVod`/`allSeries` filtrent
-  /// sur la liste de catégories mise en cache, donc si le fournisseur a répondu
-  /// une liste vide au premier chargement, ne réinvalider que les listes les
-  /// laisse vides indéfiniment. Idem pour `userInfo`, jamais rafraîchi jusqu'ici.
-  ///
-  /// Le futur ne se termine qu'une fois les données réellement retéléchargées :
   /// `ref.invalidate` est PARESSEUX (il jette le cache, la requête ne part qu'au
-  /// prochain `watch`), donc sans le `await` ci-dessous le bouton rendait la main
-  /// en quelques millisecondes sans qu'aucun appel réseau ait eu lieu.
-  Future<void> refreshNow() async {
-    if (ref.read(refreshBusyProvider)) return; // rafraîchissement déjà en cours
+  /// prochain `watch`) : les boutons des Réglages qui se contentaient
+  /// d'invalider affichaient « rafraîchi » sans qu'aucun appel réseau n'ait eu
+  /// lieu — et sur un écran qui n'observe pas ces providers, rien ne partait
+  /// avant la prochaine visite de la section. Chaque portée attend donc la fin
+  /// du téléchargement et renvoie `false` si une source a échoué.
+  Future<bool> refresh([RefreshScope scope = RefreshScope.all]) async {
+    if (ref.read(refreshBusyProvider)) return false; // rafraîchissement déjà en cours
     ref.read(refreshBusyProvider.notifier).state = true;
+    var ok = true;
     try {
-      // Recréer les sources : `M3uSource` mémoïse la playlist pour la vie de
-      // l'instance (`_loading ??= _load()`), donc sans ça un M3U ne se recharge
-      // jamais, quel que soit le nombre de providers invalidés.
+      final all = scope == RefreshScope.all;
+
+      // Recréer les sources quelle que soit la portée : `M3uSource` mémoïse la
+      // playlist pour la vie de l'instance (`_loading ??= _load()`), donc sans
+      // ça un M3U ne se recharge jamais, quel que soit le nombre de providers
+      // invalidés.
       ref.invalidate(xtreamClientProvider);
       ref.invalidate(sourceInstancesProvider);
 
-      // Live — absent jusqu'ici alors que le réglage annonce « chaînes ».
-      ref.invalidate(liveCategoriesAllProvider);
-      ref.invalidate(liveCategoriesProvider);
-      ref.invalidate(liveStreamsProvider);
-      ref.invalidate(mergedLiveProvider);
-      ref.invalidate(mergedLiveCategoriesAllProvider);
-      ref.invalidate(archiveChannelsProvider);
-      ref.invalidate(channelsByCategoryProvider);
-      ref.invalidate(shortEpgProvider);
-
-      ref.invalidate(userInfoProvider);
-      ref.invalidate(vodCategoriesAllProvider);
-      ref.invalidate(vodCategoriesProvider);
-      ref.invalidate(vodStreamsProvider);
-      ref.invalidate(seriesCategoriesAllProvider);
-      ref.invalidate(seriesCategoriesProvider);
-      ref.invalidate(seriesListProvider);
-      ref.invalidate(allVodProvider);
-      ref.invalidate(allSeriesProvider);
-      ref.invalidate(latestVodProvider);
-      ref.invalidate(latestSeriesProvider);
-      ref.invalidate(epgIndexProvider);
+      if (all || scope == RefreshScope.account) {
+        ref.invalidate(userInfoProvider);
+      }
+      if (all || scope == RefreshScope.live) {
+        ref.invalidate(liveCategoriesAllProvider);
+        ref.invalidate(liveCategoriesProvider);
+        ref.invalidate(liveStreamsProvider);
+        ref.invalidate(mergedLiveProvider);
+        ref.invalidate(mergedLiveCategoriesAllProvider);
+        ref.invalidate(archiveChannelsProvider);
+        ref.invalidate(channelsByCategoryProvider);
+        ref.invalidate(shortEpgProvider);
+      }
+      if (all || scope == RefreshScope.movies) {
+        ref.invalidate(vodCategoriesAllProvider);
+        ref.invalidate(vodCategoriesProvider);
+        ref.invalidate(vodStreamsProvider);
+        ref.invalidate(allVodProvider);
+        ref.invalidate(latestVodProvider);
+      }
+      if (all || scope == RefreshScope.series) {
+        ref.invalidate(seriesCategoriesAllProvider);
+        ref.invalidate(seriesCategoriesProvider);
+        ref.invalidate(seriesListProvider);
+        ref.invalidate(allSeriesProvider);
+        ref.invalidate(latestSeriesProvider);
+      }
+      if (all || scope == RefreshScope.epg) {
+        ref.invalidate(epgIndexProvider);
+      }
 
       // Une source injoignable ne doit pas annuler le rafraîchissement des
       // autres : chaque attente absorbe son erreur.
@@ -87,26 +126,55 @@ class AutoRefreshController extends Notifier<int> {
         try {
           await f;
         } catch (e) {
+          ok = false;
           RemoteLog.log('refresh: $what KO ($e)');
         }
       }
 
-      await Future.wait([
-        pull(ref.read(userInfoProvider.future), 'userInfo'),
-        pull(ref.read(liveCategoriesProvider.future), 'liveCategories'),
-        pull(ref.read(allVodProvider.future), 'films'),
-        pull(ref.read(allSeriesProvider.future), 'series'),
-        pull(ref.read(epgIndexProvider.future), 'epg'),
-      ]);
-      await ref.read(prefsProvider).setSetting('lastRefresh', DateTime.now().millisecondsSinceEpoch);
+      final jobs = <Future<void>>[];
+      if (all || scope == RefreshScope.account) jobs.add(pull(ref.read(userInfoProvider.future), 'userInfo'));
+      if (all || scope == RefreshScope.live) jobs.add(pull(ref.read(liveCategoriesProvider.future), 'liveCategories'));
+      if (all || scope == RefreshScope.movies) jobs.add(pull(ref.read(allVodProvider.future), 'films'));
+      if (all || scope == RefreshScope.series) jobs.add(pull(ref.read(allSeriesProvider.future), 'series'));
+      if (all || scope == RefreshScope.epg) jobs.add(pull(ref.read(epgIndexProvider.future), 'epg'));
+      await Future.wait(jobs);
+
+      // Seul un rafraîchissement complet réussi réarme le compte à rebours :
+      // recharger les seuls films ne doit pas repousser la mise à jour auto.
+      if (all && ok) {
+        final now = DateTime.now().millisecondsSinceEpoch;
+        await ref.read(prefsProvider).setSetting('lastRefresh', now);
+        ref.read(lastRefreshProvider.notifier).state = now;
+      }
+      return ok;
     } finally {
       ref.read(refreshBusyProvider.notifier).state = false;
+      _schedule(state); // réarme l'échéance sur la nouvelle date
     }
   }
 
+  /// Alias historique (barre du haut, Réglages).
+  Future<void> refreshNow() => refresh();
+
+  /// Réveil par horloge murale plutôt que par `Timer.periodic(minutes)` : un Mac
+  /// en veille gèle les timers longs, l'échéance était donc repoussée d'autant
+  /// et le rafraîchissement « automatique » pouvait ne jamais partir. Ici un
+  /// battement d'une minute compare l'heure réelle à l'échéance, ce qui rattrape
+  /// aussi une échéance manquée pendant que l'app était fermée.
   void _schedule(int m) {
-    _timer?.cancel();
-    if (m > 0) _timer = Timer.periodic(Duration(minutes: m), (_) => refreshNow());
+    _tick?.cancel();
+    _boot?.cancel();
+    if (m <= 0) return;
+    _boot = Timer(const Duration(seconds: 10), _check);
+    _tick = Timer.periodic(const Duration(minutes: 1), (_) => _check());
+  }
+
+  void _check() {
+    if (state <= 0 || ref.read(refreshBusyProvider)) return;
+    final due = nextDueMs;
+    if (due == 0 || DateTime.now().millisecondsSinceEpoch < due) return;
+    RemoteLog.log('refresh: déclenchement automatique ($state min)');
+    refresh();
   }
 }
 

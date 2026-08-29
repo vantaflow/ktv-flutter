@@ -1526,6 +1526,24 @@ abstract class L {
   /// In fr, this message translates to:
   /// **'Vérifier les mises à jour au démarrage'**
   String get updCheckAtStart;
+
+  /// No description provided for @sRefreshFailed.
+  ///
+  /// In fr, this message translates to:
+  /// **'Échec de l\'actualisation'**
+  String get sRefreshFailed;
+
+  /// No description provided for @sLastRefresh.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernière actualisation'**
+  String get sLastRefresh;
+
+  /// No description provided for @sNextRefresh.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prochaine actualisation'**
+  String get sNextRefresh;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

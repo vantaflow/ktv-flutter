@@ -25,8 +25,6 @@ import '../categories/category_manager_screen.dart';
 import '../parental/parental.dart';
 import '../sources/sources_providers.dart';
 import '../live/live_providers.dart';
-import '../vod/vod_providers.dart';
-import '../series/series_providers.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Section sélectionnée dans les Réglages (layout 2 colonnes façon ancienne KTV).
@@ -190,15 +188,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     ];
   }
 
-  /// Relit les infos d'abonnement en vidant leur cache Riverpod.
-  Widget _reloadAccountButton() => FilledButton.tonalIcon(
-        onPressed: () {
-          ref.invalidate(userInfoProvider);
-          _toast(L.of(context)!.sCacheCleared);
-        },
-        icon: const Icon(Icons.refresh_rounded),
-        label: Text(L.of(context)!.sReload),
-      );
+  /// Relit les infos d'abonnement — réellement, en attendant la réponse du
+  /// serveur, au lieu de vider le cache et d'annoncer aussitôt « rechargé ».
+  Widget _reloadAccountButton() =>
+      _refreshButton(RefreshScope.account, L.of(context)!.sReload, Icons.refresh_rounded);
+
+  /// Bouton de rechargement commun aux sections des Réglages.
+  ///
+  /// Un simple `ref.invalidate` est PARESSEUX : sur un écran qui n'observe pas
+  /// le provider (Catalogue, EPG…), aucune requête ne partait et le message de
+  /// confirmation mentait. Ici l'appel réseau est attendu, le bouton reste
+  /// désactivé avec sa roue pendant ce temps, et l'échec est dit.
+  Widget _refreshButton(RefreshScope scope, String label, IconData icon, {bool filled = false}) {
+    final l = L.of(context)!;
+    final busy = ref.watch(refreshBusyProvider);
+    final child = busy
+        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+        : Icon(icon);
+    Future<void> run() async {
+      final ok = await ref.read(autoRefreshControllerProvider.notifier).refresh(scope);
+      if (!mounted) return;
+      setState(() {});
+      _toast(ok ? l.sRefreshed : l.sRefreshFailed);
+    }
+
+    return filled
+        ? FilledButton.icon(onPressed: busy ? null : run, icon: child, label: Text(busy ? l.sRefreshing : label))
+        : FilledButton.tonalIcon(onPressed: busy ? null : run, icon: child, label: Text(busy ? l.sRefreshing : label));
+  }
 
   // --- ▶️ Lecture & tampon ---
   List<Widget> _playback(PrefsStore prefs) {
@@ -257,14 +274,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         const SizedBox(height: 12),
         _line('État', status),
         const SizedBox(height: 12),
-        FilledButton.tonalIcon(
-          onPressed: () {
-            ref.invalidate(epgIndexProvider);
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(L.of(context)!.sEpgReloading)));
-          },
-          icon: const Icon(Icons.refresh),
-          label: Text(L.of(context)!.sRefreshEpg),
-        ),
+        _refreshButton(RefreshScope.epg, L.of(context)!.sRefreshEpg, Icons.refresh),
       ]),
     ];
   }
@@ -276,9 +286,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         Text(L.of(context)!.sCatalogHint, style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
         const SizedBox(height: 12),
         Wrap(spacing: 10, runSpacing: 10, children: [
-          FilledButton.tonalIcon(onPressed: () { ref.invalidate(vodCategoriesAllProvider); ref.invalidate(vodCategoriesProvider); ref.invalidate(vodStreamsProvider); ref.invalidate(allVodProvider); ref.invalidate(latestVodProvider); _toast(L.of(context)!.sMoviesRefreshed); }, icon: Icon(Icons.movie_rounded), label: Text(L.of(context)!.sRefreshMovies)),
-          FilledButton.tonalIcon(onPressed: () { ref.invalidate(seriesCategoriesAllProvider); ref.invalidate(seriesCategoriesProvider); ref.invalidate(seriesListProvider); ref.invalidate(allSeriesProvider); ref.invalidate(latestSeriesProvider); _toast(L.of(context)!.sSeriesRefreshed); }, icon: Icon(Icons.grid_view_rounded), label: Text(L.of(context)!.sRefreshSeries)),
-          FilledButton.icon(onPressed: () { ref.read(autoRefreshControllerProvider.notifier).refreshNow(); _toast(L.of(context)!.sCatalogRefreshed); }, icon: Icon(Icons.refresh), label: Text(L.of(context)!.sRefreshAll)),
+          _refreshButton(RefreshScope.movies, L.of(context)!.sRefreshMovies, Icons.movie_rounded),
+          _refreshButton(RefreshScope.series, L.of(context)!.sRefreshSeries, Icons.grid_view_rounded),
+          _refreshButton(RefreshScope.all, L.of(context)!.sRefreshAll, Icons.refresh, filled: true),
         ]),
       ]),
     ];
@@ -510,7 +520,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   // --- 🔄 Mise à jour automatique ---
   List<Widget> _autoRefresh(PrefsStore prefs) {
     final cur = ref.watch(autoRefreshControllerProvider);
-    final last = int.tryParse(prefs.settingStr('lastRefresh', '0')) ?? 0;
+    // Lu via le provider et non via `prefs` : un rafraîchissement automatique
+    // terminé en arrière-plan doit rafraîchir l'étiquette sans quitter l'écran.
+    final last = ref.watch(lastRefreshProvider);
+    final next = cur > 0 && last > 0 ? last + cur * 60000 : 0;
     return [
       _card([
         Text(L.of(context)!.sAutoRefreshHint, style: TextStyle(color: KtvColors.muted, fontSize: 12.5)),
@@ -533,26 +546,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ]),
         const SizedBox(height: 10),
-        Builder(builder: (_) {
-          final busy = ref.watch(refreshBusyProvider);
-          return FilledButton.tonalIcon(
-            // Désactivé pendant l'opération : le rafraîchissement est maintenant
-            // attendu jusqu'au bout, l'utilisateur voit donc sa vraie durée.
-            onPressed: busy
-                ? null
-                : () async {
-                    await ref.read(autoRefreshControllerProvider.notifier).refreshNow();
-                    if (!mounted) return;
-                    setState(() {});
-                    _toast(L.of(context)!.sRefreshed);
-                  },
-            icon: busy
-                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.refresh),
-            label: Text(busy ? L.of(context)!.sRefreshing : L.of(context)!.sRefreshNow),
-          );
-        }),
-        if (last > 0) Padding(padding: const EdgeInsets.only(top: 8), child: Text('Dernière actualisation : ${_dateTime(last)}', style: TextStyle(color: KtvColors.muted, fontSize: 11.5))),
+        // Désactivé pendant l'opération : le rafraîchissement est attendu
+        // jusqu'au bout, l'utilisateur voit donc sa vraie durée.
+        _refreshButton(RefreshScope.all, L.of(context)!.sRefreshNow, Icons.refresh),
+        if (last > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text('${L.of(context)!.sLastRefresh} : ${_dateTime(last)}', style: TextStyle(color: KtvColors.muted, fontSize: 11.5)),
+          ),
+        if (next > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text('${L.of(context)!.sNextRefresh} : ${_dateTime(next)}', style: TextStyle(color: KtvColors.muted, fontSize: 11.5)),
+          ),
       ]),
     ];
   }

@@ -753,4 +753,13 @@ class LAr extends L {
 
   @override
   String get updCheckAtStart => 'التحقق من التحديثات عند البدء';
+
+  @override
+  String get sRefreshFailed => 'فشل التحديث';
+
+  @override
+  String get sLastRefresh => 'آخر تحديث';
+
+  @override
+  String get sNextRefresh => 'التحديث القادم';
 }
