@@ -28,11 +28,11 @@ npx wrangler deploy
 > `wrangler d1 create ktv-sync` + `wrangler d1 execute ktv-sync --remote --file=schema.sql`,
 > puis décommenter le bloc `[[d1_databases]]`.
 
-**Déjà déployé** : `https://ktv-sync.khalilbenaz.workers.dev` (KV `SYNC`, secret Trakt posé).
+**Déjà déployé** : `https://ktv-sync.bmwmfcknzb.workers.dev` (KV `SYNC`, secret Trakt posé).
 
 L'URL obtenue (`https://ktv-sync.<compte>.workers.dev`) est à renseigner dans
 l'app : **Réglages → Synchronisation → Serveur** (valeur par défaut
-`https://ktv-sync.khalilbenaz.workers.dev`).
+`https://ktv-sync.bmwmfcknzb.workers.dev`).
 
 ## API
 

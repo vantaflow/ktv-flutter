@@ -18,7 +18,7 @@ class TmdbService {
 
   TmdbService(
     this._prefs, {
-    String proxy = 'https://ktv-tmdb.khalilbenaz.workers.dev',
+    String proxy = 'https://ktv-tmdb.bmwmfcknzb.workers.dev',
     String lang = 'fr-FR',
     String apiKey = '',
     bool enabled = true,

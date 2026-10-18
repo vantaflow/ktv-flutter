@@ -4,9 +4,9 @@ import '../../core/version.dart';
 
 /// Journalisation distante pour débogage (surtout Android TV, où on n'a pas la
 /// console). Envoie les étapes de démarrage + erreurs au Worker ktv-sync `/log`,
-/// lisibles en ligne : GET https://ktv-sync.khalilbenaz.workers.dev/log
+/// lisibles en ligne : GET https://ktv-sync.bmwmfcknzb.workers.dev/log
 class RemoteLog {
-  static const _endpoint = 'https://ktv-sync.khalilbenaz.workers.dev/log';
+  static const _endpoint = 'https://ktv-sync.bmwmfcknzb.workers.dev/log';
   static final _dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 8), receiveTimeout: const Duration(seconds: 8)));
   static late String _id;
   static late String _platform;

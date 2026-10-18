@@ -10,7 +10,7 @@ import '../trakt/trakt_providers.dart';
 import 'crypto_box.dart';
 import 'sync_merge.dart';
 
-const kDefaultSyncEndpoint = 'https://ktv-sync.khalilbenaz.workers.dev';
+const kDefaultSyncEndpoint = 'https://ktv-sync.bmwmfcknzb.workers.dev';
 
 enum SyncStatus { idle, syncing, ok, error }
 
