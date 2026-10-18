@@ -19,7 +19,7 @@ class UpdateInfo {
 /// un bundle en cours d'exécution automatiquement est trop risqué.)
 class UpdateService {
   final Dio _dio = Dio();
-  static const _repo = 'khalilbenaz/ktv-flutter';
+  static const _repo = 'vantaflow/ktv-flutter';
 
   Future<UpdateInfo?> check() async {
     try {

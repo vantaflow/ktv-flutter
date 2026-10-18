@@ -1162,7 +1162,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             label: Text(L.of(context)!.sCheckUpdates),
           ),
           const SizedBox(width: 10),
-          TextButton(onPressed: () => _openUrl('https://github.com/khalilbenaz/ktv-flutter/releases'), child: Text(L.of(context)!.sSeeReleases)),
+          TextButton(onPressed: () => _openUrl('https://github.com/vantaflow/ktv-flutter/releases'), child: Text(L.of(context)!.sSeeReleases)),
         ]),
         if (u != null) ...[
           const SizedBox(height: 14),
@@ -1187,7 +1187,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Text(L.of(context)!.sUpToDate, style: TextStyle(color: KtvColors.accent, fontWeight: FontWeight.w600)),
         ],
         const SizedBox(height: 10),
-        SelectableText('github.com/khalilbenaz/ktv-flutter', style: TextStyle(color: KtvColors.accent2, fontSize: 12)),
+        SelectableText('github.com/vantaflow/ktv-flutter', style: TextStyle(color: KtvColors.accent2, fontSize: 12)),
       ]),
     ];
   }

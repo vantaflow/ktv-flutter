@@ -2,9 +2,9 @@
 
 Lecteur IPTV **KTV** pour **macOS · Windows**, propulsé par **media_kit / libmpv**. Interface **FR / EN / AR** (avec RTL).
 
-**▶︎ [Télécharger la dernière version](https://github.com/khalilbenaz/ktv-flutter/releases/latest)** · **[Site](https://khalilbenaz.github.io/ktv-flutter/)**
+**▶︎ [Télécharger la dernière version](https://github.com/vantaflow/ktv-flutter/releases/latest)** · **[Site](https://vantaflow.github.io/ktv-flutter/)**
 
-> Version précédente en Electron : [github.com/khalilbenaz/ktv](https://github.com/khalilbenaz/ktv).
+> Version précédente en Electron : [github.com/vantaflow/ktv](https://github.com/vantaflow/ktv).
 
 ## Pourquoi Flutter + libmpv
 
